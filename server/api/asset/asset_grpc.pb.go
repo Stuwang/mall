@@ -146,6 +146,8 @@ type AdminAssetClient interface {
 	AdminGetUserAssets(ctx context.Context, in *AdminGetUserAssetsRequest, opts ...grpc.CallOption) (*GetUserAssetsReply, error)
 	// 后台手动给用户增加积分
 	AdminGrantPoints(ctx context.Context, in *AdminGrantPointsRequest, opts ...grpc.CallOption) (*AdminGrantPointsReply, error)
+	// 查询指定用户资产变更历史
+	AdminGetAssetHistory(ctx context.Context, in *AdminGetAssetHistoryRequest, opts ...grpc.CallOption) (*GetAssetHistoryReply, error)
 }
 
 type adminAssetClient struct {
@@ -174,6 +176,15 @@ func (c *adminAssetClient) AdminGrantPoints(ctx context.Context, in *AdminGrantP
 	return out, nil
 }
 
+func (c *adminAssetClient) AdminGetAssetHistory(ctx context.Context, in *AdminGetAssetHistoryRequest, opts ...grpc.CallOption) (*GetAssetHistoryReply, error) {
+	out := new(GetAssetHistoryReply)
+	err := c.cc.Invoke(ctx, "/asset.v1.AdminAsset/AdminGetAssetHistory", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AdminAssetServer is the server API for AdminAsset service.
 // All implementations should embed UnimplementedAdminAssetServer
 // for forward compatibility
@@ -182,6 +193,8 @@ type AdminAssetServer interface {
 	AdminGetUserAssets(context.Context, *AdminGetUserAssetsRequest) (*GetUserAssetsReply, error)
 	// 后台手动给用户增加积分
 	AdminGrantPoints(context.Context, *AdminGrantPointsRequest) (*AdminGrantPointsReply, error)
+	// 查询指定用户资产变更历史
+	AdminGetAssetHistory(context.Context, *AdminGetAssetHistoryRequest) (*GetAssetHistoryReply, error)
 }
 
 // UnimplementedAdminAssetServer should be embedded to have forward compatible implementations.
@@ -193,6 +206,9 @@ func (UnimplementedAdminAssetServer) AdminGetUserAssets(context.Context, *AdminG
 }
 func (UnimplementedAdminAssetServer) AdminGrantPoints(context.Context, *AdminGrantPointsRequest) (*AdminGrantPointsReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AdminGrantPoints not implemented")
+}
+func (UnimplementedAdminAssetServer) AdminGetAssetHistory(context.Context, *AdminGetAssetHistoryRequest) (*GetAssetHistoryReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AdminGetAssetHistory not implemented")
 }
 
 // UnsafeAdminAssetServer may be embedded to opt out of forward compatibility for this service.
@@ -242,6 +258,24 @@ func _AdminAsset_AdminGrantPoints_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AdminAsset_AdminGetAssetHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminGetAssetHistoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminAssetServer).AdminGetAssetHistory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/asset.v1.AdminAsset/AdminGetAssetHistory",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminAssetServer).AdminGetAssetHistory(ctx, req.(*AdminGetAssetHistoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AdminAsset_ServiceDesc is the grpc.ServiceDesc for AdminAsset service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -256,6 +290,10 @@ var AdminAsset_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AdminGrantPoints",
 			Handler:    _AdminAsset_AdminGrantPoints_Handler,
+		},
+		{
+			MethodName: "AdminGetAssetHistory",
+			Handler:    _AdminAsset_AdminGetAssetHistory_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

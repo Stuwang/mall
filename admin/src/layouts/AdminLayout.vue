@@ -16,7 +16,13 @@ const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 
-const activeMenu = computed(() => route.path)
+const activeMenu = computed(() => {
+  const parent = route.meta.menuParent
+  if (typeof parent === 'string' && parent) {
+    return parent
+  }
+  return route.path
+})
 
 const menus = [
   { path: '/dashboard', title: '概览', icon: MenuIcon },

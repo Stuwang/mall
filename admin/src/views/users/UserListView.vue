@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { AssetType, type UserInfo } from '@/api/types'
 import { appContext } from '@/app/AppContext'
+import { routeNames } from '@/router/routes'
 import { formatUnix } from '@/utils/format'
 import { showError } from '@/utils/notify'
+
+const router = useRouter()
 
 const userApi = appContext.api.users
 const assetApi = appContext.api.assets
@@ -85,6 +89,10 @@ async function handleBan(row: UserInfo): Promise<void> {
   }
 }
 
+function goDetail(row: UserInfo): void {
+  void router.push({ name: routeNames.userDetail, params: { id: row.id } })
+}
+
 async function openPointsDialog(row: UserInfo): Promise<void> {
   pointsUser.value = row
   pointsDialogVisible.value = true
@@ -157,8 +165,16 @@ onMounted(() => {
     </div>
 
     <el-table v-loading="loading" :data="list" stripe border>
-      <el-table-column prop="id" label="ID" width="80" />
-      <el-table-column prop="username" label="账号" min-width="120" />
+      <el-table-column label="ID" width="80">
+        <template #default="{ row }">
+          <el-button link type="primary" @click="goDetail(row)">{{ row.id }}</el-button>
+        </template>
+      </el-table-column>
+      <el-table-column label="账号" min-width="120">
+        <template #default="{ row }">
+          <el-button link type="primary" @click="goDetail(row)">{{ row.username }}</el-button>
+        </template>
+      </el-table-column>
       <el-table-column prop="nickname" label="昵称" min-width="120" />
       <el-table-column label="管理员" width="90">
         <template #default="{ row }">
@@ -180,8 +196,9 @@ onMounted(() => {
       <el-table-column label="创建时间" min-width="160">
         <template #default="{ row }">{{ formatUnix(row.ct) }}</template>
       </el-table-column>
-      <el-table-column label="操作" width="180" fixed="right">
+      <el-table-column label="操作" width="220" fixed="right">
         <template #default="{ row }">
+          <el-button link type="primary" @click="goDetail(row)">详情</el-button>
           <el-button link type="primary" @click="openPointsDialog(row)">积分</el-button>
           <el-button link type="primary" @click="handleBan(row)">
             {{ row.banned ? '解封/改期' : '封禁' }}

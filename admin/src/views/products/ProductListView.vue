@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   CategoryStatus,
   ProductStatus,
@@ -8,9 +9,12 @@ import {
   type ProductInfo,
 } from '@/api/types'
 import { appContext } from '@/app/AppContext'
+import { routeNames } from '@/router/routes'
 import { formatFenToYuan, formatUnix, yuanToFen } from '@/utils/format'
 import { productStatusLabel } from '@/utils/labels'
 import { showError } from '@/utils/notify'
+
+const router = useRouter()
 
 const productApi = appContext.api.products
 const categoryApi = appContext.api.categories
@@ -79,6 +83,10 @@ async function loadList(): Promise<void> {
 function handleSearch(): void {
   query.page = 1
   void loadList()
+}
+
+function goDetail(row: ProductInfo): void {
+  void router.push({ name: routeNames.productDetail, params: { id: row.id } })
 }
 
 function openCreate(): void {
@@ -222,8 +230,16 @@ onMounted(async () => {
     </div>
 
     <el-table v-loading="loading" :data="list" stripe border>
-      <el-table-column prop="id" label="ID" width="70" />
-      <el-table-column prop="name" label="名称" min-width="160" />
+      <el-table-column label="ID" width="70">
+        <template #default="{ row }">
+          <el-button link type="primary" @click="goDetail(row)">{{ row.id }}</el-button>
+        </template>
+      </el-table-column>
+      <el-table-column label="名称" min-width="160">
+        <template #default="{ row }">
+          <el-button link type="primary" @click="goDetail(row)">{{ row.name }}</el-button>
+        </template>
+      </el-table-column>
       <el-table-column label="分类" min-width="120">
         <template #default="{ row }">{{ categoryName(row.category_id) }}</template>
       </el-table-column>
@@ -241,8 +257,9 @@ onMounted(async () => {
       <el-table-column label="更新时间" min-width="160">
         <template #default="{ row }">{{ formatUnix(row.ut) }}</template>
       </el-table-column>
-      <el-table-column label="操作" width="220" fixed="right">
+      <el-table-column label="操作" width="260" fixed="right">
         <template #default="{ row }">
+          <el-button link type="primary" @click="goDetail(row)">详情</el-button>
           <el-button link type="primary" @click="openEdit(row)">编辑</el-button>
           <el-button link type="warning" @click="quickStock(row)">库存</el-button>
           <el-button link type="danger" @click="toggleStatus(row)">

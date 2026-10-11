@@ -18,28 +18,30 @@ export default defineConfig({
   },
   server: {
     port: 5174,
+    // 仅代理后端 API 前缀，避免与前端页面路由（如 /cart、/product/:id）冲突；
+    // 刷新页面时否则会被代理到后端，导致 SPA 无法回落 index.html。
     proxy: {
-      '/user': {
+      '/user/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
-      '/product': {
+      '/product/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
-      '/cart': {
+      '/cart/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
-      '/order': {
+      '/order/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
-      '/asset': {
+      '/asset/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
-      '/mall': {
+      '/mall/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
       },

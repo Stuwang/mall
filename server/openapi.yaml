@@ -32,6 +32,32 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/google.rpc.Status'
+    /admin/api/v1/asset/history:
+        post:
+            tags:
+                - AdminAsset
+            summary: AdminGetAssetHistory
+            description: 查询指定用户资产变更历史
+            operationId: AdminAsset_AdminGetAssetHistory
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/asset.v1.AdminGetAssetHistoryRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/asset.v1.GetAssetHistoryReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
     /admin/api/v1/asset/list:
         post:
             tags:
@@ -1091,6 +1117,25 @@ paths:
                                 $ref: '#/components/schemas/google.rpc.Status'
 components:
     schemas:
+        asset.v1.AdminGetAssetHistoryRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                userId:
+                    type: integer
+                    format: int64
+                type:
+                    enum:
+                        - ASSET_TYPE_POINT
+                    type: string
+                    format: enum
+                page:
+                    type: integer
+                    format: int32
+                pageSize:
+                    type: integer
+                    format: int32
         asset.v1.AdminGetUserAssetsRequest:
             type: object
             properties:

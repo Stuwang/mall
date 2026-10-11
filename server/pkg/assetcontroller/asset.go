@@ -119,6 +119,42 @@ func (c *Controller) AdminGetUserAssets(ctx context.Context, req *apiasset.Admin
 	return &apiasset.GetUserAssetsReply{Assets: assets}, nil
 }
 
+func (c *Controller) AdminGetAssetHistory(ctx context.Context, req *apiasset.AdminGetAssetHistoryRequest) (*apiasset.GetAssetHistoryReply, error) {
+	if _, err := auth.RequireAdmin(ctx); err != nil {
+		logger.Errorf("AdminGetAssetHistory RequireAdmin err=%v", err)
+		return nil, err
+	}
+	if req.UserId <= 0 {
+		logger.Errorf("AdminGetAssetHistory invalid user_id=%d", req.UserId)
+		return nil, codeerror.ErrorParam
+	}
+	if _, err := userdao.NewUserDao(nil).GetByID(req.UserId); err != nil {
+		logger.Errorf("AdminGetAssetHistory GetByID userID=%d err=%v", req.UserId, err)
+		return nil, err
+	}
+
+	assetType := int32(req.Type)
+	if assetType < 0 {
+		logger.Errorf("AdminGetAssetHistory invalid type=%d userID=%d", assetType, req.UserId)
+		return nil, codeerror.ErrorParam
+	}
+
+	list, total, err := assetdao.NewHistoryDao(nil).List(req.UserId, assetType, int(req.Page), int(req.PageSize))
+	if err != nil {
+		logger.Errorf("AdminGetAssetHistory List userID=%d type=%d err=%v", req.UserId, assetType, err)
+		return nil, err
+	}
+
+	out := make([]*apiasset.AssetHistory, 0, len(list))
+	for i := range list {
+		out = append(out, toHistory(&list[i]))
+	}
+	return &apiasset.GetAssetHistoryReply{
+		List:  out,
+		Total: total,
+	}, nil
+}
+
 func (c *Controller) AdminGrantPoints(ctx context.Context, req *apiasset.AdminGrantPointsRequest) (*apiasset.AdminGrantPointsReply, error) {
 	admin, err := auth.RequireAdmin(ctx)
 	if err != nil {

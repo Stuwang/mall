@@ -78,3 +78,16 @@ export function cancelReasonLabel(reason: CancelReason): string {
       return '-'
   }
 }
+
+export function assetBizTypeLabel(bizType: string): string {
+  switch (bizType) {
+    case 'admin_grant_points':
+      return '后台加积分'
+    case 'order_pay_point':
+      return '订单积分抵扣'
+    case 'order_point_recharge':
+      return '积分充值'
+    default:
+      return bizType || '-'
+  }
+}

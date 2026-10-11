@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { OrderStatus, type OrderInfo } from '@/api/types'
 import { appContext } from '@/app/AppContext'
+import { routeNames } from '@/router/routes'
 import { formatFenToYuan, formatUnix } from '@/utils/format'
 import {
   cancelReasonLabel,
@@ -12,6 +14,8 @@ import {
 import { showError } from '@/utils/notify'
 
 const api = appContext.api.orders
+const route = useRoute()
+const router = useRouter()
 const loading = ref(false)
 const detailLoading = ref(false)
 const list = ref<OrderInfo[]>([])
@@ -26,6 +30,13 @@ const query = reactive({
   page: 1,
   page_size: 20,
 })
+
+function applyRouteQuery(): void {
+  const userId = Number(route.query.user_id)
+  const productId = Number(route.query.product_id)
+  query.user_id = Number.isFinite(userId) && userId > 0 ? userId : undefined
+  query.product_id = Number.isFinite(productId) && productId > 0 ? productId : undefined
+}
 
 async function loadList(): Promise<void> {
   loading.value = true
@@ -48,6 +59,13 @@ async function loadList(): Promise<void> {
 
 function handleSearch(): void {
   query.page = 1
+  void router.replace({
+    name: routeNames.orders,
+    query: {
+      ...(query.user_id ? { user_id: String(query.user_id) } : {}),
+      ...(query.product_id ? { product_id: String(query.product_id) } : {}),
+    },
+  })
   void loadList()
 }
 
@@ -66,7 +84,27 @@ async function openDetail(row: OrderInfo): Promise<void> {
   }
 }
 
+function goUser(userId: number): void {
+  if (!userId) return
+  void router.push({ name: routeNames.userDetail, params: { id: userId } })
+}
+
+function goProduct(productId: number): void {
+  if (!productId) return
+  void router.push({ name: routeNames.productDetail, params: { id: productId } })
+}
+
+watch(
+  () => [route.query.user_id, route.query.product_id],
+  () => {
+    applyRouteQuery()
+    query.page = 1
+    void loadList()
+  },
+)
+
 onMounted(() => {
+  applyRouteQuery()
   void loadList()
 })
 </script>
@@ -98,7 +136,11 @@ onMounted(() => {
     <el-table v-loading="loading" :data="list" stripe border>
       <el-table-column prop="id" label="ID" width="70" />
       <el-table-column prop="order_no" label="订单号" min-width="180" />
-      <el-table-column prop="user_id" label="用户" width="90" />
+      <el-table-column label="用户" width="90">
+        <template #default="{ row }">
+          <el-button link type="primary" @click="goUser(row.user_id)">{{ row.user_id }}</el-button>
+        </template>
+      </el-table-column>
       <el-table-column label="类型" width="90">
         <template #default="{ row }">{{ orderTypeLabel(row.order_type) }}</template>
       </el-table-column>
@@ -114,6 +156,22 @@ onMounted(() => {
         <template #default="{ row }">{{ formatFenToYuan(row.cash_amount) }}</template>
       </el-table-column>
       <el-table-column prop="point_amount" label="积分" width="90" />
+      <el-table-column label="商品" min-width="160">
+        <template #default="{ row }">
+          <div v-if="row.items?.length" class="item-links">
+            <el-button
+              v-for="item in row.items"
+              :key="item.id"
+              link
+              type="primary"
+              @click="goProduct(item.product_id)"
+            >
+              {{ item.product_name || `#${item.product_id}` }}
+            </el-button>
+          </div>
+          <span v-else>-</span>
+        </template>
+      </el-table-column>
       <el-table-column label="下单时间" min-width="160">
         <template #default="{ row }">{{ formatUnix(row.ct) }}</template>
       </el-table-column>
@@ -147,7 +205,11 @@ onMounted(() => {
         <template v-if="current">
           <el-descriptions :column="1" border>
             <el-descriptions-item label="订单号">{{ current.order_no }}</el-descriptions-item>
-            <el-descriptions-item label="用户 ID">{{ current.user_id }}</el-descriptions-item>
+            <el-descriptions-item label="用户 ID">
+              <el-button link type="primary" @click="goUser(current.user_id)">
+                {{ current.user_id }}
+              </el-button>
+            </el-descriptions-item>
             <el-descriptions-item label="类型">
               {{ orderTypeLabel(current.order_type) }}
             </el-descriptions-item>
@@ -183,8 +245,20 @@ onMounted(() => {
 
           <h4 class="items-title">明细</h4>
           <el-table :data="current.items || []" size="small" border>
-            <el-table-column prop="product_id" label="商品ID" width="80" />
-            <el-table-column prop="product_name" label="名称" min-width="120" />
+            <el-table-column label="商品ID" width="80">
+              <template #default="{ row }">
+                <el-button link type="primary" @click="goProduct(row.product_id)">
+                  {{ row.product_id }}
+                </el-button>
+              </template>
+            </el-table-column>
+            <el-table-column label="名称" min-width="120">
+              <template #default="{ row }">
+                <el-button link type="primary" @click="goProduct(row.product_id)">
+                  {{ row.product_name }}
+                </el-button>
+              </template>
+            </el-table-column>
             <el-table-column label="单价" width="90">
               <template #default="{ row }">{{ formatFenToYuan(row.product_price) }}</template>
             </el-table-column>
@@ -208,5 +282,11 @@ onMounted(() => {
 
 .items-title {
   margin: 20px 0 10px;
+}
+
+.item-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 </style>

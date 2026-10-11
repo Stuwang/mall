@@ -11,8 +11,9 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    // 前缀必须落到 /xxx/api，避免 /users、/products、/orders 刷新被代理成后端 404
     proxy: {
-      '/user': {
+      '/user/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
@@ -20,11 +21,15 @@ export default defineConfig({
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
-      '/product': {
+      '/product/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
-      '/order': {
+      '/order/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
+      '/asset/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
       },

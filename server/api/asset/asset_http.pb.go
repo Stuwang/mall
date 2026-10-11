@@ -118,10 +118,13 @@ func (c *AssetHTTPClientImpl) GetUserAssets(ctx context.Context, in *GetUserAsse
 	return &out, nil
 }
 
+const OperationAdminAssetAdminGetAssetHistory = "/asset.v1.AdminAsset/AdminGetAssetHistory"
 const OperationAdminAssetAdminGetUserAssets = "/asset.v1.AdminAsset/AdminGetUserAssets"
 const OperationAdminAssetAdminGrantPoints = "/asset.v1.AdminAsset/AdminGrantPoints"
 
 type AdminAssetHTTPServer interface {
+	// AdminGetAssetHistory 查询指定用户资产变更历史
+	AdminGetAssetHistory(context.Context, *AdminGetAssetHistoryRequest) (*GetAssetHistoryReply, error)
 	// AdminGetUserAssets 查询指定用户资产列表
 	AdminGetUserAssets(context.Context, *AdminGetUserAssetsRequest) (*GetUserAssetsReply, error)
 	// AdminGrantPoints 后台手动给用户增加积分
@@ -132,6 +135,7 @@ func RegisterAdminAssetHTTPServer(s *http.Server, srv AdminAssetHTTPServer) {
 	r := s.Route("/")
 	r.POST("/admin/api/v1/asset/list", _AdminAsset_AdminGetUserAssets0_HTTP_Handler(srv))
 	r.POST("/admin/api/v1/asset/grant_points", _AdminAsset_AdminGrantPoints0_HTTP_Handler(srv))
+	r.POST("/admin/api/v1/asset/history", _AdminAsset_AdminGetAssetHistory0_HTTP_Handler(srv))
 }
 
 func _AdminAsset_AdminGetUserAssets0_HTTP_Handler(srv AdminAssetHTTPServer) func(ctx http.Context) error {
@@ -178,7 +182,30 @@ func _AdminAsset_AdminGrantPoints0_HTTP_Handler(srv AdminAssetHTTPServer) func(c
 	}
 }
 
+func _AdminAsset_AdminGetAssetHistory0_HTTP_Handler(srv AdminAssetHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in AdminGetAssetHistoryRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAdminAssetAdminGetAssetHistory)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.AdminGetAssetHistory(ctx, req.(*AdminGetAssetHistoryRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GetAssetHistoryReply)
+		return ctx.Result(200, reply)
+	}
+}
+
 type AdminAssetHTTPClient interface {
+	AdminGetAssetHistory(ctx context.Context, req *AdminGetAssetHistoryRequest, opts ...http.CallOption) (rsp *GetAssetHistoryReply, err error)
 	AdminGetUserAssets(ctx context.Context, req *AdminGetUserAssetsRequest, opts ...http.CallOption) (rsp *GetUserAssetsReply, err error)
 	AdminGrantPoints(ctx context.Context, req *AdminGrantPointsRequest, opts ...http.CallOption) (rsp *AdminGrantPointsReply, err error)
 }
@@ -189,6 +216,19 @@ type AdminAssetHTTPClientImpl struct {
 
 func NewAdminAssetHTTPClient(client *http.Client) AdminAssetHTTPClient {
 	return &AdminAssetHTTPClientImpl{client}
+}
+
+func (c *AdminAssetHTTPClientImpl) AdminGetAssetHistory(ctx context.Context, in *AdminGetAssetHistoryRequest, opts ...http.CallOption) (*GetAssetHistoryReply, error) {
+	var out GetAssetHistoryReply
+	pattern := "/admin/api/v1/asset/history"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationAdminAssetAdminGetAssetHistory))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
 }
 
 func (c *AdminAssetHTTPClientImpl) AdminGetUserAssets(ctx context.Context, in *AdminGetUserAssetsRequest, opts ...http.CallOption) (*GetUserAssetsReply, error) {

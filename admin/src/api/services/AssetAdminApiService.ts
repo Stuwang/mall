@@ -1,8 +1,10 @@
 import type { HttpClient } from '@/api/http/HttpClient'
 import type {
+  AdminGetAssetHistoryRequest,
   AdminGetUserAssetsRequest,
   AdminGrantPointsReply,
   AdminGrantPointsRequest,
+  GetAssetHistoryReply,
   GetUserAssetsReply,
 } from '@/api/types'
 
@@ -16,6 +18,10 @@ export class AssetAdminApiService {
 
   getUserAssets(request: AdminGetUserAssetsRequest): Promise<GetUserAssetsReply> {
     return this.http.post<GetUserAssetsReply>('/admin/api/v1/asset/list', request)
+  }
+
+  getHistory(request: AdminGetAssetHistoryRequest): Promise<GetAssetHistoryReply> {
+    return this.http.post<GetAssetHistoryReply>('/admin/api/v1/asset/history', request)
   }
 
   grantPoints(request: AdminGrantPointsRequest): Promise<AdminGrantPointsReply> {

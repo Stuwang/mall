@@ -43,6 +43,14 @@ service AdminAsset {
       body: "*"
     };
   }
+
+  // 查询指定用户资产变更历史
+  rpc AdminGetAssetHistory (AdminGetAssetHistoryRequest) returns (GetAssetHistoryReply) {
+    option (google.api.http) = {
+      post: "/admin/api/v1/asset/history"
+      body: "*"
+    };
+  }
 }
 
 // 资产类型
@@ -104,6 +112,14 @@ message AdminGetUserAssetsRequest {
   int64 user_id = 2;
   // 可选：按类型筛选，0 表示全部
   AssetType type = 3;
+}
+
+message AdminGetAssetHistoryRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 user_id = 2;
+  AssetType type = 3;
+  int32 page = 4;
+  int32 page_size = 5;
 }
 
 message AdminGrantPointsRequest {

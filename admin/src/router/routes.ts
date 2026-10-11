@@ -4,8 +4,10 @@ export const routeNames = {
   login: 'login',
   dashboard: 'dashboard',
   users: 'users',
+  userDetail: 'userDetail',
   categories: 'categories',
   products: 'products',
+  productDetail: 'productDetail',
   orders: 'orders',
 } as const
 
@@ -34,6 +36,12 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: '用户管理', menu: true },
       },
       {
+        path: 'users/:id',
+        name: routeNames.userDetail,
+        component: () => import('@/views/users/UserDetailView.vue'),
+        meta: { title: '用户详情', menuParent: '/users' },
+      },
+      {
         path: 'categories',
         name: routeNames.categories,
         component: () => import('@/views/categories/CategoryListView.vue'),
@@ -44,6 +52,12 @@ export const routes: RouteRecordRaw[] = [
         name: routeNames.products,
         component: () => import('@/views/products/ProductListView.vue'),
         meta: { title: '商品管理', menu: true },
+      },
+      {
+        path: 'products/:id',
+        name: routeNames.productDetail,
+        component: () => import('@/views/products/ProductDetailView.vue'),
+        meta: { title: '商品详情', menuParent: '/products' },
       },
       {
         path: 'orders',

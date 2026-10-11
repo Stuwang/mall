@@ -1,4 +1,4 @@
-import type { WithBaseParam } from './common'
+import type { PageQuery, WithBaseParam } from './common'
 
 /** asset.v1.AssetType */
 export const AssetType = {
@@ -15,6 +15,21 @@ export interface AssetInfo {
   ut: number
 }
 
+export interface AssetHistory {
+  id: number
+  user_id: number
+  type: AssetType
+  /** 变更量（可正可负） */
+  change: number
+  /** 变更后余额 */
+  balance: number
+  idempotent_id: string
+  biz_type: string
+  biz_id: string
+  remark: string
+  ct: number
+}
+
 export interface AdminGetUserAssetsRequest extends WithBaseParam {
   user_id: number
   type?: AssetType
@@ -22,6 +37,16 @@ export interface AdminGetUserAssetsRequest extends WithBaseParam {
 
 export interface GetUserAssetsReply {
   assets: AssetInfo[]
+}
+
+export interface AdminGetAssetHistoryRequest extends WithBaseParam, PageQuery {
+  user_id: number
+  type?: AssetType
+}
+
+export interface GetAssetHistoryReply {
+  list: AssetHistory[]
+  total: number
 }
 
 export interface AdminGrantPointsRequest extends WithBaseParam {

@@ -35,15 +35,15 @@ func As(err error) (CodeError, bool) {
 	return CodeError{}, false
 }
 
-// OrSystem 业务 CodeError 原样返回；未知错误打日志并返回 ErrorSystem
+// OrSystem 先打错误日志；业务 CodeError 原样返回，未知错误返回 ErrorSystem
 func OrSystem(err error, format string, args ...interface{}) error {
 	if err == nil {
 		return nil
 	}
+	logger.Errorf(format+": %v", append(args, err)...)
 	if ce, ok := As(err); ok {
 		return ce
 	}
-	logger.Errorf(format+": %v", append(args, err)...)
 	return ErrorSystem
 }
 

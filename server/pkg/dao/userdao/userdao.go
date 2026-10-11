@@ -16,7 +16,10 @@ func db() *gorm.DB {
 
 // AutoMigrate 迁移用户相关表
 func AutoMigrate() error {
-	return db().AutoMigrate(&usermodel.User{}, &usermodel.UserLogin{})
+	if err := db().AutoMigrate(&usermodel.User{}, &usermodel.UserLogin{}); err != nil {
+		return codeerror.OrSystem(err, "AutoMigrate user tables")
+	}
+	return nil
 }
 
 // CreateUserWithPassword 事务创建用户及密码登录方式
@@ -49,7 +52,10 @@ func CreateUserWithPassword(nickname, username, password string) (*usermodel.Use
 			Ct:         now,
 			Ut:         now,
 		}
-		return tx.Create(login).Error
+		if err := tx.Create(login).Error; err != nil {
+			return err
+		}
+		return nil
 	})
 	if err != nil {
 		return nil, codeerror.OrSystem(err, "CreateUserWithPassword username=%s", username)
@@ -63,7 +69,7 @@ func GetLoginByPasswordAccount(username string) (*usermodel.UserLogin, error) {
 	err := db().Where("type = ? AND identifier = ?", usermodel.LoginTypePassword, username).
 		First(&login).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, codeerror.ErrorUserNotFound
+		return nil, codeerror.OrSystem(codeerror.ErrorUserNotFound, "GetLoginByPasswordAccount not found username=%s", username)
 	}
 	if err != nil {
 		return nil, codeerror.OrSystem(err, "GetLoginByPasswordAccount username=%s", username)
@@ -76,7 +82,7 @@ func GetByID(id int64) (*usermodel.User, error) {
 	var u usermodel.User
 	err := db().Where("id = ?", id).First(&u).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, codeerror.ErrorUserNotFound
+		return nil, codeerror.OrSystem(codeerror.ErrorUserNotFound, "GetByID not found id=%d", id)
 	}
 	if err != nil {
 		return nil, codeerror.OrSystem(err, "GetByID id=%d", id)
@@ -90,7 +96,7 @@ func GetPasswordLoginByUserID(userID int64) (*usermodel.UserLogin, error) {
 	err := db().Where("user_id = ? AND type = ?", userID, usermodel.LoginTypePassword).
 		First(&login).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, codeerror.ErrorUserNotFound
+		return nil, codeerror.OrSystem(codeerror.ErrorUserNotFound, "GetPasswordLoginByUserID not found userID=%d", userID)
 	}
 	if err != nil {
 		return nil, codeerror.OrSystem(err, "GetPasswordLoginByUserID userID=%d", userID)
@@ -102,7 +108,7 @@ func GetPasswordLoginByUserID(userID int64) (*usermodel.UserLogin, error) {
 func UpdateUser(id int64, nickname string, sex int32) (*usermodel.User, error) {
 	u, err := GetByID(id)
 	if err != nil {
-		return nil, err
+		return nil, codeerror.OrSystem(err, "UpdateUser GetByID id=%d", id)
 	}
 	u.Nickname = nickname
 	u.Sex = sex

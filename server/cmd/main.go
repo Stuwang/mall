@@ -84,6 +84,9 @@ func main() {
 	if err := userdao.AutoMigrate(); err != nil {
 		logger.Fatalf("auto migrate user: %v", err)
 	}
+	if err := userdao.EnsureAdmins(cfg.Admins); err != nil {
+		logger.Fatalf("ensure admins: %v", err)
+	}
 	if err := assetdao.AutoMigrate(); err != nil {
 		logger.Fatalf("auto migrate asset: %v", err)
 	}

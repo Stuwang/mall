@@ -107,3 +107,21 @@ func (d *UserDao) SetBanUntil(id, banUntil int64) (*usermodel.User, error) {
 	}
 	return u, nil
 }
+
+// SetAdmin 设置/取消管理员标记
+func (d *UserDao) SetAdmin(id int64, isAdmin bool) (*usermodel.User, error) {
+	u, err := d.GetByID(id)
+	if err != nil {
+		return nil, codeerror.OrSystem(err, "UserDao.SetAdmin GetByID id=%d", id)
+	}
+	flag := int32(0)
+	if isAdmin {
+		flag = 1
+	}
+	u.IsAdmin = flag
+	u.Ut = time.Now().Unix()
+	if err := d.db.Model(u).Select("is_admin", "ut").Updates(u).Error; err != nil {
+		return nil, codeerror.OrSystem(err, "UserDao.SetAdmin id=%d isAdmin=%v", id, isAdmin)
+	}
+	return u, nil
+}

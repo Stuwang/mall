@@ -17,6 +17,15 @@ type Config struct {
 	Auth     AuthConfig     `yaml:"auth"`
 	Order    OrderConfig    `yaml:"order"`
 	Point    PointConfig    `yaml:"point"`
+	// Admins 启动时幂等写入的管理员账号（按 username 去重）
+	Admins []AdminAccount `yaml:"admins"`
+}
+
+// AdminAccount 初始管理员账号
+type AdminAccount struct {
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+	Nickname string `yaml:"nickname"`
 }
 
 type OrderConfig struct {
@@ -92,6 +101,19 @@ func (c *Config) applyDefaults() {
 func (c *Config) validate() error {
 	if !c.IsTest() && c.Auth.JWTSecret == "" {
 		return fmt.Errorf("auth.jwt_secret is required when env is not %s", EnvTest)
+	}
+	seen := make(map[string]struct{}, len(c.Admins))
+	for i, a := range c.Admins {
+		if a.Username == "" {
+			return fmt.Errorf("admins[%d].username is required", i)
+		}
+		if a.Password == "" {
+			return fmt.Errorf("admins[%d].password is required", i)
+		}
+		if _, ok := seen[a.Username]; ok {
+			return fmt.Errorf("admins[%d].username %q duplicated in config", i, a.Username)
+		}
+		seen[a.Username] = struct{}{}
 	}
 	return nil
 }

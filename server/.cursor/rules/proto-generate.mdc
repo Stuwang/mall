@@ -1,0 +1,31 @@
+---
+description: 修改 proto 后必须用 generate.sh 生成 pb，禁止手改生成文件
+alwaysApply: true
+---
+
+# Proto → PB 生成约定
+
+## 流程
+
+1. **只改** `api/**/*.proto`（及必要时 `third_party` 依赖），不要手改 `*.pb.go` / `*_http.pb.go` / `*_grpc.pb.go` / 根目录 `openapi.yaml`。
+2. 在项目根目录执行生成脚本（会跑 `protoc`，产出 go / http / grpc / openapi）：
+
+```bash
+# Linux / macOS / Git Bash
+sh generate.sh
+```
+
+Windows（PowerShell）请用 Git Bash，因脚本依赖 `find`：
+
+```powershell
+& "C:\Program Files\Git\usr\bin\bash.exe" -lc "cd /d/me/mall/server && sh generate.sh"
+```
+
+3. 生成后按需改业务代码：controller 实现新 RPC、`cmd/main.go` 注册 HTTP Server、白名单等。
+4. 用 `go build ./cmd`（或 `CGO_ENABLED=0 go build -o NUL .\cmd\`）确认能编译。
+
+## 注意
+
+- `generate.sh` 会扫描 `api` 下所有 `.proto`（排除 errors），一次全量生成即可。
+- 新增 `service` 后，生成物里会有 `RegisterXxxHTTPServer`；须在 `main` 里挂上对应 controller。
+- 管理端接口路径约定：`/admin/api/v1/...`；用户端：`/<模块>/api/v1/...`。

@@ -1,7 +1,7 @@
 package database
 
 import (
-	"gorm.io/driver/sqlite"
+	"github.com/glebarez/sqlite" // pure go, no CGO
 	"gorm.io/gorm"
 	"helloworld/base/logger"
 )

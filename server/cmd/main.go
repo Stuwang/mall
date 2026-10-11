@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
+	"fmt"
 	stdhttp "net/http"
 
 	"github.com/go-kratos/kratos/v2"
@@ -42,9 +43,10 @@ type Server struct {
 }
 
 func (s Server) SayHello2(ctx context.Context, request *helloworld.HelloRequest) (*helloworld.HelloReply, error) {
+	auth := auth.MustFromContext(ctx)
 	return &helloworld.HelloReply{
 		Message:     "hello " + request.Name,
-		AccessToken: "token",
+		AccessToken: fmt.Sprintf("token %v", auth.UserID),
 		Type:        helloworld.Type_Type_C,
 		Value:       123,
 	}, nil
@@ -82,6 +84,7 @@ func main() {
 	}
 
 	logger.InitLogger(cfg.Logger.Filename)
+	logger.Infof("begin to start")
 	database.InitDb(cfg.Database.Filename)
 	defer database.Close()
 	auth.Init(cfg.Auth, cfg.Env)
@@ -98,6 +101,7 @@ func main() {
 				auth.WithWhitelist(
 					user.OperationUserRegister,
 					user.OperationUserLogin,
+					helloworld.OperationGreeterSayHello,
 				),
 			),
 		),
@@ -161,13 +165,8 @@ func main() {
 			return
 		}),
 	)
-	helloworld.RegisterGreeterHTTPServer(httpSrv, s)
 
-	httpSrv.HandleFunc("/hello", func(writer stdhttp.ResponseWriter, request *stdhttp.Request) {
-		logger.Debugw("this is a log", "a", "b")
-		writer.WriteHeader(stdhttp.StatusOK)
-		writer.Write([]byte(`hello world`))
-	})
+	helloworld.RegisterGreeterHTTPServer(httpSrv, s)
 
 	app := kratos.New(
 		kratos.Name("helloworld"),

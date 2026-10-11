@@ -43,7 +43,7 @@ watch(
     if (syncing.value) return
     const urls = asList(val)
     fileList.value = urls.map((url, i) => ({
-      name: `image-${i + 1}`,
+      name: displayNameFromURL(url, i),
       url,
       status: 'success',
       uid: Date.now() + i,
@@ -52,12 +52,30 @@ watch(
   { immediate: true },
 )
 
+function displayNameFromURL(url: string, index: number): string {
+  try {
+    const path = url.split('?')[0] ?? url
+    const base = path.split('/').pop()
+    if (base) return base
+  } catch {
+    /* ignore */
+  }
+  return `image-${index + 1}`
+}
+
 async function handleUpload(options: UploadRequestOptions): Promise<void> {
   try {
     const reply = await mediaApi.upload(options.file as File)
     const next = [...asList(props.modelValue), reply.url].slice(0, props.limit)
     syncing.value = true
     emitValue(next)
+    // 列表展示用服务端随机文件名，不用用户本地原名
+    fileList.value = next.map((url, i) => ({
+      name: displayNameFromURL(url, i),
+      url,
+      status: 'success',
+      uid: Date.now() + i,
+    }))
     syncing.value = false
     options.onSuccess?.(reply)
   } catch (error) {

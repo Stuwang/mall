@@ -51,9 +51,10 @@ func handleUpload(ctx khttp.Context) error {
 		}
 		defer file.Close()
 
-		uri, err := mediastore.Get().Save(header.Filename, file, header.Size)
+		contentType := header.Header.Get("Content-Type")
+		uri, err := mediastore.Get().Save(header.Filename, contentType, file, header.Size)
 		if err != nil {
-			logger.Errorf("media upload Save filename=%s err=%v", header.Filename, err)
+			logger.Errorf("media upload Save orig=%s contentType=%s err=%v", header.Filename, contentType, err)
 			return nil, err
 		}
 		return &UploadReply{

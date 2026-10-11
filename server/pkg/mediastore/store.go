@@ -35,6 +35,15 @@ var allowedExt = map[string]string{
 	".webp": "image/webp",
 }
 
+// contentType -> 规范扩展名（统一 .jpg，不用用户原名）
+var contentTypeExt = map[string]string{
+	"image/jpeg": ".jpg",
+	"image/jpg":  ".jpg",
+	"image/png":  ".png",
+	"image/gif":  ".gif",
+	"image/webp": ".webp",
+}
+
 var (
 	mu    sync.RWMutex
 	store *Store
@@ -97,26 +106,30 @@ func (s *Store) MaxUploadBytes() int64 {
 	return s.maxUploadBytes
 }
 
-// Save 保存上传文件，返回逻辑 URI（local_file:///key）
-func (s *Store) Save(filename string, r io.Reader, size int64) (string, error) {
+// Save 保存上传文件，返回逻辑 URI（local_file:///key）。
+// 磁盘文件名一律随机生成，绝不使用用户原始文件名，避免重名覆盖。
+// origName / contentType 仅用于推断扩展名。
+func (s *Store) Save(origName, contentType string, r io.Reader, size int64) (string, error) {
 	if size > 0 && size > s.maxUploadBytes {
 		logger.Errorf("mediastore Save file too large size=%d max=%d", size, s.maxUploadBytes)
 		return "", codeerror.ErrorParam
 	}
-	ext := strings.ToLower(filepath.Ext(filename))
-	if _, ok := allowedExt[ext]; !ok {
-		logger.Errorf("mediastore Save unsupported ext=%s filename=%s", ext, filename)
+	ext, ok := resolveExt(origName, contentType)
+	if !ok {
+		logger.Errorf("mediastore Save unsupported type orig=%s contentType=%s", origName, contentType)
 		return "", codeerror.ErrorParam
 	}
 
 	day := time.Now().Format("2006/01/02")
-	key := path.Join(day, uuid.NewString()+ext)
+	// 32 位 hex，不含原文件名
+	randomName := strings.ReplaceAll(uuid.NewString(), "-", "") + ext
+	key := path.Join(day, randomName)
 	full := filepath.Join(s.rootDir, filepath.FromSlash(key))
 	if err := os.MkdirAll(filepath.Dir(full), 0o755); err != nil {
 		return "", codeerror.OrSystem(err, "mediastore Save mkdir key=%s", key)
 	}
 
-	f, err := os.OpenFile(full, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644)
+	f, err := os.OpenFile(full, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o644)
 	if err != nil {
 		return "", codeerror.OrSystem(err, "mediastore Save open key=%s", key)
 	}
@@ -135,6 +148,21 @@ func (s *Store) Save(filename string, r io.Reader, size int64) (string, error) {
 	}
 	uri := SchemeLocalFile + ":///" + key
 	return uri, nil
+}
+
+func resolveExt(origName, contentType string) (string, bool) {
+	ct := strings.ToLower(strings.TrimSpace(strings.Split(contentType, ";")[0]))
+	if ext, ok := contentTypeExt[ct]; ok {
+		return ext, true
+	}
+	ext := strings.ToLower(filepath.Ext(origName))
+	if ext == ".jpeg" {
+		ext = ".jpg"
+	}
+	if _, ok := allowedExt[ext]; ok {
+		return ext, true
+	}
+	return "", false
 }
 
 // Resolve 将逻辑 URI / 外链转为可访问 URL

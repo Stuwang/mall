@@ -1,0 +1,13 @@
+
+###
+POST localhost:8080/hello/api/v1/say2
+Content-Type: application/json
+
+{}
+
+
+###
+POST localhost:8080/hello/api/v1/say
+Content-Type: application/json
+
+{}

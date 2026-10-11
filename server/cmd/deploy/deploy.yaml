@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: http-server
+  namespace: kratos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: http-example
+  template:
+    metadata:
+      labels:
+        app: http-example
+    spec:
+      containers:
+        - name: http-example
+          image: http_example:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: http-server
+  namespace: kratos
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8000
+  selector:
+    app: http-example
+---

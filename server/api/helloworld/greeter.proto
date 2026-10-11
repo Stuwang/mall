@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package helloworld.v1;
+
+import "google/api/annotations.proto";
+import "base/base.proto";
+
+option go_package = "helloworld/api/helloworld;helloworld";
+
+// The greeting service definition.
+service Greeter {
+  // Sends a greeting
+  rpc SayHello (HelloRequest) returns (HelloReply) {
+    option (google.api.http) = {
+      post: "/hello/api/v1/say"
+      body: "*"
+    };
+  }
+  rpc SayHello2 (HelloRequest) returns (HelloReply) {
+    option (google.api.http) = {
+      post: "/hello/api/v1/say2"
+      body: "*"
+    };
+  }
+
+}
+
+// The request message containing the user's name.
+message HelloRequest {
+  BaseParam BaseParam = 1;
+  string name = 2;
+}
+
+enum Type {
+  TYPE_UNSPECIFIED = 0;
+  TYPE_A = 1;
+  TYPE_B = 2;
+  Type_C = 3;
+}
+
+// The response message containing the greetings
+message HelloReply {
+  string message = 1;
+  string access_token = 2;
+  Type type = 3;
+  int64 value = 4;
+}

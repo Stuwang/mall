@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package helloworld.v1;
+
+import "google/api/annotations.proto";
+
+option go_package = "helloworld/api/base;base";
+
+message CodeError {
+  int32 code = 1;
+  string message = 2;
+  map<string, string> details = 3;
+}

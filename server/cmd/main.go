@@ -2,28 +2,26 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"flag"
 	"fmt"
-	stdhttp "net/http"
 
 	"github.com/go-kratos/kratos/v2"
-	"github.com/go-kratos/kratos/v2/middleware"
-	"github.com/go-kratos/kratos/v2/middleware/metadata"
 	"github.com/go-kratos/kratos/v2/selector"
 	"github.com/go-kratos/kratos/v2/transport/http"
 	rawgrpc "google.golang.org/grpc"
 
 	"helloworld/api/helloworld"
-	"helloworld/api/user"
+	apiuser "helloworld/api/user"
 	"helloworld/base/codeerror"
 	"helloworld/base/hash_balancer"
 	"helloworld/base/logger"
 	"helloworld/common/auth"
 	"helloworld/common/config"
 	"helloworld/common/database"
+	"helloworld/pkg/dao/userdao"
+	"helloworld/pkg/server"
+	"helloworld/pkg/usercontroller"
 
-	//_ "helloworld/base/pbjson"
 	_ "github.com/go-kratos/kratos/v2/encoding/json"
 )
 
@@ -39,14 +37,13 @@ var (
 	_ helloworld.GreeterHTTPServer = Server{}
 )
 
-type Server struct {
-}
+type Server struct{}
 
 func (s Server) SayHello2(ctx context.Context, request *helloworld.HelloRequest) (*helloworld.HelloReply, error) {
-	auth := auth.MustFromContext(ctx)
+	a := auth.MustFromContext(ctx)
 	return &helloworld.HelloReply{
 		Message:     "hello " + request.Name,
-		AccessToken: fmt.Sprintf("token %v", auth.UserID),
+		AccessToken: fmt.Sprintf("token %v", a.UserID),
 		Type:        helloworld.Type_Type_C,
 		Value:       123,
 	}, nil
@@ -54,24 +51,6 @@ func (s Server) SayHello2(ctx context.Context, request *helloworld.HelloRequest)
 
 func (s Server) SayHello(ctx context.Context, request *helloworld.HelloRequest) (*helloworld.HelloReply, error) {
 	return nil, codeerror.ErrorParam
-}
-
-type CommonResp struct {
-	Code     int               `json:"code"`
-	Msg      string            `json:"msg"`
-	MsgTrans map[string]string `json:"msg_trans"`
-	Data     json.RawMessage   `json:"data"`
-}
-
-func setIp(handler middleware.Handler) middleware.Handler {
-	return func(ctx context.Context, req interface{}) (interface{}, error) {
-		//headers, _ := metadata2.FromServerContext(ctx)
-		//_ = headers
-		//if p, ok := req.(base.ParamGetter); ok && p.GetBaseParam() != nil {
-		//	p.GetBaseParam().Ip = "123123"
-		//}
-		return handler(ctx, req)
-	}
 }
 
 func main() {
@@ -87,94 +66,22 @@ func main() {
 	logger.Infof("begin to start")
 	database.InitDb(cfg.Database.Filename)
 	defer database.Close()
-	auth.Init(cfg.Auth, cfg.Env)
 
+	if err := userdao.AutoMigrate(); err != nil {
+		logger.Fatalf("auto migrate: %v", err)
+	}
+
+	auth.Init(cfg.Auth, cfg.Env)
 	logger.Infof("server starting, env=%s addr=%s", cfg.Env, cfg.Server.HTTPAddr)
 
-	s := &Server{}
-	httpSrv := http.NewServer(
-		http.Address(cfg.Server.HTTPAddr),
-		http.Middleware(
-			metadata.Server(metadata.WithPropagatedPrefix("")),
-			setIp,
-			auth.Middleware(
-				auth.WithWhitelist(
-					user.OperationUserRegister,
-					user.OperationUserLogin,
-					helloworld.OperationGreeterSayHello,
-				),
-			),
-		),
-		http.ResponseEncoder(func(writer stdhttp.ResponseWriter, request *stdhttp.Request, i interface{}) error {
-			writer.WriteHeader(stdhttp.StatusOK)
-			//bs, err := protojson.MarshalOptions{
-			//	EmitUnpopulated: true,
-			//	UseProtoNames:   true,
-			//	UseEnumNumbers:  true,
-			//}.Marshal(i.(proto.Message))
-			bs, err := json.Marshal(i)
-			if err != nil {
-				panic(err)
-			}
-			var d = CommonResp{
-				Code:     0,
-				Msg:      "success",
-				MsgTrans: nil,
-				Data:     json.RawMessage(bs),
-			}
-			bytes, err := json.Marshal(d)
-			if err != nil {
-				panic(err)
-			}
-			writer.Write(bytes)
-			return nil
-		}),
-		http.ErrorEncoder(func(writer stdhttp.ResponseWriter, request *stdhttp.Request, err error) {
-			writer.WriteHeader(stdhttp.StatusOK)
-			var d = CommonResp{
-				Code:     int(-1),
-				Msg:      "",
-				MsgTrans: nil,
-				Data:     nil,
-			}
-
-			codeError, ok := err.(codeerror.CodeError)
-			if ok {
-				d = CommonResp{
-					Code:     int(codeError.Code),
-					Msg:      codeError.Msg,
-					MsgTrans: nil,
-					Data:     nil,
-				}
-			}
-			codeErrorPointer, ok := err.(*codeerror.CodeError)
-			if ok {
-				d = CommonResp{
-					Code:     int(codeErrorPointer.Code),
-					Msg:      codeErrorPointer.Msg,
-					MsgTrans: nil,
-					Data:     nil,
-				}
-			}
-
-			bytes, err := json.Marshal(d)
-			if err != nil {
-				panic(err)
-			}
-			writer.Write(bytes)
-			return
-		}),
-	)
-
-	helloworld.RegisterGreeterHTTPServer(httpSrv, s)
+	httpSrv := http.NewServer(server.HTTPOptions(cfg.Server.HTTPAddr)...)
+	helloworld.RegisterGreeterHTTPServer(httpSrv, Server{})
+	apiuser.RegisterUserHTTPServer(httpSrv, usercontroller.New())
 
 	app := kratos.New(
 		kratos.Name("helloworld"),
-		kratos.Server(
-			httpSrv,
-		),
+		kratos.Server(httpSrv),
 	)
-
 	if err := app.Run(); err != nil {
 		logger.Fatalf("%v", err)
 	}

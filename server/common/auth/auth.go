@@ -55,6 +55,9 @@ var (
 func Init(cfg config.AuthConfig, envName string) {
 	env = envName
 	jwtSecret = []byte(cfg.JWTSecret)
+	if len(jwtSecret) == 0 {
+		jwtSecret = []byte("dev-secret")
+	}
 	jwtExpireHours = cfg.JWTExpireHours
 	if jwtExpireHours <= 0 {
 		jwtExpireHours = 168

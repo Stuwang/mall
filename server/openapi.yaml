@@ -240,6 +240,8 @@ components:
             properties:
                 user:
                     $ref: '#/components/schemas/user.v1.UserInfo'
+                accessToken:
+                    type: string
         user.v1.LoginRequest:
             type: object
             properties:

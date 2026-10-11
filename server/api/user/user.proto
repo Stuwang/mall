@@ -71,6 +71,7 @@ message LoginRequest {
 
 message LoginReply {
   UserInfo user = 1;
+  string access_token = 2;
 }
 
 message GetUserInfoRequest {

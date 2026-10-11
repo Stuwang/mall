@@ -2,6 +2,8 @@ package codeerror
 
 import (
 	"fmt"
+
+	"helloworld/base/logger"
 )
 
 func (ce CodeError) Error() string {
@@ -19,6 +21,32 @@ func (ce CodeError) Errorf(msg string, args ...interface{}) CodeError {
 	}
 }
 
+// As 判断是否为业务 CodeError
+func As(err error) (CodeError, bool) {
+	if err == nil {
+		return CodeError{}, false
+	}
+	if ce, ok := err.(CodeError); ok {
+		return ce, true
+	}
+	if ce, ok := err.(*CodeError); ok && ce != nil {
+		return *ce, true
+	}
+	return CodeError{}, false
+}
+
+// OrSystem 业务 CodeError 原样返回；未知错误打日志并返回 ErrorSystem
+func OrSystem(err error, format string, args ...interface{}) error {
+	if err == nil {
+		return nil
+	}
+	if ce, ok := As(err); ok {
+		return ce
+	}
+	logger.Errorf(format+": %v", append(args, err)...)
+	return ErrorSystem
+}
+
 var (
 	_ error = CodeError{}
 	_ error = &CodeError{}
@@ -32,5 +60,8 @@ var (
 	ErrorPanic        = CodeError{Code: 1003, Msg: "panic error"}
 	ErrorNotOnline    = CodeError{Code: 1004, Msg: "not online"}
 	ErrorUnauthorized = CodeError{Code: 1005, Msg: "unauthorized"}
+	ErrorUserExists   = CodeError{Code: 1006, Msg: "user already exists"}
+	ErrorUserNotFound = CodeError{Code: 1007, Msg: "user not found"}
+	ErrorPassword     = CodeError{Code: 1008, Msg: "password error"}
 	ErrorSystem       = CodeError{Code: 1, Msg: "system error"}
 )

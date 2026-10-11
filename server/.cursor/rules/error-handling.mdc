@@ -1,0 +1,39 @@
+---
+description: 未知错误打日志并返回系统错误；业务 CodeError 原样返回
+alwaysApply: true
+---
+
+# 错误处理原则
+
+## 规则
+
+1. **业务错误**（参数错误、未登录、用户不存在等）：直接返回对应的 `codeerror.CodeError`，不要包成系统错误。
+2. **未知 / 基础设施错误**（DB、IO、第三方、marshal 失败等）：**打印错误日志**，并返回 `codeerror.ErrorSystem`，禁止把原始 error 文案直接暴露给客户端。
+3. 优先使用 `codeerror.OrSystem(err, "上下文 %v", arg)`：已是 CodeError 则原样返回，否则打日志并返回 `ErrorSystem`。
+
+## 示例
+
+```go
+// ✅ 业务错误原样返回
+if username == "" {
+    return nil, codeerror.ErrorParam
+}
+if errors.Is(err, gorm.ErrRecordNotFound) {
+    return nil, codeerror.ErrorUserNotFound
+}
+
+// ✅ 未知错误：打日志 + 系统错误
+if err != nil {
+    return nil, codeerror.OrSystem(err, "GetByID id=%d", id)
+}
+
+// ❌ 禁止：把底层错误直接返回给调用方/客户端
+if err != nil {
+    return nil, err
+}
+```
+
+## 分层注意
+
+- dao / controller / middleware / encoder 均遵守本原则。
+- HTTP `ErrorEncoder` 遇到非 CodeError 时同样打日志并按 `ErrorSystem` 编码响应。

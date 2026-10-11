@@ -85,17 +85,17 @@ func main() {
 
 	auth.Init(cfg.Auth, cfg.Env)
 	auth.SetUserLoader(func(userID int64) (*auth.AuthInfo, error) {
-		u, err := userdao.GetByID(userID)
+		u, err := userdao.NewUserDao(nil).GetByID(userID)
 		if err != nil {
 			logger.Errorf("UserLoader GetByID userID=%d err=%v", userID, err)
 			return nil, err
 		}
-		login, err := userdao.GetPasswordLoginByUserID(userID)
+		login, err := userdao.NewLoginDao(nil).GetPasswordByUserID(userID)
 		username := ""
 		if err == nil {
 			username = login.Identifier
 		} else if ce, ok := codeerror.As(err); !ok || !ce.Is(codeerror.ErrorUserNotFound) {
-			logger.Errorf("UserLoader GetPasswordLoginByUserID userID=%d err=%v", userID, err)
+			logger.Errorf("UserLoader GetPasswordByUserID userID=%d err=%v", userID, err)
 			return nil, err
 		}
 		return &auth.AuthInfo{

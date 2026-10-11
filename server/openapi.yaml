@@ -768,8 +768,10 @@ components:
                 stock:
                     type: integer
                     format: int32
-                cover:
-                    type: string
+                images:
+                    type: array
+                    items:
+                        type: string
                 status:
                     enum:
                         - PRODUCT_STATUS_ON
@@ -875,8 +877,10 @@ components:
                 price:
                     type: integer
                     format: int64
-                cover:
-                    type: string
+                images:
+                    type: array
+                    items:
+                        type: string
         product.v1.AdminUpdateProductStockRequest:
             type: object
             properties:
@@ -999,8 +1003,11 @@ components:
                         - PRODUCT_STATUS_OFF
                     type: string
                     format: enum
-                cover:
-                    type: string
+                images:
+                    type: array
+                    items:
+                        type: string
+                    description: 商品图片列表（按顺序）
                 ct:
                     type: integer
                     format: int64

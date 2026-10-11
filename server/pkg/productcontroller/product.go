@@ -21,10 +21,8 @@ func New() *Controller {
 	return &Controller{}
 }
 
-// ----- user -----
-
 func (c *Controller) ListProducts(ctx context.Context, req *apiproduct.ListProductsRequest) (*apiproduct.ListProductsReply, error) {
-	list, total, err := productdao.ListProducts(productdao.ProductQuery{
+	list, total, err := productdao.NewProductDao(nil).List(productdao.ProductQuery{
 		Status:   productmodel.StatusOn,
 		Keyword:  req.Keyword,
 		Page:     int(req.Page),
@@ -34,7 +32,12 @@ func (c *Controller) ListProducts(ctx context.Context, req *apiproduct.ListProdu
 		logger.Errorf("ListProducts err=%v", err)
 		return nil, err
 	}
-	return &apiproduct.ListProductsReply{List: toProductInfos(list), Total: total}, nil
+	imageMap, err := productdao.NewImageDao(nil).ListByProductIDs(productIDs(list))
+	if err != nil {
+		logger.Errorf("ListProducts ListByProductIDs err=%v", err)
+		return nil, err
+	}
+	return &apiproduct.ListProductsReply{List: toProductInfos(list, imageMap), Total: total}, nil
 }
 
 func (c *Controller) ListProductsByCategory(ctx context.Context, req *apiproduct.ListProductsByCategoryRequest) (*apiproduct.ListProductsReply, error) {
@@ -42,7 +45,7 @@ func (c *Controller) ListProductsByCategory(ctx context.Context, req *apiproduct
 		logger.Errorf("ListProductsByCategory invalid category_id=%d", req.CategoryId)
 		return nil, codeerror.ErrorParam
 	}
-	list, total, err := productdao.ListProducts(productdao.ProductQuery{
+	list, total, err := productdao.NewProductDao(nil).List(productdao.ProductQuery{
 		CategoryID: req.CategoryId,
 		Status:     productmodel.StatusOn,
 		Page:       int(req.Page),
@@ -52,7 +55,12 @@ func (c *Controller) ListProductsByCategory(ctx context.Context, req *apiproduct
 		logger.Errorf("ListProductsByCategory categoryID=%d err=%v", req.CategoryId, err)
 		return nil, err
 	}
-	return &apiproduct.ListProductsReply{List: toProductInfos(list), Total: total}, nil
+	imageMap, err := productdao.NewImageDao(nil).ListByProductIDs(productIDs(list))
+	if err != nil {
+		logger.Errorf("ListProductsByCategory ListByProductIDs err=%v", err)
+		return nil, err
+	}
+	return &apiproduct.ListProductsReply{List: toProductInfos(list, imageMap), Total: total}, nil
 }
 
 func (c *Controller) GetProduct(ctx context.Context, req *apiproduct.GetProductRequest) (*apiproduct.GetProductReply, error) {
@@ -60,7 +68,7 @@ func (c *Controller) GetProduct(ctx context.Context, req *apiproduct.GetProductR
 		logger.Errorf("GetProduct invalid id=%d", req.Id)
 		return nil, codeerror.ErrorParam
 	}
-	p, err := productdao.GetProductByID(req.Id)
+	p, err := productdao.NewProductDao(nil).GetByID(req.Id)
 	if err != nil {
 		logger.Errorf("GetProduct id=%d err=%v", req.Id, err)
 		return nil, err
@@ -69,11 +77,16 @@ func (c *Controller) GetProduct(ctx context.Context, req *apiproduct.GetProductR
 		logger.Errorf("GetProduct not on shelf id=%d status=%d", req.Id, p.Status)
 		return nil, codeerror.ErrorParam.Errorf("product not found")
 	}
-	return &apiproduct.GetProductReply{Product: toProductInfo(p)}, nil
+	images, err := productdao.NewImageDao(nil).ListByProductID(p.ID)
+	if err != nil {
+		logger.Errorf("GetProduct ListByProductID id=%d err=%v", p.ID, err)
+		return nil, err
+	}
+	return &apiproduct.GetProductReply{Product: toProductInfo(p, images)}, nil
 }
 
 func (c *Controller) ListCategories(ctx context.Context, req *apiproduct.ListCategoriesRequest) (*apiproduct.ListCategoriesReply, error) {
-	list, err := productdao.ListCategories(true)
+	list, err := productdao.NewCategoryDao(nil).List(true)
 	if err != nil {
 		logger.Errorf("ListCategories err=%v", err)
 		return nil, err

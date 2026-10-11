@@ -141,7 +141,8 @@ message ProductInfo {
   int64 price = 5;
   int32 stock = 6;
   ProductStatus status = 7;
-  string cover = 8;
+  // 商品图片列表（按顺序）
+  repeated string images = 8;
   int64 ct = 9;
   int64 ut = 10;
 }
@@ -212,7 +213,7 @@ message AdminCreateProductRequest {
   string description = 4;
   int64 price = 5;
   int32 stock = 6;
-  string cover = 7;
+  repeated string images = 7;
   ProductStatus status = 8;
 }
 
@@ -222,7 +223,7 @@ message AdminUpdateProductRequest {
   string name = 3;
   string description = 4;
   int64 price = 5;
-  string cover = 6;
+  repeated string images = 6;
 }
 
 message AdminSetProductStatusRequest {

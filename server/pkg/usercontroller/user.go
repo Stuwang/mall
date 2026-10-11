@@ -48,16 +48,16 @@ func (c *Controller) Login(ctx context.Context, req *apiuser.LoginRequest) (*api
 		logger.Errorf("Login param error username=%q password_empty=%v", username, password == "")
 		return nil, codeerror.ErrorParam
 	}
-	login, err := userdao.GetLoginByPasswordAccount(username)
+	login, err := userdao.NewLoginDao(nil).GetByPasswordAccount(username)
 	if err != nil {
-		logger.Errorf("Login GetLoginByPasswordAccount username=%s err=%v", username, err)
+		logger.Errorf("Login GetByPasswordAccount username=%s err=%v", username, err)
 		return nil, err
 	}
 	if login.Credential != password {
 		logger.Errorf("Login password mismatch username=%s userID=%d", username, login.UserID)
 		return nil, codeerror.ErrorPassword
 	}
-	u, err := userdao.GetByID(login.UserID)
+	u, err := userdao.NewUserDao(nil).GetByID(login.UserID)
 	if err != nil {
 		logger.Errorf("Login GetByID userID=%d err=%v", login.UserID, err)
 		return nil, err
@@ -78,7 +78,7 @@ func (c *Controller) GetUserInfo(ctx context.Context, req *apiuser.GetUserInfoRe
 	if uid <= 0 {
 		uid = info.UserID
 	}
-	u, err := userdao.GetByID(uid)
+	u, err := userdao.NewUserDao(nil).GetByID(uid)
 	if err != nil {
 		logger.Errorf("GetUserInfo GetByID uid=%d err=%v", uid, err)
 		return nil, err
@@ -95,9 +95,9 @@ func (c *Controller) GetUserInfo(ctx context.Context, req *apiuser.GetUserInfoRe
 
 func (c *Controller) UpdateUserInfo(ctx context.Context, req *apiuser.UpdateUserInfoRequest) (*apiuser.UpdateUserInfoReply, error) {
 	info := auth.MustFromContext(ctx)
-	u, err := userdao.UpdateUser(info.UserID, strings.TrimSpace(req.Nickname), req.Sex)
+	u, err := userdao.NewUserDao(nil).Update(info.UserID, strings.TrimSpace(req.Nickname), req.Sex)
 	if err != nil {
-		logger.Errorf("UpdateUserInfo UpdateUser userID=%d err=%v", info.UserID, err)
+		logger.Errorf("UpdateUserInfo Update userID=%d err=%v", info.UserID, err)
 		return nil, err
 	}
 	username, err := resolveUsername(u.ID, info.Username)
@@ -111,7 +111,7 @@ func (c *Controller) UpdateUserInfo(ctx context.Context, req *apiuser.UpdateUser
 }
 
 func resolveUsername(userID int64, fallback string) (string, error) {
-	login, err := userdao.GetPasswordLoginByUserID(userID)
+	login, err := userdao.NewLoginDao(nil).GetPasswordByUserID(userID)
 	if err == nil {
 		return login.Identifier, nil
 	}

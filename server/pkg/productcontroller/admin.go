@@ -4,10 +4,12 @@ import (
 	"context"
 	"strings"
 
+	"gorm.io/gorm"
 	apiproduct "helloworld/api/product"
 	"helloworld/base/codeerror"
 	"helloworld/base/logger"
 	"helloworld/common/auth"
+	"helloworld/common/database"
 	"helloworld/pkg/dao/productdao"
 	productmodel "helloworld/pkg/model/product"
 )
@@ -17,7 +19,7 @@ func (c *Controller) AdminCreateCategory(ctx context.Context, req *apiproduct.Ad
 		logger.Errorf("AdminCreateCategory RequireAdmin err=%v", err)
 		return nil, err
 	}
-	cat, err := productdao.CreateCategory(req.Name, req.Sort, int32(req.Status))
+	cat, err := productdao.NewCategoryDao(nil).Create(req.Name, req.Sort, int32(req.Status))
 	if err != nil {
 		logger.Errorf("AdminCreateCategory name=%s err=%v", req.Name, err)
 		return nil, err
@@ -34,7 +36,7 @@ func (c *Controller) AdminUpdateCategory(ctx context.Context, req *apiproduct.Ad
 		logger.Errorf("AdminUpdateCategory invalid id=%d", req.Id)
 		return nil, codeerror.ErrorParam
 	}
-	cat, err := productdao.UpdateCategory(req.Id, req.Name, req.Sort, int32(req.Status))
+	cat, err := productdao.NewCategoryDao(nil).Update(req.Id, req.Name, req.Sort, int32(req.Status))
 	if err != nil {
 		logger.Errorf("AdminUpdateCategory id=%d err=%v", req.Id, err)
 		return nil, err
@@ -47,7 +49,7 @@ func (c *Controller) AdminListCategories(ctx context.Context, req *apiproduct.Ad
 		logger.Errorf("AdminListCategories RequireAdmin err=%v", err)
 		return nil, err
 	}
-	list, err := productdao.ListCategories(false)
+	list, err := productdao.NewCategoryDao(nil).List(false)
 	if err != nil {
 		logger.Errorf("AdminListCategories err=%v", err)
 		return nil, err
@@ -60,20 +62,46 @@ func (c *Controller) AdminCreateProduct(ctx context.Context, req *apiproduct.Adm
 		logger.Errorf("AdminCreateProduct RequireAdmin err=%v", err)
 		return nil, err
 	}
-	p, err := productdao.CreateProduct(&productmodel.Product{
-		CategoryID:  req.CategoryId,
-		Name:        req.Name,
-		Description: req.Description,
-		Price:       req.Price,
-		Stock:       req.Stock,
-		Cover:       req.Cover,
-		Status:      int32(req.Status),
+
+	var (
+		created *productmodel.Product
+		images  []productmodel.ProductImage
+	)
+	err := database.GetDb().Transaction(func(tx *gorm.DB) error {
+		categoryDao := productdao.NewCategoryDao(tx)
+		productDao := productdao.NewProductDao(tx)
+		imageDao := productdao.NewImageDao(tx)
+
+		if _, err := categoryDao.GetByID(req.CategoryId); err != nil {
+			return err
+		}
+		p, err := productDao.Create(&productmodel.Product{
+			CategoryID:  req.CategoryId,
+			Name:        req.Name,
+			Description: req.Description,
+			Price:       req.Price,
+			Stock:       req.Stock,
+			Status:      int32(req.Status),
+		})
+		if err != nil {
+			return err
+		}
+		if err := imageDao.Replace(p.ID, req.Images); err != nil {
+			return err
+		}
+		imgs, err := imageDao.ListByProductID(p.ID)
+		if err != nil {
+			return err
+		}
+		created = p
+		images = imgs
+		return nil
 	})
 	if err != nil {
 		logger.Errorf("AdminCreateProduct name=%s err=%v", req.Name, err)
-		return nil, err
+		return nil, codeerror.OrSystem(err, "AdminCreateProduct name=%s", req.Name)
 	}
-	return &apiproduct.AdminProductReply{Product: toProductInfo(p)}, nil
+	return &apiproduct.AdminProductReply{Product: toProductInfo(created, images)}, nil
 }
 
 func (c *Controller) AdminUpdateProduct(ctx context.Context, req *apiproduct.AdminUpdateProductRequest) (*apiproduct.AdminProductReply, error) {
@@ -85,12 +113,35 @@ func (c *Controller) AdminUpdateProduct(ctx context.Context, req *apiproduct.Adm
 		logger.Errorf("AdminUpdateProduct invalid id=%d", req.Id)
 		return nil, codeerror.ErrorParam
 	}
-	p, err := productdao.UpdateProduct(req.Id, req.Name, req.Description, req.Cover, req.Price)
+
+	var (
+		updated *productmodel.Product
+		images  []productmodel.ProductImage
+	)
+	err := database.GetDb().Transaction(func(tx *gorm.DB) error {
+		productDao := productdao.NewProductDao(tx)
+		imageDao := productdao.NewImageDao(tx)
+
+		p, err := productDao.Update(req.Id, req.Name, req.Description, req.Price)
+		if err != nil {
+			return err
+		}
+		if err := imageDao.Replace(p.ID, req.Images); err != nil {
+			return err
+		}
+		imgs, err := imageDao.ListByProductID(p.ID)
+		if err != nil {
+			return err
+		}
+		updated = p
+		images = imgs
+		return nil
+	})
 	if err != nil {
 		logger.Errorf("AdminUpdateProduct id=%d err=%v", req.Id, err)
-		return nil, err
+		return nil, codeerror.OrSystem(err, "AdminUpdateProduct id=%d", req.Id)
 	}
-	return &apiproduct.AdminProductReply{Product: toProductInfo(p)}, nil
+	return &apiproduct.AdminProductReply{Product: toProductInfo(updated, images)}, nil
 }
 
 func (c *Controller) AdminSetProductStatus(ctx context.Context, req *apiproduct.AdminSetProductStatusRequest) (*apiproduct.AdminProductReply, error) {
@@ -102,12 +153,17 @@ func (c *Controller) AdminSetProductStatus(ctx context.Context, req *apiproduct.
 		logger.Errorf("AdminSetProductStatus invalid id=%d", req.Id)
 		return nil, codeerror.ErrorParam
 	}
-	p, err := productdao.SetProductStatus(req.Id, int32(req.Status))
+	p, err := productdao.NewProductDao(nil).SetStatus(req.Id, int32(req.Status))
 	if err != nil {
 		logger.Errorf("AdminSetProductStatus id=%d status=%v err=%v", req.Id, req.Status, err)
 		return nil, err
 	}
-	return &apiproduct.AdminProductReply{Product: toProductInfo(p)}, nil
+	images, err := productdao.NewImageDao(nil).ListByProductID(p.ID)
+	if err != nil {
+		logger.Errorf("AdminSetProductStatus ListByProductID id=%d err=%v", p.ID, err)
+		return nil, err
+	}
+	return &apiproduct.AdminProductReply{Product: toProductInfo(p, images)}, nil
 }
 
 func (c *Controller) AdminUpdateProductStock(ctx context.Context, req *apiproduct.AdminUpdateProductStockRequest) (*apiproduct.AdminProductReply, error) {
@@ -119,12 +175,17 @@ func (c *Controller) AdminUpdateProductStock(ctx context.Context, req *apiproduc
 		logger.Errorf("AdminUpdateProductStock invalid id=%d", req.Id)
 		return nil, codeerror.ErrorParam
 	}
-	p, err := productdao.UpdateProductStock(req.Id, req.Stock)
+	p, err := productdao.NewProductDao(nil).UpdateStock(req.Id, req.Stock)
 	if err != nil {
 		logger.Errorf("AdminUpdateProductStock id=%d stock=%d err=%v", req.Id, req.Stock, err)
 		return nil, err
 	}
-	return &apiproduct.AdminProductReply{Product: toProductInfo(p)}, nil
+	images, err := productdao.NewImageDao(nil).ListByProductID(p.ID)
+	if err != nil {
+		logger.Errorf("AdminUpdateProductStock ListByProductID id=%d err=%v", p.ID, err)
+		return nil, err
+	}
+	return &apiproduct.AdminProductReply{Product: toProductInfo(p, images)}, nil
 }
 
 func (c *Controller) AdminUpdateProductCategory(ctx context.Context, req *apiproduct.AdminUpdateProductCategoryRequest) (*apiproduct.AdminProductReply, error) {
@@ -136,12 +197,36 @@ func (c *Controller) AdminUpdateProductCategory(ctx context.Context, req *apipro
 		logger.Errorf("AdminUpdateProductCategory invalid id=%d category_id=%d", req.Id, req.CategoryId)
 		return nil, codeerror.ErrorParam
 	}
-	p, err := productdao.UpdateProductCategory(req.Id, req.CategoryId)
+
+	var (
+		updated *productmodel.Product
+		images  []productmodel.ProductImage
+	)
+	err := database.GetDb().Transaction(func(tx *gorm.DB) error {
+		categoryDao := productdao.NewCategoryDao(tx)
+		productDao := productdao.NewProductDao(tx)
+		imageDao := productdao.NewImageDao(tx)
+
+		if _, err := categoryDao.GetByID(req.CategoryId); err != nil {
+			return err
+		}
+		p, err := productDao.UpdateCategory(req.Id, req.CategoryId)
+		if err != nil {
+			return err
+		}
+		imgs, err := imageDao.ListByProductID(p.ID)
+		if err != nil {
+			return err
+		}
+		updated = p
+		images = imgs
+		return nil
+	})
 	if err != nil {
 		logger.Errorf("AdminUpdateProductCategory id=%d categoryID=%d err=%v", req.Id, req.CategoryId, err)
-		return nil, err
+		return nil, codeerror.OrSystem(err, "AdminUpdateProductCategory id=%d", req.Id)
 	}
-	return &apiproduct.AdminProductReply{Product: toProductInfo(p)}, nil
+	return &apiproduct.AdminProductReply{Product: toProductInfo(updated, images)}, nil
 }
 
 func (c *Controller) AdminListProducts(ctx context.Context, req *apiproduct.AdminListProductsRequest) (*apiproduct.ListProductsReply, error) {
@@ -149,7 +234,7 @@ func (c *Controller) AdminListProducts(ctx context.Context, req *apiproduct.Admi
 		logger.Errorf("AdminListProducts RequireAdmin err=%v", err)
 		return nil, err
 	}
-	list, total, err := productdao.ListProducts(productdao.ProductQuery{
+	list, total, err := productdao.NewProductDao(nil).List(productdao.ProductQuery{
 		CategoryID: req.CategoryId,
 		Status:     int32(req.Status),
 		Keyword:    strings.TrimSpace(req.Keyword),
@@ -160,7 +245,12 @@ func (c *Controller) AdminListProducts(ctx context.Context, req *apiproduct.Admi
 		logger.Errorf("AdminListProducts err=%v", err)
 		return nil, err
 	}
-	return &apiproduct.ListProductsReply{List: toProductInfos(list), Total: total}, nil
+	imageMap, err := productdao.NewImageDao(nil).ListByProductIDs(productIDs(list))
+	if err != nil {
+		logger.Errorf("AdminListProducts ListByProductIDs err=%v", err)
+		return nil, err
+	}
+	return &apiproduct.ListProductsReply{List: toProductInfos(list, imageMap), Total: total}, nil
 }
 
 func (c *Controller) AdminGetProduct(ctx context.Context, req *apiproduct.AdminGetProductRequest) (*apiproduct.GetProductReply, error) {
@@ -172,10 +262,15 @@ func (c *Controller) AdminGetProduct(ctx context.Context, req *apiproduct.AdminG
 		logger.Errorf("AdminGetProduct invalid id=%d", req.Id)
 		return nil, codeerror.ErrorParam
 	}
-	p, err := productdao.GetProductByID(req.Id)
+	p, err := productdao.NewProductDao(nil).GetByID(req.Id)
 	if err != nil {
 		logger.Errorf("AdminGetProduct id=%d err=%v", req.Id, err)
 		return nil, err
 	}
-	return &apiproduct.GetProductReply{Product: toProductInfo(p)}, nil
+	images, err := productdao.NewImageDao(nil).ListByProductID(p.ID)
+	if err != nil {
+		logger.Errorf("AdminGetProduct ListByProductID id=%d err=%v", p.ID, err)
+		return nil, err
+	}
+	return &apiproduct.GetProductReply{Product: toProductInfo(p, images)}, nil
 }

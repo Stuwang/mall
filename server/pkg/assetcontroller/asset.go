@@ -27,13 +27,12 @@ func (c *Controller) GetUserAssets(ctx context.Context, req *apiasset.GetUserAss
 		return nil, codeerror.ErrorParam
 	}
 
-	list, err := assetdao.ListByUserID(info.UserID, assetType)
+	list, err := assetdao.NewAssetDao(nil).ListByUserID(info.UserID, assetType)
 	if err != nil {
 		logger.Errorf("GetUserAssets ListByUserID userID=%d type=%d err=%v", info.UserID, assetType, err)
 		return nil, err
 	}
 
-	// 未查到积分记录时补一条余额 0，方便前端展示
 	if (assetType == 0 || assetType == assetmodel.TypePoint) && !hasType(list, assetmodel.TypePoint) {
 		list = append(list, assetmodel.UserAsset{
 			UserID:  info.UserID,
@@ -57,9 +56,9 @@ func (c *Controller) GetAssetHistory(ctx context.Context, req *apiasset.GetAsset
 		return nil, codeerror.ErrorParam
 	}
 
-	list, total, err := assetdao.ListHistory(info.UserID, assetType, int(req.Page), int(req.PageSize))
+	list, total, err := assetdao.NewHistoryDao(nil).List(info.UserID, assetType, int(req.Page), int(req.PageSize))
 	if err != nil {
-		logger.Errorf("GetAssetHistory ListHistory userID=%d type=%d err=%v", info.UserID, assetType, err)
+		logger.Errorf("GetAssetHistory List userID=%d type=%d err=%v", info.UserID, assetType, err)
 		return nil, err
 	}
 

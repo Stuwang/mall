@@ -86,7 +86,7 @@ func (c *Controller) AdminCreateProduct(ctx context.Context, req *apiproduct.Adm
 		if err != nil {
 			return err
 		}
-		if err := imageDao.Replace(p.ID, req.Images); err != nil {
+		if err := imageDao.Replace(p.ID, normalizeImageURLs(req.Images)); err != nil {
 			return err
 		}
 		imgs, err := imageDao.ListByProductID(p.ID)
@@ -126,7 +126,7 @@ func (c *Controller) AdminUpdateProduct(ctx context.Context, req *apiproduct.Adm
 		if err != nil {
 			return err
 		}
-		if err := imageDao.Replace(p.ID, req.Images); err != nil {
+		if err := imageDao.Replace(p.ID, normalizeImageURLs(req.Images)); err != nil {
 			return err
 		}
 		imgs, err := imageDao.ListByProductID(p.ID)
@@ -227,6 +227,28 @@ func (c *Controller) AdminUpdateProductCategory(ctx context.Context, req *apipro
 		return nil, codeerror.OrSystem(err, "AdminUpdateProductCategory id=%d", req.Id)
 	}
 	return &apiproduct.AdminProductReply{Product: toProductInfo(updated, images)}, nil
+}
+
+func (c *Controller) AdminSetProductHot(ctx context.Context, req *apiproduct.AdminSetProductHotRequest) (*apiproduct.AdminProductReply, error) {
+	if _, err := auth.RequireAdmin(ctx); err != nil {
+		logger.Errorf("AdminSetProductHot RequireAdmin err=%v", err)
+		return nil, err
+	}
+	if req.Id <= 0 {
+		logger.Errorf("AdminSetProductHot invalid id=%d", req.Id)
+		return nil, codeerror.ErrorParam
+	}
+	p, err := productdao.NewProductDao(nil).SetHot(req.Id, req.IsHot)
+	if err != nil {
+		logger.Errorf("AdminSetProductHot id=%d isHot=%v err=%v", req.Id, req.IsHot, err)
+		return nil, err
+	}
+	images, err := productdao.NewImageDao(nil).ListByProductID(p.ID)
+	if err != nil {
+		logger.Errorf("AdminSetProductHot ListByProductID id=%d err=%v", p.ID, err)
+		return nil, err
+	}
+	return &apiproduct.AdminProductReply{Product: toProductInfo(p, images)}, nil
 }
 
 func (c *Controller) AdminListProducts(ctx context.Context, req *apiproduct.AdminListProductsRequest) (*apiproduct.ListProductsReply, error) {

@@ -1,0 +1,157 @@
+syntax = "proto3";
+
+package misc.v1;
+
+import "google/api/annotations.proto";
+import "base/base.proto";
+
+option go_package = "helloworld/api/misc;misc";
+
+// 用户侧杂项展示（免登录）：Banner / 公告
+service Misc {
+  rpc ListBanners (ListBannersRequest) returns (ListBannersReply) {
+    option (google.api.http) = {
+      post: "/misc/api/v1/banner/list"
+      body: "*"
+    };
+  }
+
+  rpc ListAnnouncements (ListAnnouncementsRequest) returns (ListAnnouncementsReply) {
+    option (google.api.http) = {
+      post: "/misc/api/v1/announcement/list"
+      body: "*"
+    };
+  }
+}
+
+// 管理侧 Banner / 公告（需 admin）
+service AdminMisc {
+  // ----- Banner -----
+  rpc AdminCreateBanner (AdminCreateBannerRequest) returns (AdminBannerReply) {
+    option (google.api.http) = {
+      post: "/admin/api/v1/banner/create"
+      body: "*"
+    };
+  }
+  rpc AdminUpdateBanner (AdminUpdateBannerRequest) returns (AdminBannerReply) {
+    option (google.api.http) = {
+      post: "/admin/api/v1/banner/update"
+      body: "*"
+    };
+  }
+  rpc AdminListBanners (AdminListBannersRequest) returns (ListBannersReply) {
+    option (google.api.http) = {
+      post: "/admin/api/v1/banner/list"
+      body: "*"
+    };
+  }
+
+  // ----- 公告 -----
+  rpc AdminCreateAnnouncement (AdminCreateAnnouncementRequest) returns (AdminAnnouncementReply) {
+    option (google.api.http) = {
+      post: "/admin/api/v1/announcement/create"
+      body: "*"
+    };
+  }
+  rpc AdminUpdateAnnouncement (AdminUpdateAnnouncementRequest) returns (AdminAnnouncementReply) {
+    option (google.api.http) = {
+      post: "/admin/api/v1/announcement/update"
+      body: "*"
+    };
+  }
+  rpc AdminListAnnouncements (AdminListAnnouncementsRequest) returns (ListAnnouncementsReply) {
+    option (google.api.http) = {
+      post: "/admin/api/v1/announcement/list"
+      body: "*"
+    };
+  }
+}
+
+// 启用 / 停用
+enum MiscStatus {
+  MISC_STATUS_UNSPECIFIED = 0;
+  MISC_STATUS_ON = 1;
+  MISC_STATUS_OFF = 2;
+}
+
+message BannerInfo {
+  int64 id = 1;
+  // 图片 URL（暂不支持跳转）
+  string image_url = 2;
+  int32 sort = 3;
+  MiscStatus status = 4;
+  int64 ct = 5;
+  int64 ut = 6;
+}
+
+message AnnouncementInfo {
+  int64 id = 1;
+  // 公告文案
+  string content = 2;
+  int32 sort = 3;
+  MiscStatus status = 4;
+  int64 ct = 5;
+  int64 ut = 6;
+}
+
+message ListBannersRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+}
+
+message ListBannersReply {
+  repeated BannerInfo list = 1;
+}
+
+message ListAnnouncementsRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+}
+
+message ListAnnouncementsReply {
+  repeated AnnouncementInfo list = 1;
+}
+
+message AdminCreateBannerRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  string image_url = 2;
+  int32 sort = 3;
+  MiscStatus status = 4;
+}
+
+message AdminUpdateBannerRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 id = 2;
+  string image_url = 3;
+  int32 sort = 4;
+  MiscStatus status = 5;
+}
+
+message AdminListBannersRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+}
+
+message AdminBannerReply {
+  BannerInfo banner = 1;
+}
+
+message AdminCreateAnnouncementRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  string content = 2;
+  int32 sort = 3;
+  MiscStatus status = 4;
+}
+
+message AdminUpdateAnnouncementRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 id = 2;
+  string content = 3;
+  int32 sort = 4;
+  MiscStatus status = 5;
+}
+
+message AdminListAnnouncementsRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+}
+
+message AdminAnnouncementReply {
+  AnnouncementInfo announcement = 1;
+}

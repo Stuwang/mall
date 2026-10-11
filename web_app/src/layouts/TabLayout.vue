@@ -10,11 +10,16 @@ const router = useRouter()
 const authStore = useAuthStore()
 const cartStore = useCartStore()
 
+const tabRoutes = [
+  routeNames.home,
+  routeNames.catalog,
+  routeNames.cart,
+  routeNames.mine,
+] as const
+
 const active = computed(() => {
-  const name = route.name
-  if (name === routeNames.cart) return 1
-  if (name === routeNames.mine) return 2
-  return 0
+  const idx = tabRoutes.indexOf(route.name as (typeof tabRoutes)[number])
+  return idx >= 0 ? idx : 0
 })
 
 const cartBadge = computed(() =>
@@ -34,8 +39,7 @@ watch(
 )
 
 function onChange(index: number | string): void {
-  const map = [routeNames.home, routeNames.cart, routeNames.mine] as const
-  const target = map[Number(index)]
+  const target = tabRoutes[Number(index)]
   if (target && route.name !== target) {
     void router.push({ name: target })
   }
@@ -46,7 +50,8 @@ function onChange(index: number | string): void {
   <div class="page page-with-tab">
     <RouterView />
     <van-tabbar :model-value="active" fixed placeholder safe-area-inset-bottom @change="onChange">
-      <van-tabbar-item icon="shop-o">首页</van-tabbar-item>
+      <van-tabbar-item icon="home-o">首页</van-tabbar-item>
+      <van-tabbar-item icon="apps-o">分类</van-tabbar-item>
       <van-tabbar-item icon="shopping-cart-o" :badge="cartBadge">购物车</van-tabbar-item>
       <van-tabbar-item icon="user-o">我的</van-tabbar-item>
     </van-tabbar>

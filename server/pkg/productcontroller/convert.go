@@ -2,6 +2,7 @@ package productcontroller
 
 import (
 	apiproduct "helloworld/api/product"
+	"helloworld/pkg/mediastore"
 	productmodel "helloworld/pkg/model/product"
 )
 
@@ -9,9 +10,10 @@ func toProductInfo(p *productmodel.Product, images []productmodel.ProductImage) 
 	if p == nil {
 		return nil
 	}
+	store := mediastore.Get()
 	urls := make([]string, 0, len(images))
 	for i := range images {
-		urls = append(urls, images[i].URL)
+		urls = append(urls, store.Resolve(images[i].URL))
 	}
 	return &apiproduct.ProductInfo{
 		Id:          p.ID,
@@ -24,6 +26,7 @@ func toProductInfo(p *productmodel.Product, images []productmodel.ProductImage) 
 		Images:      urls,
 		Ct:          p.Ct,
 		Ut:          p.Ut,
+		IsHot:       p.IsHot,
 	}
 }
 
@@ -63,4 +66,17 @@ func productIDs(list []productmodel.Product) []int64 {
 		ids = append(ids, list[i].ID)
 	}
 	return ids
+}
+
+func normalizeImageURLs(urls []string) []string {
+	store := mediastore.Get()
+	out := make([]string, 0, len(urls))
+	for _, u := range urls {
+		n := store.Normalize(u)
+		if n == "" {
+			continue
+		}
+		out = append(out, n)
+	}
+	return out
 }

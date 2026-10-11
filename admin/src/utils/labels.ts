@@ -1,6 +1,7 @@
 import {
   CancelReason,
   CategoryStatus,
+  MiscStatus,
   OrderStatus,
   OrderType,
   PayType,
@@ -23,6 +24,17 @@ export function categoryStatusLabel(status: CategoryStatus): string {
     case CategoryStatus.ON:
       return '启用'
     case CategoryStatus.OFF:
+      return '停用'
+    default:
+      return '未知'
+  }
+}
+
+export function miscStatusLabel(status: MiscStatus): string {
+  switch (status) {
+    case MiscStatus.ON:
+      return '启用'
+    case MiscStatus.OFF:
       return '停用'
     default:
       return '未知'

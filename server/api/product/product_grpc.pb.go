@@ -26,6 +26,8 @@ type ProductClient interface {
 	ListProductsByCategory(ctx context.Context, in *ListProductsByCategoryRequest, opts ...grpc.CallOption) (*ListProductsReply, error)
 	// 分类列表（启用中的）
 	ListCategories(ctx context.Context, in *ListCategoriesRequest, opts ...grpc.CallOption) (*ListCategoriesReply, error)
+	// 爆款推荐（仅上架且标记为爆款）
+	ListHotProducts(ctx context.Context, in *ListHotProductsRequest, opts ...grpc.CallOption) (*ListProductsReply, error)
 }
 
 type productClient struct {
@@ -72,6 +74,15 @@ func (c *productClient) ListCategories(ctx context.Context, in *ListCategoriesRe
 	return out, nil
 }
 
+func (c *productClient) ListHotProducts(ctx context.Context, in *ListHotProductsRequest, opts ...grpc.CallOption) (*ListProductsReply, error) {
+	out := new(ListProductsReply)
+	err := c.cc.Invoke(ctx, "/product.v1.Product/ListHotProducts", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProductServer is the server API for Product service.
 // All implementations should embed UnimplementedProductServer
 // for forward compatibility
@@ -84,6 +95,8 @@ type ProductServer interface {
 	ListProductsByCategory(context.Context, *ListProductsByCategoryRequest) (*ListProductsReply, error)
 	// 分类列表（启用中的）
 	ListCategories(context.Context, *ListCategoriesRequest) (*ListCategoriesReply, error)
+	// 爆款推荐（仅上架且标记为爆款）
+	ListHotProducts(context.Context, *ListHotProductsRequest) (*ListProductsReply, error)
 }
 
 // UnimplementedProductServer should be embedded to have forward compatible implementations.
@@ -101,6 +114,9 @@ func (UnimplementedProductServer) ListProductsByCategory(context.Context, *ListP
 }
 func (UnimplementedProductServer) ListCategories(context.Context, *ListCategoriesRequest) (*ListCategoriesReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCategories not implemented")
+}
+func (UnimplementedProductServer) ListHotProducts(context.Context, *ListHotProductsRequest) (*ListProductsReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListHotProducts not implemented")
 }
 
 // UnsafeProductServer may be embedded to opt out of forward compatibility for this service.
@@ -186,6 +202,24 @@ func _Product_ListCategories_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Product_ListHotProducts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListHotProductsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServer).ListHotProducts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/product.v1.Product/ListHotProducts",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServer).ListHotProducts(ctx, req.(*ListHotProductsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Product_ServiceDesc is the grpc.ServiceDesc for Product service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -209,6 +243,10 @@ var Product_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "ListCategories",
 			Handler:    _Product_ListCategories_Handler,
 		},
+		{
+			MethodName: "ListHotProducts",
+			Handler:    _Product_ListHotProducts_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "product/product.proto",
@@ -228,6 +266,7 @@ type AdminProductClient interface {
 	AdminSetProductStatus(ctx context.Context, in *AdminSetProductStatusRequest, opts ...grpc.CallOption) (*AdminProductReply, error)
 	AdminUpdateProductStock(ctx context.Context, in *AdminUpdateProductStockRequest, opts ...grpc.CallOption) (*AdminProductReply, error)
 	AdminUpdateProductCategory(ctx context.Context, in *AdminUpdateProductCategoryRequest, opts ...grpc.CallOption) (*AdminProductReply, error)
+	AdminSetProductHot(ctx context.Context, in *AdminSetProductHotRequest, opts ...grpc.CallOption) (*AdminProductReply, error)
 	AdminListProducts(ctx context.Context, in *AdminListProductsRequest, opts ...grpc.CallOption) (*ListProductsReply, error)
 	AdminGetProduct(ctx context.Context, in *AdminGetProductRequest, opts ...grpc.CallOption) (*GetProductReply, error)
 }
@@ -312,6 +351,15 @@ func (c *adminProductClient) AdminUpdateProductCategory(ctx context.Context, in 
 	return out, nil
 }
 
+func (c *adminProductClient) AdminSetProductHot(ctx context.Context, in *AdminSetProductHotRequest, opts ...grpc.CallOption) (*AdminProductReply, error) {
+	out := new(AdminProductReply)
+	err := c.cc.Invoke(ctx, "/product.v1.AdminProduct/AdminSetProductHot", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *adminProductClient) AdminListProducts(ctx context.Context, in *AdminListProductsRequest, opts ...grpc.CallOption) (*ListProductsReply, error) {
 	out := new(ListProductsReply)
 	err := c.cc.Invoke(ctx, "/product.v1.AdminProduct/AdminListProducts", in, out, opts...)
@@ -344,6 +392,7 @@ type AdminProductServer interface {
 	AdminSetProductStatus(context.Context, *AdminSetProductStatusRequest) (*AdminProductReply, error)
 	AdminUpdateProductStock(context.Context, *AdminUpdateProductStockRequest) (*AdminProductReply, error)
 	AdminUpdateProductCategory(context.Context, *AdminUpdateProductCategoryRequest) (*AdminProductReply, error)
+	AdminSetProductHot(context.Context, *AdminSetProductHotRequest) (*AdminProductReply, error)
 	AdminListProducts(context.Context, *AdminListProductsRequest) (*ListProductsReply, error)
 	AdminGetProduct(context.Context, *AdminGetProductRequest) (*GetProductReply, error)
 }
@@ -375,6 +424,9 @@ func (UnimplementedAdminProductServer) AdminUpdateProductStock(context.Context, 
 }
 func (UnimplementedAdminProductServer) AdminUpdateProductCategory(context.Context, *AdminUpdateProductCategoryRequest) (*AdminProductReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AdminUpdateProductCategory not implemented")
+}
+func (UnimplementedAdminProductServer) AdminSetProductHot(context.Context, *AdminSetProductHotRequest) (*AdminProductReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AdminSetProductHot not implemented")
 }
 func (UnimplementedAdminProductServer) AdminListProducts(context.Context, *AdminListProductsRequest) (*ListProductsReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AdminListProducts not implemented")
@@ -538,6 +590,24 @@ func _AdminProduct_AdminUpdateProductCategory_Handler(srv interface{}, ctx conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AdminProduct_AdminSetProductHot_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminSetProductHotRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminProductServer).AdminSetProductHot(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/product.v1.AdminProduct/AdminSetProductHot",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminProductServer).AdminSetProductHot(ctx, req.(*AdminSetProductHotRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AdminProduct_AdminListProducts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AdminListProductsRequest)
 	if err := dec(in); err != nil {
@@ -612,6 +682,10 @@ var AdminProduct_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AdminUpdateProductCategory",
 			Handler:    _AdminProduct_AdminUpdateProductCategory_Handler,
+		},
+		{
+			MethodName: "AdminSetProductHot",
+			Handler:    _AdminProduct_AdminSetProductHot_Handler,
 		},
 		{
 			MethodName: "AdminListProducts",

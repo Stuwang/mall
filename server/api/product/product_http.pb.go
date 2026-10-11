@@ -21,6 +21,7 @@ const _ = http.SupportPackageIsVersion1
 
 const OperationProductGetProduct = "/product.v1.Product/GetProduct"
 const OperationProductListCategories = "/product.v1.Product/ListCategories"
+const OperationProductListHotProducts = "/product.v1.Product/ListHotProducts"
 const OperationProductListProducts = "/product.v1.Product/ListProducts"
 const OperationProductListProductsByCategory = "/product.v1.Product/ListProductsByCategory"
 
@@ -29,6 +30,8 @@ type ProductHTTPServer interface {
 	GetProduct(context.Context, *GetProductRequest) (*GetProductReply, error)
 	// ListCategories 分类列表（启用中的）
 	ListCategories(context.Context, *ListCategoriesRequest) (*ListCategoriesReply, error)
+	// ListHotProducts 爆款推荐（仅上架且标记为爆款）
+	ListHotProducts(context.Context, *ListHotProductsRequest) (*ListProductsReply, error)
 	// ListProducts 商品浏览（仅上架）
 	ListProducts(context.Context, *ListProductsRequest) (*ListProductsReply, error)
 	// ListProductsByCategory 按分类浏览商品（仅上架）
@@ -41,6 +44,7 @@ func RegisterProductHTTPServer(s *http.Server, srv ProductHTTPServer) {
 	r.POST("/product/api/v1/detail", _Product_GetProduct0_HTTP_Handler(srv))
 	r.POST("/product/api/v1/list_by_category", _Product_ListProductsByCategory0_HTTP_Handler(srv))
 	r.POST("/product/api/v1/category/list", _Product_ListCategories0_HTTP_Handler(srv))
+	r.POST("/product/api/v1/list_hot", _Product_ListHotProducts0_HTTP_Handler(srv))
 }
 
 func _Product_ListProducts0_HTTP_Handler(srv ProductHTTPServer) func(ctx http.Context) error {
@@ -131,9 +135,32 @@ func _Product_ListCategories0_HTTP_Handler(srv ProductHTTPServer) func(ctx http.
 	}
 }
 
+func _Product_ListHotProducts0_HTTP_Handler(srv ProductHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in ListHotProductsRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationProductListHotProducts)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.ListHotProducts(ctx, req.(*ListHotProductsRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*ListProductsReply)
+		return ctx.Result(200, reply)
+	}
+}
+
 type ProductHTTPClient interface {
 	GetProduct(ctx context.Context, req *GetProductRequest, opts ...http.CallOption) (rsp *GetProductReply, err error)
 	ListCategories(ctx context.Context, req *ListCategoriesRequest, opts ...http.CallOption) (rsp *ListCategoriesReply, err error)
+	ListHotProducts(ctx context.Context, req *ListHotProductsRequest, opts ...http.CallOption) (rsp *ListProductsReply, err error)
 	ListProducts(ctx context.Context, req *ListProductsRequest, opts ...http.CallOption) (rsp *ListProductsReply, err error)
 	ListProductsByCategory(ctx context.Context, req *ListProductsByCategoryRequest, opts ...http.CallOption) (rsp *ListProductsReply, err error)
 }
@@ -164,6 +191,19 @@ func (c *ProductHTTPClientImpl) ListCategories(ctx context.Context, in *ListCate
 	pattern := "/product/api/v1/category/list"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationProductListCategories))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *ProductHTTPClientImpl) ListHotProducts(ctx context.Context, in *ListHotProductsRequest, opts ...http.CallOption) (*ListProductsReply, error) {
+	var out ListProductsReply
+	pattern := "/product/api/v1/list_hot"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationProductListHotProducts))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
 	if err != nil {
@@ -203,6 +243,7 @@ const OperationAdminProductAdminCreateProduct = "/product.v1.AdminProduct/AdminC
 const OperationAdminProductAdminGetProduct = "/product.v1.AdminProduct/AdminGetProduct"
 const OperationAdminProductAdminListCategories = "/product.v1.AdminProduct/AdminListCategories"
 const OperationAdminProductAdminListProducts = "/product.v1.AdminProduct/AdminListProducts"
+const OperationAdminProductAdminSetProductHot = "/product.v1.AdminProduct/AdminSetProductHot"
 const OperationAdminProductAdminSetProductStatus = "/product.v1.AdminProduct/AdminSetProductStatus"
 const OperationAdminProductAdminUpdateCategory = "/product.v1.AdminProduct/AdminUpdateCategory"
 const OperationAdminProductAdminUpdateProduct = "/product.v1.AdminProduct/AdminUpdateProduct"
@@ -217,6 +258,7 @@ type AdminProductHTTPServer interface {
 	AdminGetProduct(context.Context, *AdminGetProductRequest) (*GetProductReply, error)
 	AdminListCategories(context.Context, *AdminListCategoriesRequest) (*ListCategoriesReply, error)
 	AdminListProducts(context.Context, *AdminListProductsRequest) (*ListProductsReply, error)
+	AdminSetProductHot(context.Context, *AdminSetProductHotRequest) (*AdminProductReply, error)
 	AdminSetProductStatus(context.Context, *AdminSetProductStatusRequest) (*AdminProductReply, error)
 	AdminUpdateCategory(context.Context, *AdminUpdateCategoryRequest) (*AdminCategoryReply, error)
 	AdminUpdateProduct(context.Context, *AdminUpdateProductRequest) (*AdminProductReply, error)
@@ -234,6 +276,7 @@ func RegisterAdminProductHTTPServer(s *http.Server, srv AdminProductHTTPServer) 
 	r.POST("/admin/api/v1/product/set_status", _AdminProduct_AdminSetProductStatus0_HTTP_Handler(srv))
 	r.POST("/admin/api/v1/product/update_stock", _AdminProduct_AdminUpdateProductStock0_HTTP_Handler(srv))
 	r.POST("/admin/api/v1/product/update_category", _AdminProduct_AdminUpdateProductCategory0_HTTP_Handler(srv))
+	r.POST("/admin/api/v1/product/set_hot", _AdminProduct_AdminSetProductHot0_HTTP_Handler(srv))
 	r.POST("/admin/api/v1/product/list", _AdminProduct_AdminListProducts0_HTTP_Handler(srv))
 	r.POST("/admin/api/v1/product/detail", _AdminProduct_AdminGetProduct0_HTTP_Handler(srv))
 }
@@ -414,6 +457,28 @@ func _AdminProduct_AdminUpdateProductCategory0_HTTP_Handler(srv AdminProductHTTP
 	}
 }
 
+func _AdminProduct_AdminSetProductHot0_HTTP_Handler(srv AdminProductHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in AdminSetProductHotRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAdminProductAdminSetProductHot)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.AdminSetProductHot(ctx, req.(*AdminSetProductHotRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*AdminProductReply)
+		return ctx.Result(200, reply)
+	}
+}
+
 func _AdminProduct_AdminListProducts0_HTTP_Handler(srv AdminProductHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in AdminListProductsRequest
@@ -464,6 +529,7 @@ type AdminProductHTTPClient interface {
 	AdminGetProduct(ctx context.Context, req *AdminGetProductRequest, opts ...http.CallOption) (rsp *GetProductReply, err error)
 	AdminListCategories(ctx context.Context, req *AdminListCategoriesRequest, opts ...http.CallOption) (rsp *ListCategoriesReply, err error)
 	AdminListProducts(ctx context.Context, req *AdminListProductsRequest, opts ...http.CallOption) (rsp *ListProductsReply, err error)
+	AdminSetProductHot(ctx context.Context, req *AdminSetProductHotRequest, opts ...http.CallOption) (rsp *AdminProductReply, err error)
 	AdminSetProductStatus(ctx context.Context, req *AdminSetProductStatusRequest, opts ...http.CallOption) (rsp *AdminProductReply, err error)
 	AdminUpdateCategory(ctx context.Context, req *AdminUpdateCategoryRequest, opts ...http.CallOption) (rsp *AdminCategoryReply, err error)
 	AdminUpdateProduct(ctx context.Context, req *AdminUpdateProductRequest, opts ...http.CallOption) (rsp *AdminProductReply, err error)
@@ -536,6 +602,19 @@ func (c *AdminProductHTTPClientImpl) AdminListProducts(ctx context.Context, in *
 	pattern := "/admin/api/v1/product/list"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationAdminProductAdminListProducts))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *AdminProductHTTPClientImpl) AdminSetProductHot(ctx context.Context, in *AdminSetProductHotRequest, opts ...http.CallOption) (*AdminProductReply, error) {
+	var out AdminProductReply
+	pattern := "/admin/api/v1/product/set_hot"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationAdminProductAdminSetProductHot))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
 	if err != nil {

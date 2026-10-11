@@ -2,6 +2,7 @@ import type { RouteRecordRaw } from 'vue-router'
 
 export const routeNames = {
   home: 'home',
+  catalog: 'catalog',
   cart: 'cart',
   mine: 'mine',
   login: 'login',
@@ -27,6 +28,12 @@ export const routes: RouteRecordRaw[] = [
         name: routeNames.home,
         component: () => import('@/views/home/HomeView.vue'),
         meta: { public: true, title: '首页', tab: true },
+      },
+      {
+        path: 'catalog',
+        name: routeNames.catalog,
+        component: () => import('@/views/catalog/CatalogView.vue'),
+        meta: { public: true, title: '分类', tab: true },
       },
       {
         path: 'cart',

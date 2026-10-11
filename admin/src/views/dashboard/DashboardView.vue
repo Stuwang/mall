@@ -7,7 +7,7 @@ const auth = useAuthStore()
 <template>
   <div class="page-card">
     <h2>欢迎回来，{{ auth.displayName }}</h2>
-    <p class="desc">左侧菜单可管理用户、分类、商品与订单。图片上传后续接入，商品图片暂填 URL。</p>
+    <p class="desc">左侧菜单可管理用户、分类、商品、Banner 与订单；商品/Banner 支持图片上传。</p>
     <el-alert
       type="info"
       :closable="false"

@@ -9,6 +9,7 @@ import (
 	"helloworld/common/auth"
 	"helloworld/pkg/dao/cartdao"
 	"helloworld/pkg/dao/productdao"
+	"helloworld/pkg/mediastore"
 	cartmodel "helloworld/pkg/model/cart"
 	"helloworld/pkg/model/common"
 	productmodel "helloworld/pkg/model/product"
@@ -221,7 +222,7 @@ func firstImage(productID int64) (string, error) {
 	if len(images) == 0 {
 		return "", nil
 	}
-	return images[0].URL, nil
+	return mediastore.Get().Resolve(images[0].URL), nil
 }
 
 func toCartItem(item *cartmodel.CartItem, product *productmodel.Product, cover string) *apicart.CartItem {

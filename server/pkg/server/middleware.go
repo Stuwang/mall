@@ -9,6 +9,7 @@ import (
 
 	"helloworld/api/helloworld"
 	"helloworld/api/mall"
+	"helloworld/api/misc"
 	"helloworld/api/product"
 	"helloworld/api/user"
 	"helloworld/common/auth"
@@ -29,9 +30,14 @@ func Middlewares() []middleware.Middleware {
 				product.OperationProductListProductsByCategory,
 				product.OperationProductGetProduct,
 				product.OperationProductListCategories,
+				product.OperationProductListHotProducts,
 				// 商城公共信息免登录
 				mall.OperationMallGetMallInfo,
+				// Banner / 公告免登录
+				misc.OperationMiscListBanners,
+				misc.OperationMiscListAnnouncements,
 			),
+			auth.WithPathPrefixWhitelist("/files/"),
 		),
 	}
 }

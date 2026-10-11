@@ -18,8 +18,23 @@ type Config struct {
 	Order    OrderConfig    `yaml:"order"`
 	Point    PointConfig    `yaml:"point"`
 	Mall     MallConfig     `yaml:"mall"`
+	Storage  StorageConfig  `yaml:"storage"`
 	// Admins 启动时幂等写入的管理员账号（按 username 去重）
 	Admins []AdminAccount `yaml:"admins"`
+}
+
+// StorageConfig 图片等媒体存储
+type StorageConfig struct {
+	// PublicBase 对外访问根地址（无尾斜杠），如 http://localhost:8080
+	PublicBase string `yaml:"public_base"`
+	// MaxUploadBytes 单文件上限，默认 5MB
+	MaxUploadBytes int64           `yaml:"max_upload_bytes"`
+	Local          LocalStorageCfg `yaml:"local"`
+}
+
+// LocalStorageCfg 本地文件存储
+type LocalStorageCfg struct {
+	RootDir string `yaml:"root_dir"`
 }
 
 // MallConfig 商城展示信息（帮助中心 / 联系方式等）
@@ -110,6 +125,15 @@ func (c *Config) applyDefaults() {
 	}
 	if c.Point.PointsPerYuan <= 0 {
 		c.Point.PointsPerYuan = 100
+	}
+	if c.Storage.PublicBase == "" {
+		c.Storage.PublicBase = "http://localhost:8080"
+	}
+	if c.Storage.Local.RootDir == "" {
+		c.Storage.Local.RootDir = "data/images"
+	}
+	if c.Storage.MaxUploadBytes <= 0 {
+		c.Storage.MaxUploadBytes = 5 << 20
 	}
 }
 

@@ -93,3 +93,22 @@ func (c *Controller) ListCategories(ctx context.Context, req *apiproduct.ListCat
 	}
 	return &apiproduct.ListCategoriesReply{List: toCategoryInfos(list)}, nil
 }
+
+func (c *Controller) ListHotProducts(ctx context.Context, req *apiproduct.ListHotProductsRequest) (*apiproduct.ListProductsReply, error) {
+	list, total, err := productdao.NewProductDao(nil).List(productdao.ProductQuery{
+		Status:   productmodel.StatusOn,
+		OnlyHot:  true,
+		Page:     int(req.Page),
+		PageSize: int(req.PageSize),
+	})
+	if err != nil {
+		logger.Errorf("ListHotProducts err=%v", err)
+		return nil, err
+	}
+	imageMap, err := productdao.NewImageDao(nil).ListByProductIDs(productIDs(list))
+	if err != nil {
+		logger.Errorf("ListHotProducts ListByProductIDs err=%v", err)
+		return nil, err
+	}
+	return &apiproduct.ListProductsReply{List: toProductInfos(list, imageMap), Total: total}, nil
+}

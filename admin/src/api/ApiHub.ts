@@ -1,7 +1,10 @@
 import { HttpClient } from '@/api/http/HttpClient'
+import { AnnouncementAdminApiService } from '@/api/services/AnnouncementAdminApiService'
 import { AssetAdminApiService } from '@/api/services/AssetAdminApiService'
 import { AuthApiService } from '@/api/services/AuthApiService'
+import { BannerAdminApiService } from '@/api/services/BannerAdminApiService'
 import { CategoryAdminApiService } from '@/api/services/CategoryAdminApiService'
+import { MediaAdminApiService } from '@/api/services/MediaAdminApiService'
 import { OrderAdminApiService } from '@/api/services/OrderAdminApiService'
 import { ProductAdminApiService } from '@/api/services/ProductAdminApiService'
 import { UserAdminApiService } from '@/api/services/UserAdminApiService'
@@ -18,6 +21,9 @@ export class ApiHub {
   readonly categories: CategoryAdminApiService
   readonly products: ProductAdminApiService
   readonly orders: OrderAdminApiService
+  readonly banners: BannerAdminApiService
+  readonly announcements: AnnouncementAdminApiService
+  readonly media: MediaAdminApiService
 
   constructor(session: AuthSession) {
     this.http = new HttpClient({
@@ -29,5 +35,8 @@ export class ApiHub {
     this.categories = new CategoryAdminApiService(this.http)
     this.products = new ProductAdminApiService(this.http)
     this.orders = new OrderAdminApiService(this.http)
+    this.banners = new BannerAdminApiService(this.http)
+    this.announcements = new AnnouncementAdminApiService(this.http)
+    this.media = new MediaAdminApiService(this.http)
   }
 }

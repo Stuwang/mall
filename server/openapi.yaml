@@ -6,6 +6,82 @@ info:
     title: ""
     version: 0.0.1
 paths:
+    /admin/api/v1/announcement/create:
+        post:
+            tags:
+                - AdminMisc
+            summary: AdminCreateAnnouncement
+            description: '----- 公告 -----'
+            operationId: AdminMisc_AdminCreateAnnouncement
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/misc.v1.AdminCreateAnnouncementRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/misc.v1.AdminAnnouncementReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /admin/api/v1/announcement/list:
+        post:
+            tags:
+                - AdminMisc
+            summary: AdminListAnnouncements
+            operationId: AdminMisc_AdminListAnnouncements
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/misc.v1.AdminListAnnouncementsRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/misc.v1.ListAnnouncementsReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /admin/api/v1/announcement/update:
+        post:
+            tags:
+                - AdminMisc
+            summary: AdminUpdateAnnouncement
+            operationId: AdminMisc_AdminUpdateAnnouncement
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/misc.v1.AdminUpdateAnnouncementRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/misc.v1.AdminAnnouncementReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
     /admin/api/v1/asset/grant_points:
         post:
             tags:
@@ -78,6 +154,82 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/asset.v1.GetUserAssetsReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /admin/api/v1/banner/create:
+        post:
+            tags:
+                - AdminMisc
+            summary: AdminCreateBanner
+            description: '----- Banner -----'
+            operationId: AdminMisc_AdminCreateBanner
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/misc.v1.AdminCreateBannerRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/misc.v1.AdminBannerReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /admin/api/v1/banner/list:
+        post:
+            tags:
+                - AdminMisc
+            summary: AdminListBanners
+            operationId: AdminMisc_AdminListBanners
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/misc.v1.AdminListBannersRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/misc.v1.ListBannersReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /admin/api/v1/banner/update:
+        post:
+            tags:
+                - AdminMisc
+            summary: AdminUpdateBanner
+            operationId: AdminMisc_AdminUpdateBanner
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/misc.v1.AdminUpdateBannerRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/misc.v1.AdminBannerReply'
                 default:
                     description: Default error response
                     content:
@@ -282,6 +434,31 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/product.v1.ListProductsReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /admin/api/v1/product/set_hot:
+        post:
+            tags:
+                - AdminProduct
+            summary: AdminSetProductHot
+            operationId: AdminProduct_AdminSetProductHot
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/product.v1.AdminSetProductHotRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/product.v1.AdminProductReply'
                 default:
                     description: Default error response
                     content:
@@ -699,6 +876,56 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/google.rpc.Status'
+    /misc/api/v1/announcement/list:
+        post:
+            tags:
+                - Misc
+            summary: ListAnnouncements
+            operationId: Misc_ListAnnouncements
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/misc.v1.ListAnnouncementsRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/misc.v1.ListAnnouncementsReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /misc/api/v1/banner/list:
+        post:
+            tags:
+                - Misc
+            summary: ListBanners
+            operationId: Misc_ListBanners
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/misc.v1.ListBannersRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/misc.v1.ListBannersReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
     /order/api/v1/cancel:
         post:
             tags:
@@ -997,6 +1224,32 @@ paths:
                     application/json:
                         schema:
                             $ref: '#/components/schemas/product.v1.ListProductsByCategoryRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/product.v1.ListProductsReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /product/api/v1/list_hot:
+        post:
+            tags:
+                - Product
+            summary: ListHotProducts
+            description: 爆款推荐（仅上架且标记为爆款）
+            operationId: Product_ListHotProducts
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/product.v1.ListHotProductsRequest'
                 required: true
             responses:
                 "200":
@@ -1453,6 +1706,168 @@ components:
             properties:
                 BaseParam:
                     $ref: '#/components/schemas/helloworld.v1.BaseParam'
+        misc.v1.AdminAnnouncementReply:
+            type: object
+            properties:
+                announcement:
+                    $ref: '#/components/schemas/misc.v1.AnnouncementInfo'
+        misc.v1.AdminBannerReply:
+            type: object
+            properties:
+                banner:
+                    $ref: '#/components/schemas/misc.v1.BannerInfo'
+        misc.v1.AdminCreateAnnouncementRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                content:
+                    type: string
+                sort:
+                    type: integer
+                    format: int32
+                status:
+                    enum:
+                        - MISC_STATUS_ON
+                        - MISC_STATUS_OFF
+                    type: string
+                    format: enum
+        misc.v1.AdminCreateBannerRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                imageUrl:
+                    type: string
+                sort:
+                    type: integer
+                    format: int32
+                status:
+                    enum:
+                        - MISC_STATUS_ON
+                        - MISC_STATUS_OFF
+                    type: string
+                    format: enum
+        misc.v1.AdminListAnnouncementsRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+        misc.v1.AdminListBannersRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+        misc.v1.AdminUpdateAnnouncementRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                id:
+                    type: integer
+                    format: int64
+                content:
+                    type: string
+                sort:
+                    type: integer
+                    format: int32
+                status:
+                    enum:
+                        - MISC_STATUS_ON
+                        - MISC_STATUS_OFF
+                    type: string
+                    format: enum
+        misc.v1.AdminUpdateBannerRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                id:
+                    type: integer
+                    format: int64
+                imageUrl:
+                    type: string
+                sort:
+                    type: integer
+                    format: int32
+                status:
+                    enum:
+                        - MISC_STATUS_ON
+                        - MISC_STATUS_OFF
+                    type: string
+                    format: enum
+        misc.v1.AnnouncementInfo:
+            type: object
+            properties:
+                id:
+                    type: integer
+                    format: int64
+                content:
+                    type: string
+                    description: 公告文案
+                sort:
+                    type: integer
+                    format: int32
+                status:
+                    enum:
+                        - MISC_STATUS_ON
+                        - MISC_STATUS_OFF
+                    type: string
+                    format: enum
+                ct:
+                    type: integer
+                    format: int64
+                ut:
+                    type: integer
+                    format: int64
+        misc.v1.BannerInfo:
+            type: object
+            properties:
+                id:
+                    type: integer
+                    format: int64
+                imageUrl:
+                    type: string
+                    description: 图片 URL（暂不支持跳转）
+                sort:
+                    type: integer
+                    format: int32
+                status:
+                    enum:
+                        - MISC_STATUS_ON
+                        - MISC_STATUS_OFF
+                    type: string
+                    format: enum
+                ct:
+                    type: integer
+                    format: int64
+                ut:
+                    type: integer
+                    format: int64
+        misc.v1.ListAnnouncementsReply:
+            type: object
+            properties:
+                list:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/misc.v1.AnnouncementInfo'
+        misc.v1.ListAnnouncementsRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+        misc.v1.ListBannersReply:
+            type: object
+            properties:
+                list:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/misc.v1.BannerInfo'
+        misc.v1.ListBannersRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
         order.v1.AdminGetOrderRequest:
             type: object
             properties:
@@ -1790,6 +2205,16 @@ components:
             properties:
                 product:
                     $ref: '#/components/schemas/product.v1.ProductInfo'
+        product.v1.AdminSetProductHotRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                id:
+                    type: integer
+                    format: int64
+                isHot:
+                    type: boolean
         product.v1.AdminSetProductStatusRequest:
             type: object
             properties:
@@ -1912,6 +2337,17 @@ components:
             properties:
                 BaseParam:
                     $ref: '#/components/schemas/helloworld.v1.BaseParam'
+        product.v1.ListHotProductsRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                page:
+                    type: integer
+                    format: int32
+                pageSize:
+                    type: integer
+                    format: int32
         product.v1.ListProductsByCategoryRequest:
             type: object
             properties:
@@ -1986,6 +2422,9 @@ components:
                 ut:
                     type: integer
                     format: int64
+                isHot:
+                    type: boolean
+                    description: 是否爆款推荐
         user.v1.AdminBanUserRequest:
             type: object
             properties:
@@ -2129,6 +2568,8 @@ components:
 tags:
     - name: AdminAsset
       description: 管理侧资产服务（需 admin）
+    - name: AdminMisc
+      description: 管理侧 Banner / 公告（需 admin）
     - name: AdminOrder
       description: 管理侧订单服务（需 admin）
     - name: AdminProduct
@@ -2143,6 +2584,8 @@ tags:
       description: The greeting service definition.
     - name: Mall
       description: 商城公共信息（免登录）
+    - name: Misc
+      description: 用户侧杂项展示（免登录）：Banner / 公告
     - name: Order
       description: 用户订单服务
     - name: Product

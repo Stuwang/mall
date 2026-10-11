@@ -1,185 +1,115 @@
 <script setup lang="ts">
-import { nextTick, onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import type { AnnouncementInfo, BannerInfo, CategoryInfo, ProductInfo } from '@/api/types'
 import { appContext } from '@/app/AppContext'
-import type { CategoryInfo, ProductInfo } from '@/api/types'
 import { routeNames } from '@/router/routes'
 import { formatFenToYuan } from '@/utils/format'
 import { notifyError } from '@/utils/notify'
 
 const router = useRouter()
-const api = appContext.api.products
+const productApi = appContext.api.products
+const miscApi = appContext.api.misc
 
-const keyword = ref('')
-const categories = ref<CategoryInfo[]>([])
-const activeCategoryId = ref(0)
-const products = ref<ProductInfo[]>([])
-const page = ref(1)
-const total = ref(0)
-
-/**
- * 仅绑定给 van-list。
- * 注意：List 触发 @load 前会先把该值设为 true，因此绝不能用它做早退条件。
- */
-const listLoading = ref(false)
 const refreshing = ref(false)
-const finished = ref(false)
+const banners = ref<BannerInfo[]>([])
+const categories = ref<CategoryInfo[]>([])
+const announcements = ref<AnnouncementInfo[]>([])
+const hotProducts = ref<ProductInfo[]>([])
 
-/** 真实请求互斥（不用 ref，避免与 List 的 loading 耦合） */
-let inFlight = false
+const noticeText = computed(() =>
+  announcements.value
+    .map((item) => item.content)
+    .filter(Boolean)
+    .join('　　'),
+)
 
-async function loadCategories(): Promise<void> {
-  try {
-    const reply = await api.listCategories({})
-    categories.value = reply.list ?? []
-  } catch (error) {
-    notifyError(error, '分类加载失败')
-  }
-}
-
-async function fetchProducts(reset: boolean): Promise<void> {
-  if (inFlight) {
-    // 若是 List 触发的多余 load，必须把 loading 拨回 false，否则会一直转圈
-    listLoading.value = false
-    return
-  }
-
-  inFlight = true
-  listLoading.value = true
-
-  if (reset) {
-    page.value = 1
-    finished.value = false
-    products.value = []
-  }
-
-  try {
-    const pageSize = 10
-    const reply =
-      activeCategoryId.value > 0
-        ? await api.listProductsByCategory({
-            category_id: activeCategoryId.value,
-            page: page.value,
-            page_size: pageSize,
-          })
-        : await api.listProducts({
-            keyword: keyword.value.trim() || undefined,
-            page: page.value,
-            page_size: pageSize,
-          })
-
-    const list = reply.list ?? []
-    products.value = reset ? list : products.value.concat(list)
-    total.value = Number(reply.total ?? 0)
-
-    const noMore =
-      list.length === 0 ||
-      list.length < pageSize ||
-      (total.value > 0 && products.value.length >= total.value)
-
-    finished.value = noMore
-    if (!noMore) {
-      page.value += 1
-    }
-  } catch (error) {
-    finished.value = true
-    notifyError(error, '商品加载失败')
-  } finally {
-    inFlight = false
-    listLoading.value = false
-    refreshing.value = false
-  }
-}
-
-/** van-list 触底 / 首次 check */
-function onListLoad(): void {
-  if (finished.value) {
-    listLoading.value = false
-    return
-  }
-  void fetchProducts(false)
-}
-
-async function reload(): Promise<void> {
-  finished.value = false
-  await fetchProducts(true)
-}
-
-async function onRefresh(): Promise<void> {
-  refreshing.value = true
-  await reload()
-}
-
-function onSearch(): void {
-  activeCategoryId.value = 0
-  void reload()
-}
-
-function onCategoryChange(name: number | string): void {
-  activeCategoryId.value = Number(name)
-  keyword.value = ''
-  void reload()
+function coverOf(product: ProductInfo): string {
+  return product.images?.[0] || ''
 }
 
 function openDetail(id: number): void {
   void router.push({ name: routeNames.productDetail, params: { id: String(id) } })
 }
 
-function coverOf(product: ProductInfo): string {
-  return product.images?.[0] || ''
+function openCatalog(categoryId?: number): void {
+  void router.push({
+    name: routeNames.catalog,
+    query: categoryId ? { category_id: String(categoryId) } : undefined,
+  })
 }
 
-onMounted(async () => {
-  await loadCategories()
-  // 关闭 List 的 immediate-check，改由这里主动拉第一页，避免与 tabs 初始化抢 loading
-  await nextTick()
-  await reload()
+async function loadHome(): Promise<void> {
+  try {
+    const [bannerReply, categoryReply, announcementReply, hotReply] = await Promise.all([
+      miscApi.listBanners({}),
+      productApi.listCategories({}),
+      miscApi.listAnnouncements({}),
+      productApi.listHotProducts({ page: 1, page_size: 20 }),
+    ])
+    banners.value = bannerReply.list ?? []
+    categories.value = categoryReply.list ?? []
+    announcements.value = announcementReply.list ?? []
+    hotProducts.value = hotReply.list ?? []
+  } catch (error) {
+    notifyError(error, '首页加载失败')
+  } finally {
+    refreshing.value = false
+  }
+}
+
+async function onRefresh(): Promise<void> {
+  refreshing.value = true
+  await loadHome()
+}
+
+onMounted(() => {
+  void loadHome()
 })
 </script>
 
 <template>
   <div class="home">
-    <van-sticky>
-      <div class="search-bar">
-        <van-search
-          v-model="keyword"
-          shape="round"
-          placeholder="搜索商品"
-          show-action
-          @search="onSearch"
-        >
-          <template #action>
-            <div @click="onSearch">搜索</div>
-          </template>
-        </van-search>
-      </div>
-      <van-tabs
-        :model-value="activeCategoryId"
-        shrink
-        color="#ee0a24"
-        @change="onCategoryChange"
-      >
-        <van-tab title="全部" :name="0" />
-        <van-tab
-          v-for="item in categories"
-          :key="item.id"
-          :title="item.name"
-          :name="item.id"
-        />
-      </van-tabs>
-    </van-sticky>
-
     <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
-      <van-list
-        v-model:loading="listLoading"
-        :finished="finished"
-        finished-text="没有更多了"
-        :immediate-check="false"
-        @load="onListLoad"
-      >
-        <div v-if="products.length > 0" class="product-grid">
+      <section v-if="banners.length > 0" class="banner-wrap">
+        <van-swipe class="banner-swipe" :autoplay="4000" indicator-color="#fff">
+          <van-swipe-item v-for="item in banners" :key="item.id">
+            <van-image class="banner-img" fit="cover" :src="item.image_url" />
+          </van-swipe-item>
+        </van-swipe>
+      </section>
+
+      <section class="section category-section">
+        <div class="section-head">
+          <h2 class="section-title">商品分类</h2>
+          <button type="button" class="link-btn" @click="openCatalog()">全部</button>
+        </div>
+        <div v-if="categories.length > 0" class="category-grid">
+          <button
+            v-for="item in categories"
+            :key="item.id"
+            type="button"
+            class="category-item"
+            @click="openCatalog(item.id)"
+          >
+            <span class="category-icon">{{ item.name.slice(0, 1) }}</span>
+            <span class="category-name">{{ item.name }}</span>
+          </button>
+        </div>
+        <van-empty v-else description="暂无分类" image-size="80" />
+      </section>
+
+      <section v-if="noticeText" class="notice-section">
+        <van-notice-bar left-icon="volume-o" :text="noticeText" />
+      </section>
+
+      <section class="section hot-section">
+        <div class="section-head">
+          <h2 class="section-title">爆款推荐</h2>
+        </div>
+        <div v-if="hotProducts.length > 0" class="product-grid">
           <div
-            v-for="item in products"
+            v-for="item in hotProducts"
             :key="item.id"
             class="product-card"
             @click="openDetail(item.id)"
@@ -194,11 +124,8 @@ onMounted(async () => {
             </div>
           </div>
         </div>
-        <van-empty
-          v-else-if="finished && !listLoading"
-          description="暂无商品"
-        />
-      </van-list>
+        <van-empty v-else description="暂无爆款" image-size="80" />
+      </section>
     </van-pull-refresh>
   </div>
 </template>
@@ -206,27 +133,112 @@ onMounted(async () => {
 <style scoped>
 .home {
   min-height: 100%;
+  background: #f7f8fa;
 }
 
-.home :deep(.van-pull-refresh) {
-  min-height: 60vh;
-}
-
-.search-bar {
+.banner-wrap {
   background: #fff;
+}
+
+.banner-swipe {
+  height: 160px;
+}
+
+.banner-img {
+  display: block;
+  width: 100%;
+  height: 160px;
+  background: #f2f3f5;
+}
+
+.section {
+  margin-top: 10px;
+  padding: 12px 12px 4px;
+  background: #fff;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #323233;
+}
+
+.link-btn {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #969799;
+  font-size: 13px;
+}
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px 8px;
+  padding-bottom: 8px;
+}
+
+.category-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.category-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #fff1f0;
+  color: #ee0a24;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.category-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: #323233;
+}
+
+.notice-section {
+  margin-top: 10px;
+}
+
+.hot-section {
+  padding-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .product-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-  padding: 12px;
 }
 
 .product-card {
   overflow: hidden;
   background: #fff;
   border-radius: 10px;
+  border: 1px solid #f2f3f5;
 }
 
 .cover {

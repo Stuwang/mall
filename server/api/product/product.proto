@@ -40,6 +40,14 @@ service Product {
       body: "*"
     };
   }
+
+  // 爆款推荐（仅上架且标记为爆款）
+  rpc ListHotProducts (ListHotProductsRequest) returns (ListProductsReply) {
+    option (google.api.http) = {
+      post: "/product/api/v1/list_hot"
+      body: "*"
+    };
+  }
 }
 
 // 管理侧商品/分类服务（需 admin）
@@ -95,6 +103,12 @@ service AdminProduct {
       body: "*"
     };
   }
+  rpc AdminSetProductHot (AdminSetProductHotRequest) returns (AdminProductReply) {
+    option (google.api.http) = {
+      post: "/admin/api/v1/product/set_hot"
+      body: "*"
+    };
+  }
   rpc AdminListProducts (AdminListProductsRequest) returns (ListProductsReply) {
     option (google.api.http) = {
       post: "/admin/api/v1/product/list"
@@ -145,6 +159,8 @@ message ProductInfo {
   repeated string images = 8;
   int64 ct = 9;
   int64 ut = 10;
+  // 是否爆款推荐
+  bool is_hot = 11;
 }
 
 message ListProductsRequest {
@@ -181,6 +197,12 @@ message ListCategoriesRequest {
 
 message ListCategoriesReply {
   repeated CategoryInfo list = 1;
+}
+
+message ListHotProductsRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int32 page = 2;
+  int32 page_size = 3;
 }
 
 message AdminCreateCategoryRequest {
@@ -242,6 +264,12 @@ message AdminUpdateProductCategoryRequest {
   helloworld.v1.BaseParam BaseParam = 1;
   int64 id = 2;
   int64 category_id = 3;
+}
+
+message AdminSetProductHotRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 id = 2;
+  bool is_hot = 3;
 }
 
 message AdminListProductsRequest {

@@ -4,6 +4,7 @@ import type {
   GetProductRequest,
   ListCategoriesReply,
   ListCategoriesRequest,
+  ListHotProductsRequest,
   ListProductsByCategoryRequest,
   ListProductsReply,
   ListProductsRequest,
@@ -31,5 +32,9 @@ export class ProductApiService {
 
   listCategories(request: ListCategoriesRequest = {}): Promise<ListCategoriesReply> {
     return this.http.post<ListCategoriesReply>('/product/api/v1/category/list', request)
+  }
+
+  listHotProducts(request: ListHotProductsRequest = {}): Promise<ListProductsReply> {
+    return this.http.post<ListProductsReply>('/product/api/v1/list_hot', request)
   }
 }

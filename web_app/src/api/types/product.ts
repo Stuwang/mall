@@ -37,7 +37,10 @@ export interface ProductInfo {
   images: string[]
   ct: number
   ut: number
+  is_hot?: boolean
 }
+
+export interface ListHotProductsRequest extends WithBaseParam, PageQuery {}
 
 export interface ListProductsRequest extends WithBaseParam, PageQuery {
   keyword?: string

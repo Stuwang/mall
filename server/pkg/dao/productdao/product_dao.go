@@ -22,6 +22,7 @@ type ProductQuery struct {
 	CategoryID int64
 	Status     int32 // 0=全部
 	Keyword    string
+	OnlyHot    bool
 	Page       int
 	PageSize   int
 }
@@ -66,6 +67,9 @@ func (d *ProductDao) List(q ProductQuery) ([]productmodel.Product, int64, error)
 	}
 	if q.Status > 0 {
 		tx = tx.Where("status = ?", q.Status)
+	}
+	if q.OnlyHot {
+		tx = tx.Where("is_hot = ?", true)
 	}
 	if kw := strings.TrimSpace(q.Keyword); kw != "" {
 		tx = tx.Where("name LIKE ?", "%"+kw+"%")
@@ -185,5 +189,22 @@ func (d *ProductDao) UpdateCategory(id, categoryID int64) (*productmodel.Product
 	if err := d.db.Model(p).Select("category_id", "ut").Updates(p).Error; err != nil {
 		return nil, codeerror.OrSystem(err, "ProductDao.UpdateCategory id=%d categoryID=%d", id, categoryID)
 	}
+	return p, nil
+}
+
+func (d *ProductDao) SetHot(id int64, isHot bool) (*productmodel.Product, error) {
+	p, err := d.GetByID(id)
+	if err != nil {
+		return nil, codeerror.OrSystem(err, "ProductDao.SetHot GetByID id=%d", id)
+	}
+	now := time.Now().Unix()
+	if err := d.db.Model(p).Updates(map[string]interface{}{
+		"is_hot": isHot,
+		"ut":     now,
+	}).Error; err != nil {
+		return nil, codeerror.OrSystem(err, "ProductDao.SetHot id=%d isHot=%v", id, isHot)
+	}
+	p.IsHot = isHot
+	p.Ut = now
 	return p, nil
 }

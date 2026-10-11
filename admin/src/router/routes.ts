@@ -9,6 +9,8 @@ export const routeNames = {
   products: 'products',
   productDetail: 'productDetail',
   orders: 'orders',
+  banners: 'banners',
+  announcements: 'announcements',
 } as const
 
 export const routes: RouteRecordRaw[] = [
@@ -64,6 +66,18 @@ export const routes: RouteRecordRaw[] = [
         name: routeNames.orders,
         component: () => import('@/views/orders/OrderListView.vue'),
         meta: { title: '订单管理', menu: true },
+      },
+      {
+        path: 'banners',
+        name: routeNames.banners,
+        component: () => import('@/views/banners/BannerListView.vue'),
+        meta: { title: 'Banner 管理', menu: true },
+      },
+      {
+        path: 'announcements',
+        name: routeNames.announcements,
+        component: () => import('@/views/announcements/AnnouncementListView.vue'),
+        meta: { title: '公告管理', menu: true },
       },
     ],
   },

@@ -50,6 +50,15 @@ export class HttpClient {
     return this.unwrap(data)
   }
 
+  /** multipart 上传：去掉默认 JSON Content-Type，由浏览器自动带 boundary */
+  async uploadForm<TResponse>(path: string, form: FormData): Promise<TResponse> {
+    const { data } = await this.axios.post<ApiResponse<TResponse>>(path, form, {
+      headers: { 'Content-Type': undefined },
+      timeout: 60000,
+    })
+    return this.unwrap(data)
+  }
+
   private attachAuth(config: InternalAxiosRequestConfig): InternalAxiosRequestConfig {
     const token = this.getAccessToken()
     if (token) {

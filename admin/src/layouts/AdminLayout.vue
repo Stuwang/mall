@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import {
+  Bell,
   Box,
   Goods,
   List,
   Menu as MenuIcon,
+  Picture,
   ShoppingCart,
   User,
 } from '@element-plus/icons-vue'
@@ -30,6 +32,8 @@ const menus = [
   { path: '/categories', title: '分类管理', icon: List },
   { path: '/products', title: '商品管理', icon: Goods },
   { path: '/orders', title: '订单管理', icon: ShoppingCart },
+  { path: '/banners', title: 'Banner 管理', icon: Picture },
+  { path: '/announcements', title: '公告管理', icon: Bell },
 ]
 
 function handleLogout(): void {

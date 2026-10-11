@@ -30,6 +30,7 @@ type Product struct {
 	Price       int64  `json:"price" gorm:"column:price"` // 分
 	Stock       int32  `json:"stock" gorm:"column:stock"`
 	Status      int32  `json:"status" gorm:"column:status;index"`
+	IsHot       bool   `json:"is_hot" gorm:"column:is_hot;index"`
 	Ct          int64  `json:"ct" gorm:"column:ct"`
 	Ut          int64  `json:"ut" gorm:"column:ut"`
 }

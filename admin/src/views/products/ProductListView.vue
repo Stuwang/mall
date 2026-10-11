@@ -10,6 +10,7 @@ import {
 } from '@/api/types'
 import { appContext } from '@/app/AppContext'
 import { routeNames } from '@/router/routes'
+import ImageUpload from '@/components/ImageUpload.vue'
 import { formatFenToYuan, formatUnix, yuanToFen } from '@/utils/format'
 import { productStatusLabel } from '@/utils/labels'
 import { showError } from '@/utils/notify'
@@ -41,19 +42,12 @@ const form = reactive({
   description: '',
   priceYuan: '0.00',
   stock: 0,
-  imagesText: '',
+  images: [] as string[],
   status: ProductStatus.ON as ProductStatus,
 })
 
 function categoryName(id: number): string {
   return categories.value.find((c) => c.id === id)?.name ?? String(id || '-')
-}
-
-function parseImages(text: string): string[] {
-  return text
-    .split(/\n|,/)
-    .map((s) => s.trim())
-    .filter(Boolean)
 }
 
 async function loadCategories(): Promise<void> {
@@ -96,7 +90,7 @@ function openCreate(): void {
   form.description = ''
   form.priceYuan = '0.00'
   form.stock = 0
-  form.imagesText = ''
+  form.images = []
   form.status = ProductStatus.ON
   dialogVisible.value = true
 }
@@ -108,7 +102,7 @@ function openEdit(row: ProductInfo): void {
   form.description = row.description
   form.priceYuan = formatFenToYuan(row.price)
   form.stock = row.stock
-  form.imagesText = (row.images ?? []).join('\n')
+  form.images = [...(row.images ?? [])]
   form.status = row.status
   dialogVisible.value = true
 }
@@ -124,7 +118,7 @@ async function handleSave(): Promise<void> {
   }
   saving.value = true
   try {
-    const images = parseImages(form.imagesText)
+    const images = form.images.filter(Boolean)
     const price = yuanToFen(form.priceYuan)
     if (editingId.value == null) {
       await productApi.create({
@@ -170,6 +164,17 @@ async function toggleStatus(row: ProductInfo): Promise<void> {
     await loadList()
   } catch (error) {
     showError(error, '更新状态失败')
+  }
+}
+
+async function toggleHot(row: ProductInfo): Promise<void> {
+  const next = !row.is_hot
+  try {
+    await productApi.setHot({ id: row.id, is_hot: next })
+    ElMessage.success(next ? '已设为爆款' : '已取消爆款')
+    await loadList()
+  } catch (error) {
+    showError(error, '更新爆款失败')
   }
 }
 
@@ -254,16 +259,26 @@ onMounted(async () => {
           </el-tag>
         </template>
       </el-table-column>
+      <el-table-column label="爆款" width="80">
+        <template #default="{ row }">
+          <el-tag :type="row.is_hot ? 'danger' : 'info'" size="small">
+            {{ row.is_hot ? '是' : '否' }}
+          </el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="更新时间" min-width="160">
         <template #default="{ row }">{{ formatUnix(row.ut) }}</template>
       </el-table-column>
-      <el-table-column label="操作" width="260" fixed="right">
+      <el-table-column label="操作" width="320" fixed="right">
         <template #default="{ row }">
           <el-button link type="primary" @click="goDetail(row)">详情</el-button>
           <el-button link type="primary" @click="openEdit(row)">编辑</el-button>
           <el-button link type="warning" @click="quickStock(row)">库存</el-button>
           <el-button link type="danger" @click="toggleStatus(row)">
             {{ row.status === ProductStatus.ON ? '下架' : '上架' }}
+          </el-button>
+          <el-button link :type="row.is_hot ? 'info' : 'danger'" @click="toggleHot(row)">
+            {{ row.is_hot ? '取消爆款' : '设为爆款' }}
           </el-button>
         </template>
       </el-table-column>
@@ -321,13 +336,8 @@ onMounted(async () => {
         <el-form-item label="描述">
           <el-input v-model="form.description" type="textarea" :rows="3" />
         </el-form-item>
-        <el-form-item label="图片 URL">
-          <el-input
-            v-model="form.imagesText"
-            type="textarea"
-            :rows="3"
-            placeholder="每行一个 URL，或逗号分隔（上传功能后续接入）"
-          />
+        <el-form-item label="商品图片">
+          <ImageUpload v-model="form.images" :limit="9" />
         </el-form-item>
       </el-form>
       <template #footer>

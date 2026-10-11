@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/transport"
+	khttp "github.com/go-kratos/kratos/v2/transport/http"
 	"github.com/golang-jwt/jwt/v5"
 	"helloworld/base/codeerror"
 	"helloworld/base/logger"
@@ -40,7 +41,8 @@ type UserLoader func(userID int64) (*AuthInfo, error)
 type ActiveChecker func(userID int64) error
 
 type options struct {
-	whitelist map[string]struct{}
+	whitelist     map[string]struct{}
+	pathPrefixes  []string
 }
 
 type Option func(*options)
@@ -51,6 +53,13 @@ func WithWhitelist(ops ...string) Option {
 		for _, op := range ops {
 			o.whitelist[op] = struct{}{}
 		}
+	}
+}
+
+// WithPathPrefixWhitelist 配置免鉴权的 HTTP 路径前缀（如 /files/）
+func WithPathPrefixWhitelist(prefixes ...string) Option {
+	return func(o *options) {
+		o.pathPrefixes = append(o.pathPrefixes, prefixes...)
 	}
 }
 
@@ -185,6 +194,16 @@ func Middleware(opts ...Option) middleware.Middleware {
 			}
 			if _, skip := o.whitelist[tr.Operation()]; skip {
 				return handler(ctx, req)
+			}
+			if len(o.pathPrefixes) > 0 {
+				if reqHTTP, ok := khttp.RequestFromServerContext(ctx); ok {
+					path := reqHTTP.URL.Path
+					for _, p := range o.pathPrefixes {
+						if p != "" && strings.HasPrefix(path, p) {
+							return handler(ctx, req)
+						}
+					}
+				}
 			}
 
 			var (

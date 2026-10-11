@@ -38,3 +38,6 @@ bin/
 *.swp
 
 *.db
+
+# 本地上传图片
+data/images/

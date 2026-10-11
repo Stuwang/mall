@@ -15,6 +15,7 @@ import (
 	apiasset "helloworld/api/asset"
 	apicart "helloworld/api/cart"
 	apimall "helloworld/api/mall"
+	apimisc "helloworld/api/misc"
 	apiorder "helloworld/api/order"
 	apiproduct "helloworld/api/product"
 	apiuser "helloworld/api/user"
@@ -28,10 +29,14 @@ import (
 	"helloworld/pkg/cartcontroller"
 	"helloworld/pkg/dao/assetdao"
 	"helloworld/pkg/dao/cartdao"
+	"helloworld/pkg/dao/miscdao"
 	"helloworld/pkg/dao/orderdao"
 	"helloworld/pkg/dao/productdao"
 	"helloworld/pkg/dao/userdao"
 	"helloworld/pkg/mallcontroller"
+	"helloworld/pkg/mediacontroller"
+	"helloworld/pkg/mediastore"
+	"helloworld/pkg/misccontroller"
 	"helloworld/pkg/orderbiz"
 	"helloworld/pkg/ordercontroller"
 	"helloworld/pkg/productcontroller"
@@ -101,6 +106,9 @@ func main() {
 	if err := orderdao.AutoMigrate(); err != nil {
 		logger.Fatalf("auto migrate order: %v", err)
 	}
+	if err := miscdao.AutoMigrate(); err != nil {
+		logger.Fatalf("auto migrate misc: %v", err)
+	}
 
 	auth.Init(cfg.Auth, cfg.Env)
 	auth.SetUserLoader(func(userID int64) (*auth.AuthInfo, error) {
@@ -138,6 +146,9 @@ func main() {
 
 	orderbiz.Init(cfg.Order.PayTimeoutSec, cfg.Point.PointsPerYuan)
 	orderbiz.StartTimeoutWorker(30 * time.Second)
+	if err := mediastore.Init(cfg.Storage); err != nil {
+		logger.Fatalf("mediastore init: %v", err)
+	}
 
 	logger.Infof("server starting, env=%s addr=%s", cfg.Env, cfg.Server.HTTPAddr)
 
@@ -157,6 +168,10 @@ func main() {
 	apiorder.RegisterOrderHTTPServer(httpSrv, orderCtrl)
 	apiorder.RegisterAdminOrderHTTPServer(httpSrv, orderCtrl)
 	apimall.RegisterMallHTTPServer(httpSrv, mallcontroller.New(cfg.Point.PointsPerYuan, cfg.Mall))
+	miscCtrl := misccontroller.New()
+	apimisc.RegisterMiscHTTPServer(httpSrv, miscCtrl)
+	apimisc.RegisterAdminMiscHTTPServer(httpSrv, miscCtrl)
+	mediacontroller.RegisterHTTP(httpSrv)
 
 	app := kratos.New(
 		kratos.Name("helloworld"),

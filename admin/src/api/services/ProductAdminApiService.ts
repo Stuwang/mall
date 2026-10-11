@@ -4,6 +4,7 @@ import type {
   AdminGetProductRequest,
   AdminListProductsRequest,
   AdminProductReply,
+  AdminSetProductHotRequest,
   AdminSetProductStatusRequest,
   AdminUpdateProductCategoryRequest,
   AdminUpdateProductRequest,
@@ -46,5 +47,9 @@ export class ProductAdminApiService {
 
   updateCategory(request: AdminUpdateProductCategoryRequest): Promise<AdminProductReply> {
     return this.http.post<AdminProductReply>('/admin/api/v1/product/update_category', request)
+  }
+
+  setHot(request: AdminSetProductHotRequest): Promise<AdminProductReply> {
+    return this.http.post<AdminProductReply>('/admin/api/v1/product/set_hot', request)
   }
 }

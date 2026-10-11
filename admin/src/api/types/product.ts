@@ -37,6 +37,12 @@ export interface ProductInfo {
   images: string[]
   ct: number
   ut: number
+  is_hot?: boolean
+}
+
+export interface AdminSetProductHotRequest extends WithBaseParam {
+  id: number
+  is_hot: boolean
 }
 
 export interface ListCategoriesReply {

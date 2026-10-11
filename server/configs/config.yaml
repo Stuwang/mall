@@ -1,0 +1,16 @@
+# 环境：test 使用 UserId Header 鉴权；其它环境使用 JWT
+env: test
+
+server:
+  http_addr: ":8080"
+
+database:
+  filename: mall.db
+
+logger:
+  filename: ""
+
+auth:
+  jwt_secret: "mall-dev-secret-change-me"
+  # token 有效期（小时）
+  jwt_expire_hours: 168

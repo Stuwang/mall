@@ -2,12 +2,19 @@ package auth
 
 import (
 	"context"
+	"fmt"
+	"strconv"
 	"strings"
+	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/transport"
 	"helloworld/base/codeerror"
+	"helloworld/common/config"
 )
+
+const headerUserID = "UserId"
 
 type authKey struct{}
 
@@ -15,6 +22,12 @@ type authKey struct{}
 type AuthInfo struct {
 	UserID   int64
 	Username string
+}
+
+type jwtClaims struct {
+	UserID   int64  `json:"uid"`
+	Username string `json:"username"`
+	jwt.RegisteredClaims
 }
 
 type options struct {
@@ -30,6 +43,26 @@ func WithWhitelist(ops ...string) Option {
 			o.whitelist[op] = struct{}{}
 		}
 	}
+}
+
+var (
+	env            string
+	jwtSecret      []byte
+	jwtExpireHours int
+)
+
+// Init 根据配置初始化鉴权（须在 Middleware 使用前调用）
+func Init(cfg config.AuthConfig, envName string) {
+	env = envName
+	jwtSecret = []byte(cfg.JWTSecret)
+	jwtExpireHours = cfg.JWTExpireHours
+	if jwtExpireHours <= 0 {
+		jwtExpireHours = 168
+	}
+}
+
+func isTestEnv() bool {
+	return env == config.EnvTest
 }
 
 // NewContext 将鉴权信息写入 context
@@ -52,19 +85,53 @@ func MustFromContext(ctx context.Context) *AuthInfo {
 	return info
 }
 
-// ValidateToken 校验 token 并返回用户信息（当前为 stub：非空即通过）
-func ValidateToken(token string) (*AuthInfo, error) {
-	token = strings.TrimSpace(token)
-	if token == "" {
+// GenerateToken 使用 JWT 生成登录 token（业务登录成功后调用）
+func GenerateToken(userID int64, username string) (string, error) {
+	if len(jwtSecret) == 0 {
+		return "", fmt.Errorf("auth: jwt secret not initialized")
+	}
+	now := time.Now()
+	claims := jwtClaims{
+		UserID:   userID,
+		Username: username,
+		RegisteredClaims: jwt.RegisteredClaims{
+			IssuedAt:  jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(now.Add(time.Duration(jwtExpireHours) * time.Hour)),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(jwtSecret)
+}
+
+// ValidateToken 校验 JWT 并返回用户信息
+func ValidateToken(tokenString string) (*AuthInfo, error) {
+	tokenString = strings.TrimSpace(tokenString)
+	if tokenString == "" {
+		return nil, codeerror.ErrorUnauthorized
+	}
+	if len(jwtSecret) == 0 {
+		return nil, codeerror.ErrorUnauthorized
+	}
+	token, err := jwt.ParseWithClaims(tokenString, &jwtClaims{}, func(t *jwt.Token) (interface{}, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+		}
+		return jwtSecret, nil
+	})
+	if err != nil || !token.Valid {
+		return nil, codeerror.ErrorUnauthorized
+	}
+	claims, ok := token.Claims.(*jwtClaims)
+	if !ok {
 		return nil, codeerror.ErrorUnauthorized
 	}
 	return &AuthInfo{
-		UserID:   0,
-		Username: "",
+		UserID:   claims.UserID,
+		Username: claims.Username,
 	}, nil
 }
 
-// Middleware 非白名单接口强制 Bearer 鉴权，通过后写入 context
+// Middleware 非白名单接口强制鉴权，通过后写入 context
 func Middleware(opts ...Option) middleware.Middleware {
 	o := &options{whitelist: make(map[string]struct{})}
 	for _, opt := range opts {
@@ -72,26 +139,49 @@ func Middleware(opts ...Option) middleware.Middleware {
 	}
 	return func(handler middleware.Handler) middleware.Handler {
 		return func(ctx context.Context, req interface{}) (interface{}, error) {
-			if tr, ok := transport.FromServerContext(ctx); ok {
-				if _, skip := o.whitelist[tr.Operation()]; skip {
-					return handler(ctx, req)
-				}
-				authHeader := tr.RequestHeader().Get("Authorization")
-				token, ok := parseBearer(authHeader)
-				if !ok {
-					return nil, codeerror.ErrorUnauthorized
-				}
-				info, err := ValidateToken(token)
-				if err != nil {
-					return nil, err
-				}
-				ctx = NewContext(ctx, info)
-			} else {
+			tr, ok := transport.FromServerContext(ctx)
+			if !ok {
 				return nil, codeerror.ErrorUnauthorized
 			}
-			return handler(ctx, req)
+			if _, skip := o.whitelist[tr.Operation()]; skip {
+				return handler(ctx, req)
+			}
+
+			var (
+				info *AuthInfo
+				err  error
+			)
+			if isTestEnv() {
+				info, err = authenticateByUserIDHeader(tr)
+			} else {
+				info, err = authenticateByJWT(tr)
+			}
+			if err != nil {
+				return nil, err
+			}
+			return handler(NewContext(ctx, info), req)
 		}
 	}
+}
+
+func authenticateByUserIDHeader(tr transport.Transporter) (*AuthInfo, error) {
+	raw := strings.TrimSpace(tr.RequestHeader().Get(headerUserID))
+	if raw == "" {
+		return nil, codeerror.ErrorUnauthorized
+	}
+	uid, err := strconv.ParseInt(raw, 10, 64)
+	if err != nil || uid <= 0 {
+		return nil, codeerror.ErrorUnauthorized
+	}
+	return &AuthInfo{UserID: uid}, nil
+}
+
+func authenticateByJWT(tr transport.Transporter) (*AuthInfo, error) {
+	token, ok := parseBearer(tr.RequestHeader().Get("Authorization"))
+	if !ok {
+		return nil, codeerror.ErrorUnauthorized
+	}
+	return ValidateToken(token)
 }
 
 func parseBearer(header string) (string, bool) {

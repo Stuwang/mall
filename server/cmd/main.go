@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	stdhttp "net/http"
 
 	"github.com/go-kratos/kratos/v2"
@@ -18,6 +19,7 @@ import (
 	"helloworld/base/hash_balancer"
 	"helloworld/base/logger"
 	"helloworld/common/auth"
+	"helloworld/common/config"
 	"helloworld/common/database"
 
 	//_ "helloworld/base/pbjson"
@@ -71,15 +73,24 @@ func setIp(handler middleware.Handler) middleware.Handler {
 }
 
 func main() {
-	logger.InitLogger("")
-	database.InitDb("mall.db")
-	defer database.Close()
+	confPath := flag.String("conf", "configs/config.yaml", "config path")
+	flag.Parse()
 
-	logger.Infof("server starting")
+	cfg, err := config.Load(*confPath)
+	if err != nil {
+		panic(err)
+	}
+
+	logger.InitLogger(cfg.Logger.Filename)
+	database.InitDb(cfg.Database.Filename)
+	defer database.Close()
+	auth.Init(cfg.Auth, cfg.Env)
+
+	logger.Infof("server starting, env=%s addr=%s", cfg.Env, cfg.Server.HTTPAddr)
 
 	s := &Server{}
 	httpSrv := http.NewServer(
-		http.Address(":8080"),
+		http.Address(cfg.Server.HTTPAddr),
 		http.Middleware(
 			metadata.Server(metadata.WithPropagatedPrefix("")),
 			setIp,

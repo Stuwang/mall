@@ -17,16 +17,27 @@ Admin / H5 端口会反代 API 路径（与各自 Vite proxy 一致），前端�
 在仓库根目录：
 
 ```bash
-# Git Bash / Linux / macOS
+# Git Bash / Linux / macOS — 当前平台
 sh scripts/build_prod.sh
+
+# 交叉编译 Linux（默认 amd64；可选 arm64）
+sh scripts/build_prod.sh linux
+sh scripts/build_prod.sh linux arm64
 ```
 
 ```powershell
-# PowerShell
+# PowerShell — 当前平台
 .\scripts\build_prod.ps1
+
+# 交叉编译 Linux（默认 amd64；可选 arm64）
+.\scripts\build_prod.ps1 -Target linux
+.\scripts\build_prod.ps1 -Target linux -Arch arm64
 ```
 
-产出：`bin/mall`（Windows 为 `bin/mall.exe`）。
+产出命名：`bin/mall-<os>-<arch>`（Windows 带 `.exe`）。  
+当前平台额外会复制一份短名 `bin/mall` / `bin/mall.exe` 方便本地跑。
+
+已用 `CGO_ENABLED=0`，可在 Windows/macOS 上直接交叉出 Linux 二进制（sqlite 走纯 Go 驱动）。
 
 ## 运行
 

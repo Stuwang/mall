@@ -8,8 +8,13 @@ type User struct {
 	ID       int64  `json:"id" gorm:"column:id;primaryKey;autoIncrement"`
 	Nickname string `json:"nickname" gorm:"column:nickname"`
 	Sex      int32  `json:"sex" gorm:"column:sex"`
+	IsAdmin  int32  `json:"is_admin" gorm:"column:is_admin"` // 1=管理员
 	Ct       int64  `json:"ct" gorm:"column:ct"`
 	Ut       int64  `json:"ut" gorm:"column:ut"`
+}
+
+func (u *User) Admin() bool {
+	return u != nil && u.IsAdmin == 1
 }
 
 func (User) TableName() string {

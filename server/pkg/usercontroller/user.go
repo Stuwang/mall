@@ -62,7 +62,7 @@ func (c *Controller) Login(ctx context.Context, req *apiuser.LoginRequest) (*api
 		logger.Errorf("Login GetByID userID=%d err=%v", login.UserID, err)
 		return nil, err
 	}
-	token, err := auth.GenerateToken(u.ID, username)
+	token, err := auth.GenerateToken(u.ID, username, u.Admin())
 	if err != nil {
 		return nil, codeerror.OrSystem(err, "Login GenerateToken userID=%d", u.ID)
 	}
@@ -134,5 +134,6 @@ func toUserInfo(u *usermodel.User, username string) *apiuser.UserInfo {
 		Sex:      u.Sex,
 		Ct:       u.Ct,
 		Ut:       u.Ut,
+		IsAdmin:  u.Admin(),
 	}
 }

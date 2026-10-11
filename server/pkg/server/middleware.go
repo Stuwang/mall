@@ -8,6 +8,7 @@ import (
 	khttp "github.com/go-kratos/kratos/v2/transport/http"
 
 	"helloworld/api/helloworld"
+	"helloworld/api/product"
 	"helloworld/api/user"
 	"helloworld/common/auth"
 )
@@ -22,6 +23,11 @@ func Middlewares() []middleware.Middleware {
 				user.OperationUserRegister,
 				user.OperationUserLogin,
 				helloworld.OperationGreeterSayHello,
+				// 用户侧商品浏览免登录
+				product.OperationProductListProducts,
+				product.OperationProductListProductsByCategory,
+				product.OperationProductGetProduct,
+				product.OperationProductListCategories,
 			),
 		),
 	}

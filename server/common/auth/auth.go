@@ -7,10 +7,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/transport"
+	"github.com/golang-jwt/jwt/v5"
 	"helloworld/base/codeerror"
+	"helloworld/base/logger"
 	"helloworld/common/config"
 )
 
@@ -22,13 +23,18 @@ type authKey struct{}
 type AuthInfo struct {
 	UserID   int64
 	Username string
+	IsAdmin  bool
 }
 
 type jwtClaims struct {
 	UserID   int64  `json:"uid"`
 	Username string `json:"username"`
+	IsAdmin  bool   `json:"is_admin"`
 	jwt.RegisteredClaims
 }
+
+// UserLoader 测试环境根据 UserId 补全用户信息（含 IsAdmin）
+type UserLoader func(userID int64) (*AuthInfo, error)
 
 type options struct {
 	whitelist map[string]struct{}
@@ -49,6 +55,7 @@ var (
 	env            string
 	jwtSecret      []byte
 	jwtExpireHours int
+	userLoader     UserLoader
 )
 
 // Init 根据配置初始化鉴权（须在 Middleware 使用前调用）
@@ -62,6 +69,11 @@ func Init(cfg config.AuthConfig, envName string) {
 	if jwtExpireHours <= 0 {
 		jwtExpireHours = 168
 	}
+}
+
+// SetUserLoader 设置用户信息加载器（测试环境 UserId Header 鉴权时使用）
+func SetUserLoader(loader UserLoader) {
+	userLoader = loader
 }
 
 func isTestEnv() bool {
@@ -88,8 +100,22 @@ func MustFromContext(ctx context.Context) *AuthInfo {
 	return info
 }
 
+// RequireAdmin 要求当前用户为管理员
+func RequireAdmin(ctx context.Context) (*AuthInfo, error) {
+	info, ok := FromContext(ctx)
+	if !ok {
+		logger.Errorf("RequireAdmin missing auth info")
+		return nil, codeerror.ErrorUnauthorized
+	}
+	if !info.IsAdmin {
+		logger.Errorf("RequireAdmin forbidden userID=%d", info.UserID)
+		return nil, codeerror.ErrorForbidden
+	}
+	return info, nil
+}
+
 // GenerateToken 使用 JWT 生成登录 token（业务登录成功后调用）
-func GenerateToken(userID int64, username string) (string, error) {
+func GenerateToken(userID int64, username string, isAdmin bool) (string, error) {
 	if len(jwtSecret) == 0 {
 		return "", fmt.Errorf("auth: jwt secret not initialized")
 	}
@@ -97,6 +123,7 @@ func GenerateToken(userID int64, username string) (string, error) {
 	claims := jwtClaims{
 		UserID:   userID,
 		Username: username,
+		IsAdmin:  isAdmin,
 		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  jwt.NewNumericDate(now),
 			ExpiresAt: jwt.NewNumericDate(now.Add(time.Duration(jwtExpireHours) * time.Hour)),
@@ -131,6 +158,7 @@ func ValidateToken(tokenString string) (*AuthInfo, error) {
 	return &AuthInfo{
 		UserID:   claims.UserID,
 		Username: claims.Username,
+		IsAdmin:  claims.IsAdmin,
 	}, nil
 }
 
@@ -175,6 +203,13 @@ func authenticateByUserIDHeader(tr transport.Transporter) (*AuthInfo, error) {
 	uid, err := strconv.ParseInt(raw, 10, 64)
 	if err != nil || uid <= 0 {
 		return nil, codeerror.ErrorUnauthorized
+	}
+	if userLoader != nil {
+		info, err := userLoader(uid)
+		if err != nil {
+			return nil, err
+		}
+		return info, nil
 	}
 	return &AuthInfo{UserID: uid}, nil
 }

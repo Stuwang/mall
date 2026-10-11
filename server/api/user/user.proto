@@ -50,6 +50,7 @@ message UserInfo {
   int32 sex = 4;
   int64 ct = 5;
   int64 ut = 6;
+  bool is_admin = 7;
 }
 
 message RegisterRequest {

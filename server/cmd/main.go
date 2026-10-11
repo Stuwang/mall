@@ -12,6 +12,7 @@ import (
 
 	"helloworld/api/helloworld"
 	apiasset "helloworld/api/asset"
+	apiproduct "helloworld/api/product"
 	apiuser "helloworld/api/user"
 	"helloworld/base/codeerror"
 	"helloworld/base/hash_balancer"
@@ -21,7 +22,9 @@ import (
 	"helloworld/common/database"
 	"helloworld/pkg/assetcontroller"
 	"helloworld/pkg/dao/assetdao"
+	"helloworld/pkg/dao/productdao"
 	"helloworld/pkg/dao/userdao"
+	"helloworld/pkg/productcontroller"
 	"helloworld/pkg/server"
 	"helloworld/pkg/usercontroller"
 
@@ -76,14 +79,40 @@ func main() {
 	if err := assetdao.AutoMigrate(); err != nil {
 		logger.Fatalf("auto migrate asset: %v", err)
 	}
+	if err := productdao.AutoMigrate(); err != nil {
+		logger.Fatalf("auto migrate product: %v", err)
+	}
 
 	auth.Init(cfg.Auth, cfg.Env)
+	auth.SetUserLoader(func(userID int64) (*auth.AuthInfo, error) {
+		u, err := userdao.GetByID(userID)
+		if err != nil {
+			logger.Errorf("UserLoader GetByID userID=%d err=%v", userID, err)
+			return nil, err
+		}
+		login, err := userdao.GetPasswordLoginByUserID(userID)
+		username := ""
+		if err == nil {
+			username = login.Identifier
+		} else if ce, ok := codeerror.As(err); !ok || !ce.Is(codeerror.ErrorUserNotFound) {
+			logger.Errorf("UserLoader GetPasswordLoginByUserID userID=%d err=%v", userID, err)
+			return nil, err
+		}
+		return &auth.AuthInfo{
+			UserID:   u.ID,
+			Username: username,
+			IsAdmin:  u.Admin(),
+		}, nil
+	})
 	logger.Infof("server starting, env=%s addr=%s", cfg.Env, cfg.Server.HTTPAddr)
 
 	httpSrv := http.NewServer(server.HTTPOptions(cfg.Server.HTTPAddr)...)
 	helloworld.RegisterGreeterHTTPServer(httpSrv, Server{})
 	apiuser.RegisterUserHTTPServer(httpSrv, usercontroller.New())
 	apiasset.RegisterAssetHTTPServer(httpSrv, assetcontroller.New())
+	productCtrl := productcontroller.New()
+	apiproduct.RegisterProductHTTPServer(httpSrv, productCtrl)
+	apiproduct.RegisterAdminProductHTTPServer(httpSrv, productCtrl)
 
 	app := kratos.New(
 		kratos.Name("helloworld"),

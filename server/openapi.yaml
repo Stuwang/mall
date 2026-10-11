@@ -6,6 +6,258 @@ info:
     title: ""
     version: 0.0.1
 paths:
+    /admin/api/v1/category/create:
+        post:
+            tags:
+                - AdminProduct
+            summary: AdminCreateCategory
+            description: '----- 分类 -----'
+            operationId: AdminProduct_AdminCreateCategory
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/product.v1.AdminCreateCategoryRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/product.v1.AdminCategoryReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /admin/api/v1/category/list:
+        post:
+            tags:
+                - AdminProduct
+            summary: AdminListCategories
+            operationId: AdminProduct_AdminListCategories
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/product.v1.AdminListCategoriesRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/product.v1.ListCategoriesReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /admin/api/v1/category/update:
+        post:
+            tags:
+                - AdminProduct
+            summary: AdminUpdateCategory
+            operationId: AdminProduct_AdminUpdateCategory
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/product.v1.AdminUpdateCategoryRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/product.v1.AdminCategoryReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /admin/api/v1/product/create:
+        post:
+            tags:
+                - AdminProduct
+            summary: AdminCreateProduct
+            description: '----- 商品 -----'
+            operationId: AdminProduct_AdminCreateProduct
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/product.v1.AdminCreateProductRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/product.v1.AdminProductReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /admin/api/v1/product/detail:
+        post:
+            tags:
+                - AdminProduct
+            summary: AdminGetProduct
+            operationId: AdminProduct_AdminGetProduct
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/product.v1.AdminGetProductRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/product.v1.GetProductReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /admin/api/v1/product/list:
+        post:
+            tags:
+                - AdminProduct
+            summary: AdminListProducts
+            operationId: AdminProduct_AdminListProducts
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/product.v1.AdminListProductsRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/product.v1.ListProductsReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /admin/api/v1/product/set_status:
+        post:
+            tags:
+                - AdminProduct
+            summary: AdminSetProductStatus
+            operationId: AdminProduct_AdminSetProductStatus
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/product.v1.AdminSetProductStatusRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/product.v1.AdminProductReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /admin/api/v1/product/update:
+        post:
+            tags:
+                - AdminProduct
+            summary: AdminUpdateProduct
+            operationId: AdminProduct_AdminUpdateProduct
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/product.v1.AdminUpdateProductRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/product.v1.AdminProductReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /admin/api/v1/product/update_category:
+        post:
+            tags:
+                - AdminProduct
+            summary: AdminUpdateProductCategory
+            operationId: AdminProduct_AdminUpdateProductCategory
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/product.v1.AdminUpdateProductCategoryRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/product.v1.AdminProductReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /admin/api/v1/product/update_stock:
+        post:
+            tags:
+                - AdminProduct
+            summary: AdminUpdateProductStock
+            operationId: AdminProduct_AdminUpdateProductStock
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/product.v1.AdminUpdateProductStockRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/product.v1.AdminProductReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
     /asset/api/v1/history:
         post:
             tags:
@@ -103,6 +355,110 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/helloworld.v1.HelloReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /product/api/v1/category/list:
+        post:
+            tags:
+                - Product
+            summary: ListCategories
+            description: 分类列表（启用中的）
+            operationId: Product_ListCategories
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/product.v1.ListCategoriesRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/product.v1.ListCategoriesReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /product/api/v1/detail:
+        post:
+            tags:
+                - Product
+            summary: GetProduct
+            description: 商品详情（仅上架）
+            operationId: Product_GetProduct
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/product.v1.GetProductRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/product.v1.GetProductReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /product/api/v1/list:
+        post:
+            tags:
+                - Product
+            summary: ListProducts
+            description: 商品浏览（仅上架）
+            operationId: Product_ListProducts
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/product.v1.ListProductsRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/product.v1.ListProductsReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /product/api/v1/list_by_category:
+        post:
+            tags:
+                - Product
+            summary: ListProductsByCategory
+            description: 按分类浏览商品（仅上架）
+            operationId: Product_ListProductsByCategory
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/product.v1.ListProductsByCategoryRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/product.v1.ListProductsReply'
                 default:
                     description: Default error response
                     content:
@@ -373,6 +729,284 @@ components:
                 name:
                     type: string
             description: The request message containing the user's name.
+        product.v1.AdminCategoryReply:
+            type: object
+            properties:
+                category:
+                    $ref: '#/components/schemas/product.v1.CategoryInfo'
+        product.v1.AdminCreateCategoryRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                name:
+                    type: string
+                sort:
+                    type: integer
+                    format: int32
+                status:
+                    enum:
+                        - CATEGORY_STATUS_ON
+                        - CATEGORY_STATUS_OFF
+                    type: string
+                    format: enum
+        product.v1.AdminCreateProductRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                categoryId:
+                    type: integer
+                    format: int64
+                name:
+                    type: string
+                description:
+                    type: string
+                price:
+                    type: integer
+                    format: int64
+                stock:
+                    type: integer
+                    format: int32
+                cover:
+                    type: string
+                status:
+                    enum:
+                        - PRODUCT_STATUS_ON
+                        - PRODUCT_STATUS_OFF
+                    type: string
+                    format: enum
+        product.v1.AdminGetProductRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                id:
+                    type: integer
+                    format: int64
+        product.v1.AdminListCategoriesRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+        product.v1.AdminListProductsRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                page:
+                    type: integer
+                    format: int32
+                pageSize:
+                    type: integer
+                    format: int32
+                categoryId:
+                    type: integer
+                    format: int64
+                status:
+                    enum:
+                        - PRODUCT_STATUS_ON
+                        - PRODUCT_STATUS_OFF
+                    type: string
+                    format: enum
+                keyword:
+                    type: string
+        product.v1.AdminProductReply:
+            type: object
+            properties:
+                product:
+                    $ref: '#/components/schemas/product.v1.ProductInfo'
+        product.v1.AdminSetProductStatusRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                id:
+                    type: integer
+                    format: int64
+                status:
+                    enum:
+                        - PRODUCT_STATUS_ON
+                        - PRODUCT_STATUS_OFF
+                    type: string
+                    format: enum
+        product.v1.AdminUpdateCategoryRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                id:
+                    type: integer
+                    format: int64
+                name:
+                    type: string
+                sort:
+                    type: integer
+                    format: int32
+                status:
+                    enum:
+                        - CATEGORY_STATUS_ON
+                        - CATEGORY_STATUS_OFF
+                    type: string
+                    format: enum
+        product.v1.AdminUpdateProductCategoryRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                id:
+                    type: integer
+                    format: int64
+                categoryId:
+                    type: integer
+                    format: int64
+        product.v1.AdminUpdateProductRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                id:
+                    type: integer
+                    format: int64
+                name:
+                    type: string
+                description:
+                    type: string
+                price:
+                    type: integer
+                    format: int64
+                cover:
+                    type: string
+        product.v1.AdminUpdateProductStockRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                id:
+                    type: integer
+                    format: int64
+                stock:
+                    type: integer
+                    format: int32
+        product.v1.CategoryInfo:
+            type: object
+            properties:
+                id:
+                    type: integer
+                    format: int64
+                name:
+                    type: string
+                sort:
+                    type: integer
+                    format: int32
+                status:
+                    enum:
+                        - CATEGORY_STATUS_ON
+                        - CATEGORY_STATUS_OFF
+                    type: string
+                    format: enum
+                ct:
+                    type: integer
+                    format: int64
+                ut:
+                    type: integer
+                    format: int64
+        product.v1.GetProductReply:
+            type: object
+            properties:
+                product:
+                    $ref: '#/components/schemas/product.v1.ProductInfo'
+        product.v1.GetProductRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                id:
+                    type: integer
+                    format: int64
+        product.v1.ListCategoriesReply:
+            type: object
+            properties:
+                list:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/product.v1.CategoryInfo'
+        product.v1.ListCategoriesRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+        product.v1.ListProductsByCategoryRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                categoryId:
+                    type: integer
+                    format: int64
+                page:
+                    type: integer
+                    format: int32
+                pageSize:
+                    type: integer
+                    format: int32
+        product.v1.ListProductsReply:
+            type: object
+            properties:
+                list:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/product.v1.ProductInfo'
+                total:
+                    type: integer
+                    format: int64
+        product.v1.ListProductsRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                page:
+                    type: integer
+                    format: int32
+                pageSize:
+                    type: integer
+                    format: int32
+                keyword:
+                    type: string
+        product.v1.ProductInfo:
+            type: object
+            properties:
+                id:
+                    type: integer
+                    format: int64
+                categoryId:
+                    type: integer
+                    format: int64
+                name:
+                    type: string
+                description:
+                    type: string
+                price:
+                    type: integer
+                    description: 价格，单位分
+                    format: int64
+                stock:
+                    type: integer
+                    format: int32
+                status:
+                    enum:
+                        - PRODUCT_STATUS_ON
+                        - PRODUCT_STATUS_OFF
+                    type: string
+                    format: enum
+                cover:
+                    type: string
+                ct:
+                    type: integer
+                    format: int64
+                ut:
+                    type: integer
+                    format: int64
         user.v1.GetUserInfoReply:
             type: object
             properties:
@@ -455,11 +1089,17 @@ components:
                 ut:
                     type: integer
                     format: int64
+                isAdmin:
+                    type: boolean
             description: 用户信息
 tags:
+    - name: AdminProduct
+      description: 管理侧商品/分类服务（需 admin）
     - name: Asset
       description: 用户资产服务
     - name: Greeter
       description: The greeting service definition.
+    - name: Product
+      description: 用户侧商品服务
     - name: User
       description: 用户管理服务

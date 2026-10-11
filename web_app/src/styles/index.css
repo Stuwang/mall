@@ -1,0 +1,65 @@
+:root {
+  --mall-bg: #f7f8fa;
+  --mall-card: #ffffff;
+  --mall-text: #323233;
+  --mall-muted: #969799;
+  --mall-primary: #ee0a24;
+  --mall-safe-bottom: env(safe-area-inset-bottom, 0px);
+  color: var(--mall-text);
+  font-family:
+    'PingFang SC',
+    'Hiragino Sans GB',
+    'Microsoft YaHei',
+    system-ui,
+    sans-serif;
+  line-height: 1.4;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  min-height: 100%;
+  background: var(--mall-bg);
+}
+
+body {
+  overscroll-behavior-y: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.page {
+  min-height: 100%;
+  background: var(--mall-bg);
+}
+
+.page-with-tab {
+  padding-bottom: calc(50px + var(--mall-safe-bottom));
+}
+
+.price {
+  color: var(--mall-primary);
+  font-weight: 600;
+}
+
+.price::before {
+  content: '¥';
+  font-size: 0.75em;
+  margin-right: 1px;
+}
+
+.muted {
+  color: var(--mall-muted);
+  font-size: 12px;
+}

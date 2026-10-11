@@ -11,6 +11,7 @@ import (
 	rawgrpc "google.golang.org/grpc"
 
 	"helloworld/api/helloworld"
+	apiasset "helloworld/api/asset"
 	apiuser "helloworld/api/user"
 	"helloworld/base/codeerror"
 	"helloworld/base/hash_balancer"
@@ -18,6 +19,8 @@ import (
 	"helloworld/common/auth"
 	"helloworld/common/config"
 	"helloworld/common/database"
+	"helloworld/pkg/assetcontroller"
+	"helloworld/pkg/dao/assetdao"
 	"helloworld/pkg/dao/userdao"
 	"helloworld/pkg/server"
 	"helloworld/pkg/usercontroller"
@@ -68,7 +71,10 @@ func main() {
 	defer database.Close()
 
 	if err := userdao.AutoMigrate(); err != nil {
-		logger.Fatalf("auto migrate: %v", err)
+		logger.Fatalf("auto migrate user: %v", err)
+	}
+	if err := assetdao.AutoMigrate(); err != nil {
+		logger.Fatalf("auto migrate asset: %v", err)
 	}
 
 	auth.Init(cfg.Auth, cfg.Env)
@@ -77,6 +83,7 @@ func main() {
 	httpSrv := http.NewServer(server.HTTPOptions(cfg.Server.HTTPAddr)...)
 	helloworld.RegisterGreeterHTTPServer(httpSrv, Server{})
 	apiuser.RegisterUserHTTPServer(httpSrv, usercontroller.New())
+	apiasset.RegisterAssetHTTPServer(httpSrv, assetcontroller.New())
 
 	app := kratos.New(
 		kratos.Name("helloworld"),

@@ -6,6 +6,58 @@ info:
     title: ""
     version: 0.0.1
 paths:
+    /asset/api/v1/history:
+        post:
+            tags:
+                - Asset
+            summary: GetAssetHistory
+            description: 查询当前用户资产变更历史
+            operationId: Asset_GetAssetHistory
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/asset.v1.GetAssetHistoryRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/asset.v1.GetAssetHistoryReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /asset/api/v1/list:
+        post:
+            tags:
+                - Asset
+            summary: GetUserAssets
+            description: 查询当前用户资产列表
+            operationId: Asset_GetUserAssets
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/asset.v1.GetUserAssetsRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/asset.v1.GetUserAssetsReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
     /hello/api/v1/say:
         post:
             tags:
@@ -163,6 +215,105 @@ paths:
                                 $ref: '#/components/schemas/google.rpc.Status'
 components:
     schemas:
+        asset.v1.AssetHistory:
+            type: object
+            properties:
+                id:
+                    type: integer
+                    format: int64
+                userId:
+                    type: integer
+                    format: int64
+                type:
+                    enum:
+                        - ASSET_TYPE_POINT
+                    type: string
+                    format: enum
+                change:
+                    type: integer
+                    description: 变更量（可正可负）
+                    format: int64
+                balance:
+                    type: integer
+                    description: 变更后余额
+                    format: int64
+                idempotentId:
+                    type: string
+                    description: 幂等 ID
+                bizType:
+                    type: string
+                bizId:
+                    type: string
+                remark:
+                    type: string
+                ct:
+                    type: integer
+                    format: int64
+        asset.v1.AssetInfo:
+            type: object
+            properties:
+                userId:
+                    type: integer
+                    format: int64
+                type:
+                    enum:
+                        - ASSET_TYPE_POINT
+                    type: string
+                    format: enum
+                balance:
+                    type: integer
+                    format: int64
+                ct:
+                    type: integer
+                    format: int64
+                ut:
+                    type: integer
+                    format: int64
+        asset.v1.GetAssetHistoryReply:
+            type: object
+            properties:
+                list:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/asset.v1.AssetHistory'
+                total:
+                    type: integer
+                    format: int64
+        asset.v1.GetAssetHistoryRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                type:
+                    enum:
+                        - ASSET_TYPE_POINT
+                    type: string
+                    description: 可选：按类型筛选，0 表示全部
+                    format: enum
+                page:
+                    type: integer
+                    format: int32
+                pageSize:
+                    type: integer
+                    format: int32
+        asset.v1.GetUserAssetsReply:
+            type: object
+            properties:
+                assets:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/asset.v1.AssetInfo'
+        asset.v1.GetUserAssetsRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                type:
+                    enum:
+                        - ASSET_TYPE_POINT
+                    type: string
+                    description: 可选：按类型筛选，0 表示全部
+                    format: enum
         google.protobuf.Any:
             type: object
             properties:
@@ -306,6 +457,8 @@ components:
                     format: int64
             description: 用户信息
 tags:
+    - name: Asset
+      description: 用户资产服务
     - name: Greeter
       description: The greeting service definition.
     - name: User

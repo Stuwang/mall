@@ -1,0 +1,81 @@
+syntax = "proto3";
+
+package asset.v1;
+
+import "google/api/annotations.proto";
+import "base/base.proto";
+
+option go_package = "helloworld/api/asset;asset";
+
+// 用户资产服务
+service Asset {
+  // 查询当前用户资产列表
+  rpc GetUserAssets (GetUserAssetsRequest) returns (GetUserAssetsReply) {
+    option (google.api.http) = {
+      post: "/asset/api/v1/list"
+      body: "*"
+    };
+  }
+
+  // 查询当前用户资产变更历史
+  rpc GetAssetHistory (GetAssetHistoryRequest) returns (GetAssetHistoryReply) {
+    option (google.api.http) = {
+      post: "/asset/api/v1/history"
+      body: "*"
+    };
+  }
+}
+
+// 资产类型
+enum AssetType {
+  ASSET_TYPE_UNSPECIFIED = 0;
+  // 积分
+  ASSET_TYPE_POINT = 1;
+}
+
+message AssetInfo {
+  int64 user_id = 1;
+  AssetType type = 2;
+  int64 balance = 3;
+  int64 ct = 4;
+  int64 ut = 5;
+}
+
+message AssetHistory {
+  int64 id = 1;
+  int64 user_id = 2;
+  AssetType type = 3;
+  // 变更量（可正可负）
+  int64 change = 4;
+  // 变更后余额
+  int64 balance = 5;
+  // 幂等 ID
+  string idempotent_id = 6;
+  string biz_type = 7;
+  string biz_id = 8;
+  string remark = 9;
+  int64 ct = 10;
+}
+
+message GetUserAssetsRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  // 可选：按类型筛选，0 表示全部
+  AssetType type = 2;
+}
+
+message GetUserAssetsReply {
+  repeated AssetInfo assets = 1;
+}
+
+message GetAssetHistoryRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  // 可选：按类型筛选，0 表示全部
+  AssetType type = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message GetAssetHistoryReply {
+  repeated AssetHistory list = 1;
+  int64 total = 2;
+}

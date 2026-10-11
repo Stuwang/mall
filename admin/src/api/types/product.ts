@@ -65,7 +65,7 @@ export interface AdminUpdateCategoryRequest extends WithBaseParam {
   status: CategoryStatus
 }
 
-export interface AdminListCategoriesRequest extends WithBaseParam {}
+export type AdminListCategoriesRequest = WithBaseParam
 
 export interface AdminCategoryReply {
   category: CategoryInfo

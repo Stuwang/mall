@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+package cart.v1;
+
+import "google/api/annotations.proto";
+import "base/base.proto";
+
+option go_package = "helloworld/api/cart;cart";
+
+// 用户购物车服务
+service Cart {
+  // 加入购物车
+  rpc AddToCart (AddToCartRequest) returns (CartItemReply) {
+    option (google.api.http) = {
+      post: "/cart/api/v1/add"
+      body: "*"
+    };
+  }
+
+  // 从购物车移除
+  rpc RemoveFromCart (RemoveFromCartRequest) returns (RemoveFromCartReply) {
+    option (google.api.http) = {
+      post: "/cart/api/v1/remove"
+      body: "*"
+    };
+  }
+
+  // 调整购物车数量
+  rpc UpdateCartQuantity (UpdateCartQuantityRequest) returns (CartItemReply) {
+    option (google.api.http) = {
+      post: "/cart/api/v1/update_quantity"
+      body: "*"
+    };
+  }
+
+  // 购物车列表
+  rpc ListCart (ListCartRequest) returns (ListCartReply) {
+    option (google.api.http) = {
+      post: "/cart/api/v1/list"
+      body: "*"
+    };
+  }
+}
+
+message CartItem {
+  int64 id = 1;
+  int64 user_id = 2;
+  int64 product_id = 3;
+  int32 quantity = 4;
+  // 以下为展示字段
+  string product_name = 5;
+  int64 product_price = 6;
+  int32 product_stock = 7;
+  string product_cover = 8;
+  int32 product_status = 9;
+  int64 ct = 10;
+  int64 ut = 11;
+}
+
+message AddToCartRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 product_id = 2;
+  // 增加数量，默认 1
+  int32 quantity = 3;
+}
+
+message RemoveFromCartRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  // 购物车项 ID；与 product_id 二选一，优先 id
+  int64 id = 2;
+  int64 product_id = 3;
+}
+
+message RemoveFromCartReply {}
+
+message UpdateCartQuantityRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 id = 2;
+  // 目标数量；<=0 视为移除
+  int32 quantity = 3;
+}
+
+message CartItemReply {
+  CartItem item = 1;
+}
+
+message ListCartRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+}
+
+message ListCartReply {
+  repeated CartItem list = 1;
+  int64 total_quantity = 2;
+}

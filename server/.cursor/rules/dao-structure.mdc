@@ -1,0 +1,24 @@
+---
+description: 按表拆分 Dao，跨表事务通过注入 gorm.DB/tx
+alwaysApply: true
+---
+
+# Dao 结构约定
+
+1. **一张表对应一个 Dao 结构体**（如 `ProductDao`、`ImageDao`、`CategoryDao`），不要把多表操作堆在同一个 Dao 里。
+2. Dao 持有 `*gorm.DB`，通过构造函数注入：
+   - `NewXxxDao(nil)`：使用全局 `database.GetDb()`
+   - `NewXxxDao(tx)`：使用事务连接
+3. 提供 `WithTx(tx *gorm.DB)` 便于在已有 Dao 上切换到事务。
+4. **跨表事务**在上层（controller / 编排函数）开启 `db.Transaction`，并把同一个 `tx` 注入各个 Dao：
+
+```go
+err := database.GetDb().Transaction(func(tx *gorm.DB) error {
+    productDao := productdao.NewProductDao(tx)
+    imageDao := productdao.NewImageDao(tx)
+    // ...
+    return nil
+})
+```
+
+5. 单表读写直接 `NewXxxDao(nil).Method(...)` 即可。

@@ -63,6 +63,7 @@ var (
 	ErrorUserExists   = CodeError{Code: 1006, Msg: "user already exists"}
 	ErrorUserNotFound = CodeError{Code: 1007, Msg: "user not found"}
 	ErrorPassword     = CodeError{Code: 1008, Msg: "password error"}
-	ErrorForbidden    = CodeError{Code: 1009, Msg: "forbidden"}
-	ErrorSystem       = CodeError{Code: 1, Msg: "system error"}
+	ErrorForbidden         = CodeError{Code: 1009, Msg: "forbidden"}
+	ErrorStockInsufficient = CodeError{Code: 1010, Msg: "stock insufficient"}
+	ErrorSystem            = CodeError{Code: 1, Msg: "system error"}
 )

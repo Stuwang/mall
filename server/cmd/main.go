@@ -12,6 +12,7 @@ import (
 
 	"helloworld/api/helloworld"
 	apiasset "helloworld/api/asset"
+	apicart "helloworld/api/cart"
 	apiproduct "helloworld/api/product"
 	apiuser "helloworld/api/user"
 	"helloworld/base/codeerror"
@@ -21,7 +22,9 @@ import (
 	"helloworld/common/config"
 	"helloworld/common/database"
 	"helloworld/pkg/assetcontroller"
+	"helloworld/pkg/cartcontroller"
 	"helloworld/pkg/dao/assetdao"
+	"helloworld/pkg/dao/cartdao"
 	"helloworld/pkg/dao/productdao"
 	"helloworld/pkg/dao/userdao"
 	"helloworld/pkg/productcontroller"
@@ -82,6 +85,9 @@ func main() {
 	if err := productdao.AutoMigrate(); err != nil {
 		logger.Fatalf("auto migrate product: %v", err)
 	}
+	if err := cartdao.AutoMigrate(); err != nil {
+		logger.Fatalf("auto migrate cart: %v", err)
+	}
 
 	auth.Init(cfg.Auth, cfg.Env)
 	auth.SetUserLoader(func(userID int64) (*auth.AuthInfo, error) {
@@ -113,6 +119,7 @@ func main() {
 	productCtrl := productcontroller.New()
 	apiproduct.RegisterProductHTTPServer(httpSrv, productCtrl)
 	apiproduct.RegisterAdminProductHTTPServer(httpSrv, productCtrl)
+	apicart.RegisterCartHTTPServer(httpSrv, cartcontroller.New())
 
 	app := kratos.New(
 		kratos.Name("helloworld"),

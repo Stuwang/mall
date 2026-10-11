@@ -310,6 +310,110 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/google.rpc.Status'
+    /cart/api/v1/add:
+        post:
+            tags:
+                - Cart
+            summary: AddToCart
+            description: 加入购物车
+            operationId: Cart_AddToCart
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/cart.v1.AddToCartRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/cart.v1.CartItemReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /cart/api/v1/list:
+        post:
+            tags:
+                - Cart
+            summary: ListCart
+            description: 购物车列表
+            operationId: Cart_ListCart
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/cart.v1.ListCartRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/cart.v1.ListCartReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /cart/api/v1/remove:
+        post:
+            tags:
+                - Cart
+            summary: RemoveFromCart
+            description: 从购物车移除
+            operationId: Cart_RemoveFromCart
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/cart.v1.RemoveFromCartRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/cart.v1.RemoveFromCartReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /cart/api/v1/update_quantity:
+        post:
+            tags:
+                - Cart
+            summary: UpdateCartQuantity
+            description: 调整购物车数量
+            operationId: Cart_UpdateCartQuantity
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/cart.v1.UpdateCartQuantityRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/cart.v1.CartItemReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
     /hello/api/v1/say:
         post:
             tags:
@@ -670,6 +774,100 @@ components:
                     type: string
                     description: 可选：按类型筛选，0 表示全部
                     format: enum
+        cart.v1.AddToCartRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                productId:
+                    type: integer
+                    format: int64
+                quantity:
+                    type: integer
+                    description: 增加数量，默认 1
+                    format: int32
+        cart.v1.CartItem:
+            type: object
+            properties:
+                id:
+                    type: integer
+                    format: int64
+                userId:
+                    type: integer
+                    format: int64
+                productId:
+                    type: integer
+                    format: int64
+                quantity:
+                    type: integer
+                    format: int32
+                productName:
+                    type: string
+                    description: 以下为展示字段
+                productPrice:
+                    type: integer
+                    format: int64
+                productStock:
+                    type: integer
+                    format: int32
+                productCover:
+                    type: string
+                productStatus:
+                    type: integer
+                    format: int32
+                ct:
+                    type: integer
+                    format: int64
+                ut:
+                    type: integer
+                    format: int64
+        cart.v1.CartItemReply:
+            type: object
+            properties:
+                item:
+                    $ref: '#/components/schemas/cart.v1.CartItem'
+        cart.v1.ListCartReply:
+            type: object
+            properties:
+                list:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/cart.v1.CartItem'
+                totalQuantity:
+                    type: integer
+                    format: int64
+        cart.v1.ListCartRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+        cart.v1.RemoveFromCartReply:
+            type: object
+            properties: {}
+        cart.v1.RemoveFromCartRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                id:
+                    type: integer
+                    description: 购物车项 ID；与 product_id 二选一，优先 id
+                    format: int64
+                productId:
+                    type: integer
+                    format: int64
+        cart.v1.UpdateCartQuantityRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                id:
+                    type: integer
+                    format: int64
+                quantity:
+                    type: integer
+                    description: 目标数量；<=0 视为移除
+                    format: int32
         google.protobuf.Any:
             type: object
             properties:
@@ -1104,6 +1302,8 @@ tags:
       description: 管理侧商品/分类服务（需 admin）
     - name: Asset
       description: 用户资产服务
+    - name: Cart
+      description: 用户购物车服务
     - name: Greeter
       description: The greeting service definition.
     - name: Product

@@ -24,7 +24,8 @@ point:
   points_per_yuan: 100
 
 storage:
-  public_base: "http://localhost:8080"
+  # 对外可访问的 API 根地址（无尾斜杠）。一体部署时图片 URL 指向此地址（默认 API :8080）。
+  public_base: "http://192.168.10.225:8080"
   max_upload_bytes: 5242880
   local:
     root_dir: "data/images"

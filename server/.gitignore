@@ -41,3 +41,9 @@ bin/
 
 # 本地上传图片
 data/images/
+
+# allinone embed 前端构建产物（保留 .gitkeep）
+cmd/allinone/static/admin/*
+!cmd/allinone/static/admin/.gitkeep
+cmd/allinone/static/web_app/*
+!cmd/allinone/static/web_app/.gitkeep

@@ -26,10 +26,11 @@ var (
 
 var (
 	// OK = CodeError{0, "OK"} // no use because == nil check
-	ErrorParam     = CodeError{Code: 1000, Msg: "param error"}
-	ErrorExited    = CodeError{Code: 1001, Msg: "error alreadt exited"}
-	ErrorUnimplied = CodeError{Code: 1002, Msg: "no unimplied results returned"}
-	ErrorPanic     = CodeError{Code: 1003, Msg: "panic error"}
-	ErrorNotOnline = CodeError{Code: 1004, Msg: "not online"}
-	ErrorSystem    = CodeError{Code: 1, Msg: "system error"}
+	ErrorParam        = CodeError{Code: 1000, Msg: "param error"}
+	ErrorExited       = CodeError{Code: 1001, Msg: "error alreadt exited"}
+	ErrorUnimplied    = CodeError{Code: 1002, Msg: "no unimplied results returned"}
+	ErrorPanic        = CodeError{Code: 1003, Msg: "panic error"}
+	ErrorNotOnline    = CodeError{Code: 1004, Msg: "not online"}
+	ErrorUnauthorized = CodeError{Code: 1005, Msg: "unauthorized"}
+	ErrorSystem       = CodeError{Code: 1, Msg: "system error"}
 )

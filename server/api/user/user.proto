@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+package user.v1;
+
+import "google/api/annotations.proto";
+import "base/base.proto";
+
+option go_package = "helloworld/api/user;user";
+
+// 用户管理服务
+service User {
+  // 用户注册
+  rpc Register (RegisterRequest) returns (RegisterReply) {
+    option (google.api.http) = {
+      post: "/user/api/v1/register"
+      body: "*"
+    };
+  }
+
+  // 用户登录
+  rpc Login (LoginRequest) returns (LoginReply) {
+    option (google.api.http) = {
+      post: "/user/api/v1/login"
+      body: "*"
+    };
+  }
+
+  // 用户信息查询
+  rpc GetUserInfo (GetUserInfoRequest) returns (GetUserInfoReply) {
+    option (google.api.http) = {
+      post: "/user/api/v1/info"
+      body: "*"
+    };
+  }
+
+  // 用户信息修改
+  rpc UpdateUserInfo (UpdateUserInfoRequest) returns (UpdateUserInfoReply) {
+    option (google.api.http) = {
+      post: "/user/api/v1/update"
+      body: "*"
+    };
+  }
+}
+
+// 用户信息
+message UserInfo {
+  int64 id = 1;
+  string username = 2;
+  string nickname = 3;
+  int32 sex = 4;
+  int64 ct = 5;
+  int64 ut = 6;
+}
+
+message RegisterRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  string username = 2;
+  string password = 3;
+  string nickname = 4;
+}
+
+message RegisterReply {
+  UserInfo user = 1;
+}
+
+message LoginRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  string username = 2;
+  string password = 3;
+}
+
+message LoginReply {
+  UserInfo user = 1;
+}
+
+message GetUserInfoRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 id = 2;
+}
+
+message GetUserInfoReply {
+  UserInfo user = 1;
+}
+
+message UpdateUserInfoRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 id = 2;
+  string nickname = 3;
+  int32 sex = 4;
+}
+
+message UpdateUserInfoReply {
+  UserInfo user = 1;
+}

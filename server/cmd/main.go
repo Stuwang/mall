@@ -3,23 +3,23 @@ package main
 import (
 	"context"
 	"encoding/json"
+	stdhttp "net/http"
+
 	"github.com/go-kratos/kratos/v2"
-	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/middleware/metadata"
 	"github.com/go-kratos/kratos/v2/selector"
 	"github.com/go-kratos/kratos/v2/transport/http"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	rawgrpc "google.golang.org/grpc"
-	"helloworld/base/codeerror"
-	stdhttp "net/http"
-	"strings"
 
 	"helloworld/api/helloworld"
+	"helloworld/api/user"
+	"helloworld/base/codeerror"
 	"helloworld/base/hash_balancer"
+	"helloworld/base/logger"
+	"helloworld/common/auth"
+	"helloworld/common/database"
 
-	kzap "github.com/go-kratos/kratos/contrib/log/zap/v2"
 	//_ "helloworld/base/pbjson"
 	_ "github.com/go-kratos/kratos/v2/encoding/json"
 )
@@ -71,38 +71,11 @@ func setIp(handler middleware.Handler) middleware.Handler {
 }
 
 func main() {
-	zapConfig := zap.NewProductionConfig()
-	zapConfig.EncoderConfig.FunctionKey = "func"
-	zapConfig.Encoding = "json"
-	zapConfig.EncoderConfig.EncodeTime = zapcore.RFC3339TimeEncoder
-	zapConfig.EncoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
-	zapConfig.EncoderConfig.ConsoleSeparator = " "
-	zapConfig.Level.SetLevel(zapcore.DebugLevel)
-	zapConfig.EncoderConfig.EncodeCaller = func(caller zapcore.EntryCaller, encoder zapcore.PrimitiveArrayEncoder) {
-		fullPath := caller.FullPath()
-		count := 0
-		index := strings.LastIndexFunc(fullPath, func(r rune) bool {
-			if r == '/' {
-				count++
-			}
-			if count >= 3 {
-				return true
-			}
-			return false
-		})
-		encoder.AppendString(fullPath[index+1:])
-	}
-	l, err := zapConfig.Build()
-	if err != nil {
-		panic(err)
-	}
-	log.SetLogger(kzap.NewLogger(l.WithOptions(zap.AddCallerSkip(2))))
+	logger.InitLogger("")
+	database.InitDb("mall.db")
+	defer database.Close()
 
-	log.Infof("this is a log")
-
-	l.With(zap.String("a", "b")).Sugar().Infof("aaaaaa")
-	l.Info("this is a msg", zap.String("a", "b"))
-	l.Sugar().Debugw("this is a log", "a", "b")
+	logger.Infof("server starting")
 
 	s := &Server{}
 	httpSrv := http.NewServer(
@@ -110,9 +83,12 @@ func main() {
 		http.Middleware(
 			metadata.Server(metadata.WithPropagatedPrefix("")),
 			setIp,
-			//jwt.Server(func(token *jwt2.Token) (interface{}, error) {
-			//	return []byte("kajshdkajdas"), nil
-			//}),
+			auth.Middleware(
+				auth.WithWhitelist(
+					user.OperationUserRegister,
+					user.OperationUserLogin,
+				),
+			),
 		),
 		http.ResponseEncoder(func(writer stdhttp.ResponseWriter, request *stdhttp.Request, i interface{}) error {
 			writer.WriteHeader(stdhttp.StatusOK)
@@ -177,7 +153,7 @@ func main() {
 	helloworld.RegisterGreeterHTTPServer(httpSrv, s)
 
 	httpSrv.HandleFunc("/hello", func(writer stdhttp.ResponseWriter, request *stdhttp.Request) {
-		l.Sugar().Debugw("this is a log", "a", "b")
+		logger.Debugw("this is a log", "a", "b")
 		writer.WriteHeader(stdhttp.StatusOK)
 		writer.Write([]byte(`hello world`))
 	})
@@ -190,6 +166,6 @@ func main() {
 	)
 
 	if err := app.Run(); err != nil {
-		log.Fatal(err)
+		logger.Fatalf("%v", err)
 	}
 }

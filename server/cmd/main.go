@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"time"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/selector"
@@ -13,6 +14,7 @@ import (
 	"helloworld/api/helloworld"
 	apiasset "helloworld/api/asset"
 	apicart "helloworld/api/cart"
+	apiorder "helloworld/api/order"
 	apiproduct "helloworld/api/product"
 	apiuser "helloworld/api/user"
 	"helloworld/base/codeerror"
@@ -25,8 +27,11 @@ import (
 	"helloworld/pkg/cartcontroller"
 	"helloworld/pkg/dao/assetdao"
 	"helloworld/pkg/dao/cartdao"
+	"helloworld/pkg/dao/orderdao"
 	"helloworld/pkg/dao/productdao"
 	"helloworld/pkg/dao/userdao"
+	"helloworld/pkg/orderbiz"
+	"helloworld/pkg/ordercontroller"
 	"helloworld/pkg/productcontroller"
 	"helloworld/pkg/server"
 	"helloworld/pkg/usercontroller"
@@ -88,6 +93,9 @@ func main() {
 	if err := cartdao.AutoMigrate(); err != nil {
 		logger.Fatalf("auto migrate cart: %v", err)
 	}
+	if err := orderdao.AutoMigrate(); err != nil {
+		logger.Fatalf("auto migrate order: %v", err)
+	}
 
 	auth.Init(cfg.Auth, cfg.Env)
 	auth.SetUserLoader(func(userID int64) (*auth.AuthInfo, error) {
@@ -110,6 +118,10 @@ func main() {
 			IsAdmin:  u.Admin(),
 		}, nil
 	})
+
+	orderbiz.Init(cfg.Order.PayTimeoutSec, cfg.Point.PointsPerYuan)
+	orderbiz.StartTimeoutWorker(30 * time.Second)
+
 	logger.Infof("server starting, env=%s addr=%s", cfg.Env, cfg.Server.HTTPAddr)
 
 	httpSrv := http.NewServer(server.HTTPOptions(cfg.Server.HTTPAddr)...)
@@ -120,6 +132,7 @@ func main() {
 	apiproduct.RegisterProductHTTPServer(httpSrv, productCtrl)
 	apiproduct.RegisterAdminProductHTTPServer(httpSrv, productCtrl)
 	apicart.RegisterCartHTTPServer(httpSrv, cartcontroller.New())
+	apiorder.RegisterOrderHTTPServer(httpSrv, ordercontroller.New())
 
 	app := kratos.New(
 		kratos.Name("helloworld"),

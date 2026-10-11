@@ -10,6 +10,7 @@ import (
 	"helloworld/pkg/dao/cartdao"
 	"helloworld/pkg/dao/productdao"
 	cartmodel "helloworld/pkg/model/cart"
+	"helloworld/pkg/model/common"
 	productmodel "helloworld/pkg/model/product"
 )
 
@@ -51,19 +52,32 @@ func (c *Controller) AddToCart(ctx context.Context, req *apicart.AddToCartReques
 
 	var targetQty int32
 	if item == nil {
+		anyItem, err := cartDao.FindAnyByUserProduct(info.UserID, req.ProductId)
+		if err != nil {
+			logger.Errorf("AddToCart FindAnyByUserProduct userID=%d productID=%d err=%v", info.UserID, req.ProductId, err)
+			return nil, err
+		}
 		targetQty = qty
 		if targetQty > product.Stock {
 			logger.Errorf("AddToCart stock insufficient productID=%d stock=%d qty=%d", req.ProductId, product.Stock, targetQty)
 			return nil, codeerror.ErrorStockInsufficient
 		}
-		item = &cartmodel.CartItem{
-			UserID:    info.UserID,
-			ProductID: req.ProductId,
-			Quantity:  targetQty,
-		}
-		if err := cartDao.Create(item); err != nil {
-			logger.Errorf("AddToCart Create userID=%d productID=%d err=%v", info.UserID, req.ProductId, err)
-			return nil, err
+		if anyItem != nil && anyItem.Deleted == common.DeletedYes {
+			if err := cartDao.Revive(anyItem, targetQty); err != nil {
+				logger.Errorf("AddToCart Revive id=%d err=%v", anyItem.ID, err)
+				return nil, err
+			}
+			item = anyItem
+		} else {
+			item = &cartmodel.CartItem{
+				UserID:    info.UserID,
+				ProductID: req.ProductId,
+				Quantity:  targetQty,
+			}
+			if err := cartDao.Create(item); err != nil {
+				logger.Errorf("AddToCart Create userID=%d productID=%d err=%v", info.UserID, req.ProductId, err)
+				return nil, err
+			}
 		}
 	} else {
 		targetQty = item.Quantity + qty
@@ -93,13 +107,13 @@ func (c *Controller) RemoveFromCart(ctx context.Context, req *apicart.RemoveFrom
 
 	switch {
 	case req.Id > 0:
-		if err := cartDao.DeleteByID(req.Id, info.UserID); err != nil {
-			logger.Errorf("RemoveFromCart DeleteByID id=%d userID=%d err=%v", req.Id, info.UserID, err)
+		if err := cartDao.SoftDeleteByID(req.Id, info.UserID); err != nil {
+			logger.Errorf("RemoveFromCart SoftDeleteByID id=%d userID=%d err=%v", req.Id, info.UserID, err)
 			return nil, err
 		}
 	case req.ProductId > 0:
-		if err := cartDao.DeleteByUserProduct(info.UserID, req.ProductId); err != nil {
-			logger.Errorf("RemoveFromCart DeleteByUserProduct userID=%d productID=%d err=%v", info.UserID, req.ProductId, err)
+		if err := cartDao.SoftDeleteByUserProduct(info.UserID, req.ProductId); err != nil {
+			logger.Errorf("RemoveFromCart SoftDeleteByUserProduct userID=%d productID=%d err=%v", info.UserID, req.ProductId, err)
 			return nil, err
 		}
 	default:
@@ -118,8 +132,8 @@ func (c *Controller) UpdateCartQuantity(ctx context.Context, req *apicart.Update
 
 	cartDao := cartdao.NewCartDao(nil)
 	if req.Quantity <= 0 {
-		if err := cartDao.DeleteByID(req.Id, info.UserID); err != nil {
-			logger.Errorf("UpdateCartQuantity DeleteByID id=%d userID=%d err=%v", req.Id, info.UserID, err)
+		if err := cartDao.SoftDeleteByID(req.Id, info.UserID); err != nil {
+			logger.Errorf("UpdateCartQuantity SoftDeleteByID id=%d userID=%d err=%v", req.Id, info.UserID, err)
 			return nil, err
 		}
 		return &apicart.CartItemReply{}, nil
@@ -174,7 +188,6 @@ func (c *Controller) ListCart(ctx context.Context, req *apicart.ListCartRequest)
 		if err != nil {
 			logger.Errorf("ListCart GetProduct productID=%d err=%v", item.ProductID, err)
 			if ce, ok := codeerror.As(err); ok && ce.Code == codeerror.ErrorParam.Code {
-				// 商品已失效：仍返回购物车基础信息
 				out = append(out, &apicart.CartItem{
 					Id:        item.ID,
 					UserId:    item.UserID,

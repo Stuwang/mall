@@ -1,0 +1,195 @@
+syntax = "proto3";
+
+package order.v1;
+
+import "google/api/annotations.proto";
+import "base/base.proto";
+
+option go_package = "helloworld/api/order;order";
+
+// 用户订单服务
+service Order {
+  // 商品直接下单
+  rpc CreateProductOrder (CreateProductOrderRequest) returns (OrderReply) {
+    option (google.api.http) = {
+      post: "/order/api/v1/create_product"
+      body: "*"
+    };
+  }
+
+  // 购物车选中商品下单
+  rpc CreateCartOrder (CreateCartOrderRequest) returns (OrderReply) {
+    option (google.api.http) = {
+      post: "/order/api/v1/create_cart"
+      body: "*"
+    };
+  }
+
+  // 购买积分下单
+  rpc CreatePointOrder (CreatePointOrderRequest) returns (OrderReply) {
+    option (google.api.http) = {
+      post: "/order/api/v1/create_point"
+      body: "*"
+    };
+  }
+
+  // 选择支付方式并发起支付
+  rpc PayOrder (PayOrderRequest) returns (OrderReply) {
+    option (google.api.http) = {
+      post: "/order/api/v1/pay"
+      body: "*"
+    };
+  }
+
+  // Mock 支付成功（仅 pay_type=mock，测试用）
+  rpc MockPaySuccess (MockPaySuccessRequest) returns (OrderReply) {
+    option (google.api.http) = {
+      post: "/order/api/v1/mock_pay_success"
+      body: "*"
+    };
+  }
+
+  // 用户取消订单
+  rpc CancelOrder (CancelOrderRequest) returns (OrderReply) {
+    option (google.api.http) = {
+      post: "/order/api/v1/cancel"
+      body: "*"
+    };
+  }
+
+  // 订单详情
+  rpc GetOrder (GetOrderRequest) returns (OrderReply) {
+    option (google.api.http) = {
+      post: "/order/api/v1/detail"
+      body: "*"
+    };
+  }
+
+  // 订单列表
+  rpc ListOrders (ListOrdersRequest) returns (ListOrdersReply) {
+    option (google.api.http) = {
+      post: "/order/api/v1/list"
+      body: "*"
+    };
+  }
+}
+
+enum OrderType {
+  ORDER_TYPE_UNSPECIFIED = 0;
+  ORDER_TYPE_PRODUCT = 1;
+  ORDER_TYPE_POINT = 2;
+}
+
+enum OrderStatus {
+  ORDER_STATUS_UNSPECIFIED = 0;
+  ORDER_STATUS_PENDING_PAY = 1;
+  ORDER_STATUS_PAID = 2;
+  ORDER_STATUS_CANCELLED = 3;
+}
+
+enum PayType {
+  PAY_TYPE_UNSPECIFIED = 0;
+  PAY_TYPE_WECHAT = 1;
+  PAY_TYPE_ALIPAY = 2;
+  PAY_TYPE_POINT = 3;
+  PAY_TYPE_MOCK = 4;
+}
+
+enum CancelReason {
+  CANCEL_REASON_UNSPECIFIED = 0;
+  CANCEL_REASON_USER = 1;
+  CANCEL_REASON_TIMEOUT = 2;
+}
+
+message OrderItemInfo {
+  int64 id = 1;
+  int64 product_id = 2;
+  string product_name = 3;
+  int64 product_price = 4;
+  int32 quantity = 5;
+  int64 amount = 6;
+}
+
+message OrderInfo {
+  int64 id = 1;
+  string order_no = 2;
+  int64 user_id = 3;
+  OrderType order_type = 4;
+  OrderStatus status = 5;
+  PayType pay_type = 6;
+  // 订单总价（分）
+  int64 total_amount = 7;
+  // 现金应付/已付（分）
+  int64 cash_amount = 8;
+  // 商品单：抵扣积分数；积分单：购买积分数
+  int64 point_amount = 9;
+  // 下单时积分汇率快照：1 元 = N 积分
+  int64 points_per_yuan = 10;
+  int64 pay_expire_at = 11;
+  int64 paid_at = 12;
+  CancelReason cancel_reason = 13;
+  repeated OrderItemInfo items = 14;
+  int64 ct = 15;
+  int64 ut = 16;
+}
+
+message CreateProductItem {
+  int64 product_id = 1;
+  int32 quantity = 2;
+}
+
+message CreateProductOrderRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  repeated CreateProductItem items = 2;
+}
+
+message CreateCartOrderRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  repeated int64 cart_item_ids = 2;
+}
+
+message CreatePointOrderRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  // 购买积分数；应付金额按当前汇率计算并快照
+  int64 points = 2;
+}
+
+message PayOrderRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 order_id = 2;
+  // 现金支付渠道：微信/支付宝/Mock；全额积分时传 POINT
+  PayType pay_type = 3;
+  // 商品单可抵扣的积分数（可与货币组合）
+  int64 use_points = 4;
+}
+
+message MockPaySuccessRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 order_id = 2;
+}
+
+message CancelOrderRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 order_id = 2;
+}
+
+message GetOrderRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 order_id = 2;
+}
+
+message ListOrdersRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  OrderStatus status = 2; // 0=全部
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message OrderReply {
+  OrderInfo order = 1;
+}
+
+message ListOrdersReply {
+  repeated OrderInfo list = 1;
+  int64 total = 2;
+}

@@ -1,0 +1,13 @@
+---
+description: 积分与货币汇率可配置，下单必须快照
+alwaysApply: true
+---
+
+# 积分汇率约定
+
+1. 汇率配置：`point.points_per_yuan`（1 元 = N 积分），可能变更。
+2. **每次下单**（商品单、积分充值单）必须把当时汇率写入订单字段 `points_per_yuan`，后续结算只用快照。
+3. 换算使用 `pkg/pointrate`：
+   - `PointsToCents(points, pointsPerYuan)`
+   - `CentsToPoints(cents, pointsPerYuan)`
+4. 商品支付支持 **积分 + 货币** 混合：`use_points` + 现金渠道；订单记录 `point_amount`、`cash_amount`、`total_amount`。

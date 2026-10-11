@@ -1,5 +1,7 @@
 package product
 
+import "helloworld/pkg/model/common"
+
 const (
 	StatusOn  int32 = 1 // 上架 / 启用
 	StatusOff int32 = 2 // 下架 / 停用
@@ -38,11 +40,12 @@ func (Product) TableName() string {
 
 // ProductImage 商品图片
 type ProductImage struct {
-	ID        int64  `json:"id" gorm:"column:id;primaryKey;autoIncrement"`
-	ProductID int64  `json:"product_id" gorm:"column:product_id;index"`
-	URL       string `json:"url" gorm:"column:url"`
-	Sort      int32  `json:"sort" gorm:"column:sort"`
-	Ct        int64  `json:"ct" gorm:"column:ct"`
+	ID        int64              `json:"id" gorm:"column:id;primaryKey;autoIncrement"`
+	ProductID int64              `json:"product_id" gorm:"column:product_id;index"`
+	URL       string             `json:"url" gorm:"column:url"`
+	Sort      int32              `json:"sort" gorm:"column:sort"`
+	Deleted   common.DeletedFlag `json:"deleted" gorm:"column:deleted;index"`
+	Ct        int64              `json:"ct" gorm:"column:ct"`
 }
 
 func (ProductImage) TableName() string {

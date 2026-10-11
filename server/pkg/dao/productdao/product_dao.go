@@ -132,6 +132,46 @@ func (d *ProductDao) UpdateStock(id int64, stock int32) (*productmodel.Product, 
 	return p, nil
 }
 
+// DecStock 扣减库存（库存不足返回 ErrorStockInsufficient）
+func (d *ProductDao) DecStock(id int64, qty int32) error {
+	if id <= 0 || qty <= 0 {
+		return codeerror.OrSystem(codeerror.ErrorParam, "ProductDao.DecStock invalid id=%d qty=%d", id, qty)
+	}
+	res := d.db.Model(&productmodel.Product{}).
+		Where("id = ? AND stock >= ?", id, qty).
+		Updates(map[string]interface{}{
+			"stock": gorm.Expr("stock - ?", qty),
+			"ut":    time.Now().Unix(),
+		})
+	if res.Error != nil {
+		return codeerror.OrSystem(res.Error, "ProductDao.DecStock id=%d qty=%d", id, qty)
+	}
+	if res.RowsAffected == 0 {
+		return codeerror.OrSystem(codeerror.ErrorStockInsufficient, "ProductDao.DecStock insufficient id=%d qty=%d", id, qty)
+	}
+	return nil
+}
+
+// IncStock 回补库存
+func (d *ProductDao) IncStock(id int64, qty int32) error {
+	if id <= 0 || qty <= 0 {
+		return codeerror.OrSystem(codeerror.ErrorParam, "ProductDao.IncStock invalid id=%d qty=%d", id, qty)
+	}
+	res := d.db.Model(&productmodel.Product{}).
+		Where("id = ?", id).
+		Updates(map[string]interface{}{
+			"stock": gorm.Expr("stock + ?", qty),
+			"ut":    time.Now().Unix(),
+		})
+	if res.Error != nil {
+		return codeerror.OrSystem(res.Error, "ProductDao.IncStock id=%d qty=%d", id, qty)
+	}
+	if res.RowsAffected == 0 {
+		return codeerror.OrSystem(codeerror.ErrorParam.Errorf("product not found"), "ProductDao.IncStock not found id=%d", id)
+	}
+	return nil
+}
+
 func (d *ProductDao) UpdateCategory(id, categoryID int64) (*productmodel.Product, error) {
 	if categoryID <= 0 {
 		return nil, codeerror.OrSystem(codeerror.ErrorParam, "ProductDao.UpdateCategory invalid categoryID=%d id=%d", categoryID, id)

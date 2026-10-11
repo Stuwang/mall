@@ -65,5 +65,8 @@ var (
 	ErrorPassword     = CodeError{Code: 1008, Msg: "password error"}
 	ErrorForbidden         = CodeError{Code: 1009, Msg: "forbidden"}
 	ErrorStockInsufficient = CodeError{Code: 1010, Msg: "stock insufficient"}
+	ErrorAssetInsufficient = CodeError{Code: 1011, Msg: "asset insufficient"}
+	ErrorOrderStatus       = CodeError{Code: 1012, Msg: "order status invalid"}
+	ErrorPayExpired        = CodeError{Code: 1013, Msg: "pay expired"}
 	ErrorSystem            = CodeError{Code: 1, Msg: "system error"}
 )

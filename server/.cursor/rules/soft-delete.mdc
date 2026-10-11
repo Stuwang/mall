@@ -1,0 +1,23 @@
+---
+description: 禁止硬删除；用 deleted 标记或业务状态区分
+alwaysApply: true
+---
+
+# 数据删除约定
+
+1. **禁止硬删除**业务数据（`Delete()` 物理删除行）。
+2. 使用软删除标记或状态字段：
+   - 通用标记：`common.DeletedFlag`（`DeletedNo` / `DeletedYes`）
+   - 或业务状态（如上架/下架、订单取消）
+3. 查询默认只返回未删除数据（`deleted = DeletedNo`）。
+4. 唯一约束场景：软删除后再次写入应 **复活** 原记录，而不是再插一行冲突。
+5. 替换类操作（如商品图片）：先软删除旧数据，再插入新数据。
+
+```go
+// ❌ 禁止
+db.Where("id = ?", id).Delete(&CartItem{})
+
+// ✅ 软删除
+db.Model(&CartItem{}).Where("id = ? AND deleted = ?", id, common.DeletedNo).
+    Updates(map[string]interface{}{"deleted": common.DeletedYes, "ut": now})
+```

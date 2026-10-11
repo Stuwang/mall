@@ -465,6 +465,214 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/google.rpc.Status'
+    /order/api/v1/cancel:
+        post:
+            tags:
+                - Order
+            summary: CancelOrder
+            description: 用户取消订单
+            operationId: Order_CancelOrder
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/order.v1.CancelOrderRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/order.v1.OrderReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /order/api/v1/create_cart:
+        post:
+            tags:
+                - Order
+            summary: CreateCartOrder
+            description: 购物车选中商品下单
+            operationId: Order_CreateCartOrder
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/order.v1.CreateCartOrderRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/order.v1.OrderReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /order/api/v1/create_point:
+        post:
+            tags:
+                - Order
+            summary: CreatePointOrder
+            description: 购买积分下单
+            operationId: Order_CreatePointOrder
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/order.v1.CreatePointOrderRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/order.v1.OrderReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /order/api/v1/create_product:
+        post:
+            tags:
+                - Order
+            summary: CreateProductOrder
+            description: 商品直接下单
+            operationId: Order_CreateProductOrder
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/order.v1.CreateProductOrderRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/order.v1.OrderReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /order/api/v1/detail:
+        post:
+            tags:
+                - Order
+            summary: GetOrder
+            description: 订单详情
+            operationId: Order_GetOrder
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/order.v1.GetOrderRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/order.v1.OrderReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /order/api/v1/list:
+        post:
+            tags:
+                - Order
+            summary: ListOrders
+            description: 订单列表
+            operationId: Order_ListOrders
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/order.v1.ListOrdersRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/order.v1.ListOrdersReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /order/api/v1/mock_pay_success:
+        post:
+            tags:
+                - Order
+            summary: MockPaySuccess
+            description: Mock 支付成功（仅 pay_type=mock，测试用）
+            operationId: Order_MockPaySuccess
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/order.v1.MockPaySuccessRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/order.v1.OrderReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /order/api/v1/pay:
+        post:
+            tags:
+                - Order
+            summary: PayOrder
+            description: 选择支付方式并发起支付
+            operationId: Order_PayOrder
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/order.v1.PayOrderRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/order.v1.OrderReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
     /product/api/v1/category/list:
         post:
             tags:
@@ -927,6 +1135,211 @@ components:
                 name:
                     type: string
             description: The request message containing the user's name.
+        order.v1.CancelOrderRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                orderId:
+                    type: integer
+                    format: int64
+        order.v1.CreateCartOrderRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                cartItemIds:
+                    type: array
+                    items:
+                        type: integer
+                        format: int64
+        order.v1.CreatePointOrderRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                points:
+                    type: integer
+                    description: 购买积分数；应付金额按当前汇率计算并快照
+                    format: int64
+        order.v1.CreateProductItem:
+            type: object
+            properties:
+                productId:
+                    type: integer
+                    format: int64
+                quantity:
+                    type: integer
+                    format: int32
+        order.v1.CreateProductOrderRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                items:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/order.v1.CreateProductItem'
+        order.v1.GetOrderRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                orderId:
+                    type: integer
+                    format: int64
+        order.v1.ListOrdersReply:
+            type: object
+            properties:
+                list:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/order.v1.OrderInfo'
+                total:
+                    type: integer
+                    format: int64
+        order.v1.ListOrdersRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                status:
+                    enum:
+                        - ORDER_STATUS_PENDING_PAY
+                        - ORDER_STATUS_PAID
+                        - ORDER_STATUS_CANCELLED
+                    type: string
+                    format: enum
+                page:
+                    type: integer
+                    format: int32
+                pageSize:
+                    type: integer
+                    format: int32
+        order.v1.MockPaySuccessRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                orderId:
+                    type: integer
+                    format: int64
+        order.v1.OrderInfo:
+            type: object
+            properties:
+                id:
+                    type: integer
+                    format: int64
+                orderNo:
+                    type: string
+                userId:
+                    type: integer
+                    format: int64
+                orderType:
+                    enum:
+                        - ORDER_TYPE_PRODUCT
+                        - ORDER_TYPE_POINT
+                    type: string
+                    format: enum
+                status:
+                    enum:
+                        - ORDER_STATUS_PENDING_PAY
+                        - ORDER_STATUS_PAID
+                        - ORDER_STATUS_CANCELLED
+                    type: string
+                    format: enum
+                payType:
+                    enum:
+                        - PAY_TYPE_WECHAT
+                        - PAY_TYPE_ALIPAY
+                        - PAY_TYPE_POINT
+                        - PAY_TYPE_MOCK
+                    type: string
+                    format: enum
+                totalAmount:
+                    type: integer
+                    description: 订单总价（分）
+                    format: int64
+                cashAmount:
+                    type: integer
+                    description: 现金应付/已付（分）
+                    format: int64
+                pointAmount:
+                    type: integer
+                    description: 商品单：抵扣积分数；积分单：购买积分数
+                    format: int64
+                pointsPerYuan:
+                    type: integer
+                    description: 下单时积分汇率快照：1 元 = N 积分
+                    format: int64
+                payExpireAt:
+                    type: integer
+                    format: int64
+                paidAt:
+                    type: integer
+                    format: int64
+                cancelReason:
+                    enum:
+                        - CANCEL_REASON_USER
+                        - CANCEL_REASON_TIMEOUT
+                    type: string
+                    format: enum
+                items:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/order.v1.OrderItemInfo'
+                ct:
+                    type: integer
+                    format: int64
+                ut:
+                    type: integer
+                    format: int64
+        order.v1.OrderItemInfo:
+            type: object
+            properties:
+                id:
+                    type: integer
+                    format: int64
+                productId:
+                    type: integer
+                    format: int64
+                productName:
+                    type: string
+                productPrice:
+                    type: integer
+                    format: int64
+                quantity:
+                    type: integer
+                    format: int32
+                amount:
+                    type: integer
+                    format: int64
+        order.v1.OrderReply:
+            type: object
+            properties:
+                order:
+                    $ref: '#/components/schemas/order.v1.OrderInfo'
+        order.v1.PayOrderRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                orderId:
+                    type: integer
+                    format: int64
+                payType:
+                    enum:
+                        - PAY_TYPE_WECHAT
+                        - PAY_TYPE_ALIPAY
+                        - PAY_TYPE_POINT
+                        - PAY_TYPE_MOCK
+                    type: string
+                    description: 现金支付渠道：微信/支付宝/Mock；全额积分时传 POINT
+                    format: enum
+                usePoints:
+                    type: integer
+                    description: 商品单可抵扣的积分数（可与货币组合）
+                    format: int64
         product.v1.AdminCategoryReply:
             type: object
             properties:
@@ -1306,6 +1719,8 @@ tags:
       description: 用户购物车服务
     - name: Greeter
       description: The greeting service definition.
+    - name: Order
+      description: 用户订单服务
     - name: Product
       description: 用户侧商品服务
     - name: User

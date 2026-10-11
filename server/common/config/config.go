@@ -15,6 +15,18 @@ type Config struct {
 	Database DatabaseConfig `yaml:"database"`
 	Logger   LoggerConfig   `yaml:"logger"`
 	Auth     AuthConfig     `yaml:"auth"`
+	Order    OrderConfig    `yaml:"order"`
+	Point    PointConfig    `yaml:"point"`
+}
+
+type OrderConfig struct {
+	// 待支付超时秒数
+	PayTimeoutSec int `yaml:"pay_timeout_sec"`
+}
+
+type PointConfig struct {
+	// 1 元（100 分）可兑换的积分数；会在下单/购积分时快照到订单
+	PointsPerYuan int64 `yaml:"points_per_yuan"`
 }
 
 type ServerConfig struct {
@@ -68,6 +80,12 @@ func (c *Config) applyDefaults() {
 	}
 	if c.Auth.JWTExpireHours <= 0 {
 		c.Auth.JWTExpireHours = 168
+	}
+	if c.Order.PayTimeoutSec <= 0 {
+		c.Order.PayTimeoutSec = 15 * 60
+	}
+	if c.Point.PointsPerYuan <= 0 {
+		c.Point.PointsPerYuan = 100
 	}
 }
 

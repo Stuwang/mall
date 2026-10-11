@@ -1,5 +1,5 @@
 ---
-description: 未知错误打日志并返回系统错误；业务 CodeError 原样返回
+description: 所有错误路径必须打日志；未知错误返回系统错误
 alwaysApply: true
 ---
 
@@ -7,19 +7,21 @@ alwaysApply: true
 
 ## 规则
 
-1. **业务错误**（参数错误、未登录、用户不存在等）：直接返回对应的 `codeerror.CodeError`，不要包成系统错误。
-2. **未知 / 基础设施错误**（DB、IO、第三方、marshal 失败等）：**打印错误日志**，并返回 `codeerror.ErrorSystem`，禁止把原始 error 文案直接暴露给客户端。
-3. 优先使用 `codeerror.OrSystem(err, "上下文 %v", arg)`：已是 CodeError 则原样返回，否则打日志并返回 `ErrorSystem`。
+1. **所有错误返回路径都必须打日志**（controller、dao、middleware、encoder 均如此），不要省略业务错误（参数错误、密码错误、用户不存在等）。
+2. **业务错误**：打日志后返回对应的 `codeerror.CodeError`，不要包成系统错误。
+3. **未知 / 基础设施错误**（DB、IO、第三方、marshal 失败等）：打日志后返回 `codeerror.ErrorSystem`，禁止把原始 error 文案直接暴露给客户端。
+4. 优先使用 `codeerror.OrSystem(err, "上下文 %v", arg)`：会先打日志；已是 CodeError 则原样返回，否则返回 `ErrorSystem`。
 
 ## 示例
 
 ```go
-// ✅ 业务错误原样返回
+// ✅ 业务错误：打日志 + 原样返回
 if username == "" {
+    logger.Errorf("Register param error username empty")
     return nil, codeerror.ErrorParam
 }
 if errors.Is(err, gorm.ErrRecordNotFound) {
-    return nil, codeerror.ErrorUserNotFound
+    return nil, codeerror.OrSystem(codeerror.ErrorUserNotFound, "GetByID not found id=%d", id)
 }
 
 // ✅ 未知错误：打日志 + 系统错误
@@ -27,7 +29,12 @@ if err != nil {
     return nil, codeerror.OrSystem(err, "GetByID id=%d", id)
 }
 
-// ❌ 禁止：把底层错误直接返回给调用方/客户端
+// ❌ 禁止：错误路径不打日志
+if username == "" {
+    return nil, codeerror.ErrorParam
+}
+
+// ❌ 禁止：把底层错误直接返回给客户端
 if err != nil {
     return nil, err
 }
@@ -35,5 +42,5 @@ if err != nil {
 
 ## 分层注意
 
-- dao / controller / middleware / encoder 均遵守本原则。
+- dao 出错要打日志；controller 收到下游错误时也要再打一层带接口上下文的日志。
 - HTTP `ErrorEncoder` 遇到非 CodeError 时同样打日志并按 `ErrorSystem` 编码响应。

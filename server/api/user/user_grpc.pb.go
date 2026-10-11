@@ -213,3 +213,165 @@ var User_ServiceDesc = grpc.ServiceDesc{
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "user/user.proto",
 }
+
+// AdminUserClient is the client API for AdminUser service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type AdminUserClient interface {
+	// 用户查询（支持按 id / 关键词）
+	AdminListUsers(ctx context.Context, in *AdminListUsersRequest, opts ...grpc.CallOption) (*AdminListUsersReply, error)
+	// 用户详情
+	AdminGetUser(ctx context.Context, in *AdminGetUserRequest, opts ...grpc.CallOption) (*GetUserInfoReply, error)
+	// 封禁用户到指定时间；ban_until=0 表示解封
+	AdminBanUser(ctx context.Context, in *AdminBanUserRequest, opts ...grpc.CallOption) (*GetUserInfoReply, error)
+}
+
+type adminUserClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewAdminUserClient(cc grpc.ClientConnInterface) AdminUserClient {
+	return &adminUserClient{cc}
+}
+
+func (c *adminUserClient) AdminListUsers(ctx context.Context, in *AdminListUsersRequest, opts ...grpc.CallOption) (*AdminListUsersReply, error) {
+	out := new(AdminListUsersReply)
+	err := c.cc.Invoke(ctx, "/user.v1.AdminUser/AdminListUsers", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminUserClient) AdminGetUser(ctx context.Context, in *AdminGetUserRequest, opts ...grpc.CallOption) (*GetUserInfoReply, error) {
+	out := new(GetUserInfoReply)
+	err := c.cc.Invoke(ctx, "/user.v1.AdminUser/AdminGetUser", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminUserClient) AdminBanUser(ctx context.Context, in *AdminBanUserRequest, opts ...grpc.CallOption) (*GetUserInfoReply, error) {
+	out := new(GetUserInfoReply)
+	err := c.cc.Invoke(ctx, "/user.v1.AdminUser/AdminBanUser", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// AdminUserServer is the server API for AdminUser service.
+// All implementations should embed UnimplementedAdminUserServer
+// for forward compatibility
+type AdminUserServer interface {
+	// 用户查询（支持按 id / 关键词）
+	AdminListUsers(context.Context, *AdminListUsersRequest) (*AdminListUsersReply, error)
+	// 用户详情
+	AdminGetUser(context.Context, *AdminGetUserRequest) (*GetUserInfoReply, error)
+	// 封禁用户到指定时间；ban_until=0 表示解封
+	AdminBanUser(context.Context, *AdminBanUserRequest) (*GetUserInfoReply, error)
+}
+
+// UnimplementedAdminUserServer should be embedded to have forward compatible implementations.
+type UnimplementedAdminUserServer struct {
+}
+
+func (UnimplementedAdminUserServer) AdminListUsers(context.Context, *AdminListUsersRequest) (*AdminListUsersReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AdminListUsers not implemented")
+}
+func (UnimplementedAdminUserServer) AdminGetUser(context.Context, *AdminGetUserRequest) (*GetUserInfoReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AdminGetUser not implemented")
+}
+func (UnimplementedAdminUserServer) AdminBanUser(context.Context, *AdminBanUserRequest) (*GetUserInfoReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AdminBanUser not implemented")
+}
+
+// UnsafeAdminUserServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to AdminUserServer will
+// result in compilation errors.
+type UnsafeAdminUserServer interface {
+	mustEmbedUnimplementedAdminUserServer()
+}
+
+func RegisterAdminUserServer(s grpc.ServiceRegistrar, srv AdminUserServer) {
+	s.RegisterService(&AdminUser_ServiceDesc, srv)
+}
+
+func _AdminUser_AdminListUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminListUsersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminUserServer).AdminListUsers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/user.v1.AdminUser/AdminListUsers",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminUserServer).AdminListUsers(ctx, req.(*AdminListUsersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminUser_AdminGetUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminGetUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminUserServer).AdminGetUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/user.v1.AdminUser/AdminGetUser",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminUserServer).AdminGetUser(ctx, req.(*AdminGetUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminUser_AdminBanUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminBanUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminUserServer).AdminBanUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/user.v1.AdminUser/AdminBanUser",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminUserServer).AdminBanUser(ctx, req.(*AdminBanUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// AdminUser_ServiceDesc is the grpc.ServiceDesc for AdminUser service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var AdminUser_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "user.v1.AdminUser",
+	HandlerType: (*AdminUserServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "AdminListUsers",
+			Handler:    _AdminUser_AdminListUsers_Handler,
+		},
+		{
+			MethodName: "AdminGetUser",
+			Handler:    _AdminUser_AdminGetUser_Handler,
+		},
+		{
+			MethodName: "AdminBanUser",
+			Handler:    _AdminUser_AdminBanUser_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "user/user.proto",
+}

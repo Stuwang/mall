@@ -12,7 +12,10 @@ import (
 	usermodel "helloworld/pkg/model/user"
 )
 
-var _ apiuser.UserHTTPServer = (*Controller)(nil)
+var (
+	_ apiuser.UserHTTPServer      = (*Controller)(nil)
+	_ apiuser.AdminUserHTTPServer = (*Controller)(nil)
+)
 
 type Controller struct{}
 
@@ -61,6 +64,10 @@ func (c *Controller) Login(ctx context.Context, req *apiuser.LoginRequest) (*api
 	if err != nil {
 		logger.Errorf("Login GetByID userID=%d err=%v", login.UserID, err)
 		return nil, err
+	}
+	if u.Banned() {
+		logger.Errorf("Login user banned userID=%d banUntil=%d", u.ID, u.BanUntil)
+		return nil, codeerror.ErrorUserBanned
 	}
 	token, err := auth.GenerateToken(u.ID, username, u.Admin())
 	if err != nil {
@@ -135,5 +142,7 @@ func toUserInfo(u *usermodel.User, username string) *apiuser.UserInfo {
 		Ct:       u.Ct,
 		Ut:       u.Ut,
 		IsAdmin:  u.Admin(),
+		BanUntil: u.BanUntil,
+		Banned:   u.Banned(),
 	}
 }

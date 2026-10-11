@@ -11,7 +11,10 @@ import (
 	"helloworld/pkg/orderbiz"
 )
 
-var _ apiorder.OrderHTTPServer = (*Controller)(nil)
+var (
+	_ apiorder.OrderHTTPServer      = (*Controller)(nil)
+	_ apiorder.AdminOrderHTTPServer = (*Controller)(nil)
+)
 
 type Controller struct{}
 

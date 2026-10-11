@@ -1,5 +1,7 @@
 package user
 
+import "time"
+
 // LoginTypePassword 账号密码登录
 const LoginTypePassword int32 = 1
 
@@ -9,12 +11,19 @@ type User struct {
 	Nickname string `json:"nickname" gorm:"column:nickname"`
 	Sex      int32  `json:"sex" gorm:"column:sex"`
 	IsAdmin  int32  `json:"is_admin" gorm:"column:is_admin"` // 1=管理员
-	Ct       int64  `json:"ct" gorm:"column:ct"`
-	Ut       int64  `json:"ut" gorm:"column:ut"`
+	// BanUntil 封禁截止 unix 时间戳；0 表示未封禁；到期后自动视为解封
+	BanUntil int64 `json:"ban_until" gorm:"column:ban_until"`
+	Ct       int64 `json:"ct" gorm:"column:ct"`
+	Ut       int64 `json:"ut" gorm:"column:ut"`
 }
 
 func (u *User) Admin() bool {
 	return u != nil && u.IsAdmin == 1
+}
+
+// Banned 是否处于封禁期内
+func (u *User) Banned() bool {
+	return u != nil && u.BanUntil > 0 && u.BanUntil > time.Now().Unix()
 }
 
 func (User) TableName() string {

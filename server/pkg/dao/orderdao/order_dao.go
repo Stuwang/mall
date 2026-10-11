@@ -61,10 +61,15 @@ func (d *OrderDao) Update(o *ordermodel.Order, fields ...string) error {
 }
 
 type ListQuery struct {
-	UserID   int64
-	Status   ordermodel.OrderStatus // 0=全部
-	Page     int
-	PageSize int
+	UserID    int64
+	Status    ordermodel.OrderStatus // 0=全部
+	StartCt   int64                  // 下单时间起（含），0=不限
+	EndCt     int64                  // 下单时间止（含），0=不限
+	ProductID int64                  // 按订单明细商品过滤，0=不限
+	Page      int
+	PageSize  int
+	// RequireUser 为 true 时必须带 UserID（用户侧列表）
+	RequireUser bool
 }
 
 func (d *OrderDao) List(q ListQuery) ([]ordermodel.Order, int64, error) {
@@ -78,9 +83,27 @@ func (d *OrderDao) List(q ListQuery) ([]ordermodel.Order, int64, error) {
 	if pageSize > 100 {
 		pageSize = 100
 	}
-	tx := d.db.Model(&ordermodel.Order{}).Where("user_id = ?", q.UserID)
+	if q.RequireUser && q.UserID <= 0 {
+		return nil, 0, codeerror.OrSystem(codeerror.ErrorParam, "OrderDao.List missing userID")
+	}
+	tx := d.db.Model(&ordermodel.Order{})
+	if q.UserID > 0 {
+		tx = tx.Where("user_id = ?", q.UserID)
+	}
 	if q.Status > 0 {
 		tx = tx.Where("status = ?", q.Status)
+	}
+	if q.StartCt > 0 {
+		tx = tx.Where("ct >= ?", q.StartCt)
+	}
+	if q.EndCt > 0 {
+		tx = tx.Where("ct <= ?", q.EndCt)
+	}
+	if q.ProductID > 0 {
+		sub := d.db.Model(&ordermodel.OrderItem{}).
+			Select("order_id").
+			Where("product_id = ?", q.ProductID)
+		tx = tx.Where("id IN (?)", sub)
 	}
 	var total int64
 	if err := tx.Count(&total).Error; err != nil {

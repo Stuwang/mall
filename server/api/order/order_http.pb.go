@@ -357,3 +357,102 @@ func (c *OrderHTTPClientImpl) PayOrder(ctx context.Context, in *PayOrderRequest,
 	}
 	return &out, nil
 }
+
+const OperationAdminOrderAdminGetOrder = "/order.v1.AdminOrder/AdminGetOrder"
+const OperationAdminOrderAdminListOrders = "/order.v1.AdminOrder/AdminListOrders"
+
+type AdminOrderHTTPServer interface {
+	// AdminGetOrder 订单详情（不限归属用户）
+	AdminGetOrder(context.Context, *AdminGetOrderRequest) (*OrderReply, error)
+	// AdminListOrders 多条件订单查询：用户 / 日期 / 商品
+	AdminListOrders(context.Context, *AdminListOrdersRequest) (*ListOrdersReply, error)
+}
+
+func RegisterAdminOrderHTTPServer(s *http.Server, srv AdminOrderHTTPServer) {
+	r := s.Route("/")
+	r.POST("/admin/api/v1/order/list", _AdminOrder_AdminListOrders0_HTTP_Handler(srv))
+	r.POST("/admin/api/v1/order/detail", _AdminOrder_AdminGetOrder0_HTTP_Handler(srv))
+}
+
+func _AdminOrder_AdminListOrders0_HTTP_Handler(srv AdminOrderHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in AdminListOrdersRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAdminOrderAdminListOrders)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.AdminListOrders(ctx, req.(*AdminListOrdersRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*ListOrdersReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _AdminOrder_AdminGetOrder0_HTTP_Handler(srv AdminOrderHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in AdminGetOrderRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAdminOrderAdminGetOrder)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.AdminGetOrder(ctx, req.(*AdminGetOrderRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*OrderReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+type AdminOrderHTTPClient interface {
+	AdminGetOrder(ctx context.Context, req *AdminGetOrderRequest, opts ...http.CallOption) (rsp *OrderReply, err error)
+	AdminListOrders(ctx context.Context, req *AdminListOrdersRequest, opts ...http.CallOption) (rsp *ListOrdersReply, err error)
+}
+
+type AdminOrderHTTPClientImpl struct {
+	cc *http.Client
+}
+
+func NewAdminOrderHTTPClient(client *http.Client) AdminOrderHTTPClient {
+	return &AdminOrderHTTPClientImpl{client}
+}
+
+func (c *AdminOrderHTTPClientImpl) AdminGetOrder(ctx context.Context, in *AdminGetOrderRequest, opts ...http.CallOption) (*OrderReply, error) {
+	var out OrderReply
+	pattern := "/admin/api/v1/order/detail"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationAdminOrderAdminGetOrder))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *AdminOrderHTTPClientImpl) AdminListOrders(ctx context.Context, in *AdminListOrdersRequest, opts ...http.CallOption) (*ListOrdersReply, error) {
+	var out ListOrdersReply
+	pattern := "/admin/api/v1/order/list"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationAdminOrderAdminListOrders))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}

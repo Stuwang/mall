@@ -42,6 +42,33 @@ service User {
   }
 }
 
+// 管理侧用户服务（需 admin）
+service AdminUser {
+  // 用户查询（支持按 id / 关键词）
+  rpc AdminListUsers (AdminListUsersRequest) returns (AdminListUsersReply) {
+    option (google.api.http) = {
+      post: "/admin/api/v1/user/list"
+      body: "*"
+    };
+  }
+
+  // 用户详情
+  rpc AdminGetUser (AdminGetUserRequest) returns (GetUserInfoReply) {
+    option (google.api.http) = {
+      post: "/admin/api/v1/user/detail"
+      body: "*"
+    };
+  }
+
+  // 封禁用户到指定时间；ban_until=0 表示解封
+  rpc AdminBanUser (AdminBanUserRequest) returns (GetUserInfoReply) {
+    option (google.api.http) = {
+      post: "/admin/api/v1/user/ban"
+      body: "*"
+    };
+  }
+}
+
 // 用户信息
 message UserInfo {
   int64 id = 1;
@@ -51,6 +78,10 @@ message UserInfo {
   int64 ct = 5;
   int64 ut = 6;
   bool is_admin = 7;
+  // 封禁截止时间戳；0=未封禁
+  int64 ban_until = 8;
+  // 当前是否处于封禁中
+  bool banned = 9;
 }
 
 message RegisterRequest {
@@ -93,4 +124,31 @@ message UpdateUserInfoRequest {
 
 message UpdateUserInfoReply {
   UserInfo user = 1;
+}
+
+message AdminListUsersRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  // 按用户 id 精确查；0=不限
+  int64 user_id = 2;
+  // 匹配昵称或登录账号
+  string keyword = 3;
+  int32 page = 4;
+  int32 page_size = 5;
+}
+
+message AdminListUsersReply {
+  repeated UserInfo list = 1;
+  int64 total = 2;
+}
+
+message AdminGetUserRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 user_id = 2;
+}
+
+message AdminBanUserRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 user_id = 2;
+  // 封禁截止 unix 时间戳；传 0 解封；须大于当前时间
+  int64 ban_until = 3;
 }

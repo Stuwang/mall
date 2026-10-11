@@ -82,6 +82,58 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/google.rpc.Status'
+    /admin/api/v1/order/detail:
+        post:
+            tags:
+                - AdminOrder
+            summary: AdminGetOrder
+            description: 订单详情（不限归属用户）
+            operationId: AdminOrder_AdminGetOrder
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/order.v1.AdminGetOrderRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/order.v1.OrderReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /admin/api/v1/order/list:
+        post:
+            tags:
+                - AdminOrder
+            summary: AdminListOrders
+            description: 多条件订单查询：用户 / 日期 / 商品
+            operationId: AdminOrder_AdminListOrders
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/order.v1.AdminListOrdersRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/order.v1.ListOrdersReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
     /admin/api/v1/product/create:
         post:
             tags:
@@ -252,6 +304,84 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/product.v1.AdminProductReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /admin/api/v1/user/ban:
+        post:
+            tags:
+                - AdminUser
+            summary: AdminBanUser
+            description: 封禁用户到指定时间；ban_until=0 表示解封
+            operationId: AdminUser_AdminBanUser
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/user.v1.AdminBanUserRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user.v1.GetUserInfoReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /admin/api/v1/user/detail:
+        post:
+            tags:
+                - AdminUser
+            summary: AdminGetUser
+            description: 用户详情
+            operationId: AdminUser_AdminGetUser
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/user.v1.AdminGetUserRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user.v1.GetUserInfoReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /admin/api/v1/user/list:
+        post:
+            tags:
+                - AdminUser
+            summary: AdminListUsers
+            description: 用户查询（支持按 id / 关键词）
+            operationId: AdminUser_AdminListUsers
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/user.v1.AdminListUsersRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user.v1.AdminListUsersReply'
                 default:
                     description: Default error response
                     content:
@@ -1135,6 +1265,49 @@ components:
                 name:
                     type: string
             description: The request message containing the user's name.
+        order.v1.AdminGetOrderRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                orderId:
+                    type: integer
+                    format: int64
+        order.v1.AdminListOrdersRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                userId:
+                    type: integer
+                    description: 用户 id；0=全部
+                    format: int64
+                startCt:
+                    type: integer
+                    description: 下单时间起（unix，含）；0=不限
+                    format: int64
+                endCt:
+                    type: integer
+                    description: 下单时间止（unix，含）；0=不限
+                    format: int64
+                productId:
+                    type: integer
+                    description: 商品 id；0=全部（按订单明细匹配）
+                    format: int64
+                status:
+                    enum:
+                        - ORDER_STATUS_PENDING_PAY
+                        - ORDER_STATUS_PAID
+                        - ORDER_STATUS_CANCELLED
+                    type: string
+                    description: 订单状态；0=全部
+                    format: enum
+                page:
+                    type: integer
+                    format: int32
+                pageSize:
+                    type: integer
+                    format: int32
         order.v1.CancelOrderRequest:
             type: object
             properties:
@@ -1625,6 +1798,54 @@ components:
                 ut:
                     type: integer
                     format: int64
+        user.v1.AdminBanUserRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                userId:
+                    type: integer
+                    format: int64
+                banUntil:
+                    type: integer
+                    description: 封禁截止 unix 时间戳；传 0 解封；须大于当前时间
+                    format: int64
+        user.v1.AdminGetUserRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                userId:
+                    type: integer
+                    format: int64
+        user.v1.AdminListUsersReply:
+            type: object
+            properties:
+                list:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/user.v1.UserInfo'
+                total:
+                    type: integer
+                    format: int64
+        user.v1.AdminListUsersRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                userId:
+                    type: integer
+                    description: 按用户 id 精确查；0=不限
+                    format: int64
+                keyword:
+                    type: string
+                    description: 匹配昵称或登录账号
+                page:
+                    type: integer
+                    format: int32
+                pageSize:
+                    type: integer
+                    format: int32
         user.v1.GetUserInfoReply:
             type: object
             properties:
@@ -1709,10 +1930,21 @@ components:
                     format: int64
                 isAdmin:
                     type: boolean
+                banUntil:
+                    type: integer
+                    description: 封禁截止时间戳；0=未封禁
+                    format: int64
+                banned:
+                    type: boolean
+                    description: 当前是否处于封禁中
             description: 用户信息
 tags:
+    - name: AdminOrder
+      description: 管理侧订单服务（需 admin）
     - name: AdminProduct
       description: 管理侧商品/分类服务（需 admin）
+    - name: AdminUser
+      description: 管理侧用户服务（需 admin）
     - name: Asset
       description: 用户资产服务
     - name: Cart

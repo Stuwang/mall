@@ -68,5 +68,6 @@ var (
 	ErrorAssetInsufficient = CodeError{Code: 1011, Msg: "asset insufficient"}
 	ErrorOrderStatus       = CodeError{Code: 1012, Msg: "order status invalid"}
 	ErrorPayExpired        = CodeError{Code: 1013, Msg: "pay expired"}
+	ErrorUserBanned        = CodeError{Code: 1014, Msg: "user banned"}
 	ErrorSystem            = CodeError{Code: 1, Msg: "system error"}
 )

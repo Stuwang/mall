@@ -376,27 +376,33 @@ func GetOrder(userID, orderID int64) (*CreatedOrder, error) {
 }
 
 func ListOrders(userID int64, status ordermodel.OrderStatus, page, pageSize int) ([]CreatedOrder, int64, error) {
-	list, total, err := orderdao.NewOrderDao(nil).List(orderdao.ListQuery{
-		UserID:   userID,
-		Status:   status,
-		Page:     page,
-		PageSize: pageSize,
+	return listOrders(orderdao.ListQuery{
+		UserID:      userID,
+		Status:      status,
+		Page:        page,
+		PageSize:    pageSize,
+		RequireUser: true,
 	})
+}
+
+// AdminListOrders 管理侧多条件订单查询
+func AdminListOrders(q orderdao.ListQuery) ([]CreatedOrder, int64, error) {
+	q.RequireUser = false
+	return listOrders(q)
+}
+
+func listOrders(q orderdao.ListQuery) ([]CreatedOrder, int64, error) {
+	list, total, err := orderdao.NewOrderDao(nil).List(q)
 	if err != nil {
-		logger.Errorf("ListOrders userID=%d err=%v", userID, err)
+		logger.Errorf("listOrders err=%v", err)
 		return nil, 0, err
 	}
 	for i := range list {
 		_ = maybeAutoCancel(&list[i])
 	}
-	list, total, err = orderdao.NewOrderDao(nil).List(orderdao.ListQuery{
-		UserID:   userID,
-		Status:   status,
-		Page:     page,
-		PageSize: pageSize,
-	})
+	list, total, err = orderdao.NewOrderDao(nil).List(q)
 	if err != nil {
-		logger.Errorf("ListOrders reload userID=%d err=%v", userID, err)
+		logger.Errorf("listOrders reload err=%v", err)
 		return nil, 0, err
 	}
 	ids := make([]int64, 0, len(list))
@@ -405,7 +411,7 @@ func ListOrders(userID int64, status ordermodel.OrderStatus, page, pageSize int)
 	}
 	itemMap, err := orderdao.NewItemDao(nil).ListByOrderIDs(ids)
 	if err != nil {
-		logger.Errorf("ListOrders ListByOrderIDs userID=%d err=%v", userID, err)
+		logger.Errorf("listOrders ListByOrderIDs err=%v", err)
 		return nil, 0, err
 	}
 	out := make([]CreatedOrder, 0, len(list))

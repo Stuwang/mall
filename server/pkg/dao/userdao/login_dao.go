@@ -64,3 +64,21 @@ func (d *LoginDao) ExistsPasswordAccount(username string) (bool, error) {
 	}
 	return true, nil
 }
+
+// MapPasswordUsernameByUserIDs 批量查密码账号用户名
+func (d *LoginDao) MapPasswordUsernameByUserIDs(userIDs []int64) (map[int64]string, error) {
+	out := make(map[int64]string, len(userIDs))
+	if len(userIDs) == 0 {
+		return out, nil
+	}
+	var list []usermodel.UserLogin
+	err := d.db.Where("user_id IN ? AND type = ?", userIDs, usermodel.LoginTypePassword).
+		Find(&list).Error
+	if err != nil {
+		return nil, codeerror.OrSystem(err, "LoginDao.MapPasswordUsernameByUserIDs count=%d", len(userIDs))
+	}
+	for i := range list {
+		out[list[i].UserID] = list[i].Identifier
+	}
+	return out, nil
+}

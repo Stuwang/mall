@@ -74,6 +74,25 @@ service Order {
   }
 }
 
+// 管理侧订单服务（需 admin）
+service AdminOrder {
+  // 多条件订单查询：用户 / 日期 / 商品
+  rpc AdminListOrders (AdminListOrdersRequest) returns (ListOrdersReply) {
+    option (google.api.http) = {
+      post: "/admin/api/v1/order/list"
+      body: "*"
+    };
+  }
+
+  // 订单详情（不限归属用户）
+  rpc AdminGetOrder (AdminGetOrderRequest) returns (OrderReply) {
+    option (google.api.http) = {
+      post: "/admin/api/v1/order/detail"
+      body: "*"
+    };
+  }
+}
+
 enum OrderType {
   ORDER_TYPE_UNSPECIFIED = 0;
   ORDER_TYPE_PRODUCT = 1;
@@ -192,4 +211,25 @@ message OrderReply {
 message ListOrdersReply {
   repeated OrderInfo list = 1;
   int64 total = 2;
+}
+
+message AdminListOrdersRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  // 用户 id；0=全部
+  int64 user_id = 2;
+  // 下单时间起（unix，含）；0=不限
+  int64 start_ct = 3;
+  // 下单时间止（unix，含）；0=不限
+  int64 end_ct = 4;
+  // 商品 id；0=全部（按订单明细匹配）
+  int64 product_id = 5;
+  // 订单状态；0=全部
+  OrderStatus status = 6;
+  int32 page = 7;
+  int32 page_size = 8;
+}
+
+message AdminGetOrderRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 order_id = 2;
 }

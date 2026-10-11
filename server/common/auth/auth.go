@@ -36,6 +36,9 @@ type jwtClaims struct {
 // UserLoader 测试环境根据 UserId 补全用户信息（含 IsAdmin）
 type UserLoader func(userID int64) (*AuthInfo, error)
 
+// ActiveChecker 鉴权通过后校验账号是否可用（如封禁）
+type ActiveChecker func(userID int64) error
+
 type options struct {
 	whitelist map[string]struct{}
 }
@@ -56,6 +59,7 @@ var (
 	jwtSecret      []byte
 	jwtExpireHours int
 	userLoader     UserLoader
+	activeChecker  ActiveChecker
 )
 
 // Init 根据配置初始化鉴权（须在 Middleware 使用前调用）
@@ -74,6 +78,11 @@ func Init(cfg config.AuthConfig, envName string) {
 // SetUserLoader 设置用户信息加载器（测试环境 UserId Header 鉴权时使用）
 func SetUserLoader(loader UserLoader) {
 	userLoader = loader
+}
+
+// SetActiveChecker 设置账号可用性检查（封禁等）；鉴权成功后对非白名单请求生效
+func SetActiveChecker(checker ActiveChecker) {
+	activeChecker = checker
 }
 
 func isTestEnv() bool {
@@ -189,6 +198,12 @@ func Middleware(opts ...Option) middleware.Middleware {
 			}
 			if err != nil {
 				return nil, err
+			}
+			if activeChecker != nil {
+				if err := activeChecker(info.UserID); err != nil {
+					logger.Errorf("auth ActiveChecker userID=%d err=%v", info.UserID, err)
+					return nil, err
+				}
 			}
 			return handler(NewContext(ctx, info), req)
 		}

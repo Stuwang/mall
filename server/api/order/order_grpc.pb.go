@@ -365,3 +365,127 @@ var Order_ServiceDesc = grpc.ServiceDesc{
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "order/order.proto",
 }
+
+// AdminOrderClient is the client API for AdminOrder service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type AdminOrderClient interface {
+	// 多条件订单查询：用户 / 日期 / 商品
+	AdminListOrders(ctx context.Context, in *AdminListOrdersRequest, opts ...grpc.CallOption) (*ListOrdersReply, error)
+	// 订单详情（不限归属用户）
+	AdminGetOrder(ctx context.Context, in *AdminGetOrderRequest, opts ...grpc.CallOption) (*OrderReply, error)
+}
+
+type adminOrderClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewAdminOrderClient(cc grpc.ClientConnInterface) AdminOrderClient {
+	return &adminOrderClient{cc}
+}
+
+func (c *adminOrderClient) AdminListOrders(ctx context.Context, in *AdminListOrdersRequest, opts ...grpc.CallOption) (*ListOrdersReply, error) {
+	out := new(ListOrdersReply)
+	err := c.cc.Invoke(ctx, "/order.v1.AdminOrder/AdminListOrders", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminOrderClient) AdminGetOrder(ctx context.Context, in *AdminGetOrderRequest, opts ...grpc.CallOption) (*OrderReply, error) {
+	out := new(OrderReply)
+	err := c.cc.Invoke(ctx, "/order.v1.AdminOrder/AdminGetOrder", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// AdminOrderServer is the server API for AdminOrder service.
+// All implementations should embed UnimplementedAdminOrderServer
+// for forward compatibility
+type AdminOrderServer interface {
+	// 多条件订单查询：用户 / 日期 / 商品
+	AdminListOrders(context.Context, *AdminListOrdersRequest) (*ListOrdersReply, error)
+	// 订单详情（不限归属用户）
+	AdminGetOrder(context.Context, *AdminGetOrderRequest) (*OrderReply, error)
+}
+
+// UnimplementedAdminOrderServer should be embedded to have forward compatible implementations.
+type UnimplementedAdminOrderServer struct {
+}
+
+func (UnimplementedAdminOrderServer) AdminListOrders(context.Context, *AdminListOrdersRequest) (*ListOrdersReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AdminListOrders not implemented")
+}
+func (UnimplementedAdminOrderServer) AdminGetOrder(context.Context, *AdminGetOrderRequest) (*OrderReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AdminGetOrder not implemented")
+}
+
+// UnsafeAdminOrderServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to AdminOrderServer will
+// result in compilation errors.
+type UnsafeAdminOrderServer interface {
+	mustEmbedUnimplementedAdminOrderServer()
+}
+
+func RegisterAdminOrderServer(s grpc.ServiceRegistrar, srv AdminOrderServer) {
+	s.RegisterService(&AdminOrder_ServiceDesc, srv)
+}
+
+func _AdminOrder_AdminListOrders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminListOrdersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminOrderServer).AdminListOrders(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/order.v1.AdminOrder/AdminListOrders",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminOrderServer).AdminListOrders(ctx, req.(*AdminListOrdersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminOrder_AdminGetOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminGetOrderRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminOrderServer).AdminGetOrder(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/order.v1.AdminOrder/AdminGetOrder",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminOrderServer).AdminGetOrder(ctx, req.(*AdminGetOrderRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// AdminOrder_ServiceDesc is the grpc.ServiceDesc for AdminOrder service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var AdminOrder_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "order.v1.AdminOrder",
+	HandlerType: (*AdminOrderServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "AdminListOrders",
+			Handler:    _AdminOrder_AdminListOrders_Handler,
+		},
+		{
+			MethodName: "AdminGetOrder",
+			Handler:    _AdminOrder_AdminGetOrder_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "order/order.proto",
+}

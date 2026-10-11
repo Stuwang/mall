@@ -197,3 +197,142 @@ func (c *UserHTTPClientImpl) UpdateUserInfo(ctx context.Context, in *UpdateUserI
 	}
 	return &out, nil
 }
+
+const OperationAdminUserAdminBanUser = "/user.v1.AdminUser/AdminBanUser"
+const OperationAdminUserAdminGetUser = "/user.v1.AdminUser/AdminGetUser"
+const OperationAdminUserAdminListUsers = "/user.v1.AdminUser/AdminListUsers"
+
+type AdminUserHTTPServer interface {
+	// AdminBanUser 封禁用户到指定时间；ban_until=0 表示解封
+	AdminBanUser(context.Context, *AdminBanUserRequest) (*GetUserInfoReply, error)
+	// AdminGetUser 用户详情
+	AdminGetUser(context.Context, *AdminGetUserRequest) (*GetUserInfoReply, error)
+	// AdminListUsers 用户查询（支持按 id / 关键词）
+	AdminListUsers(context.Context, *AdminListUsersRequest) (*AdminListUsersReply, error)
+}
+
+func RegisterAdminUserHTTPServer(s *http.Server, srv AdminUserHTTPServer) {
+	r := s.Route("/")
+	r.POST("/admin/api/v1/user/list", _AdminUser_AdminListUsers0_HTTP_Handler(srv))
+	r.POST("/admin/api/v1/user/detail", _AdminUser_AdminGetUser0_HTTP_Handler(srv))
+	r.POST("/admin/api/v1/user/ban", _AdminUser_AdminBanUser0_HTTP_Handler(srv))
+}
+
+func _AdminUser_AdminListUsers0_HTTP_Handler(srv AdminUserHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in AdminListUsersRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAdminUserAdminListUsers)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.AdminListUsers(ctx, req.(*AdminListUsersRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*AdminListUsersReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _AdminUser_AdminGetUser0_HTTP_Handler(srv AdminUserHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in AdminGetUserRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAdminUserAdminGetUser)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.AdminGetUser(ctx, req.(*AdminGetUserRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GetUserInfoReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _AdminUser_AdminBanUser0_HTTP_Handler(srv AdminUserHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in AdminBanUserRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAdminUserAdminBanUser)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.AdminBanUser(ctx, req.(*AdminBanUserRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GetUserInfoReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+type AdminUserHTTPClient interface {
+	AdminBanUser(ctx context.Context, req *AdminBanUserRequest, opts ...http.CallOption) (rsp *GetUserInfoReply, err error)
+	AdminGetUser(ctx context.Context, req *AdminGetUserRequest, opts ...http.CallOption) (rsp *GetUserInfoReply, err error)
+	AdminListUsers(ctx context.Context, req *AdminListUsersRequest, opts ...http.CallOption) (rsp *AdminListUsersReply, err error)
+}
+
+type AdminUserHTTPClientImpl struct {
+	cc *http.Client
+}
+
+func NewAdminUserHTTPClient(client *http.Client) AdminUserHTTPClient {
+	return &AdminUserHTTPClientImpl{client}
+}
+
+func (c *AdminUserHTTPClientImpl) AdminBanUser(ctx context.Context, in *AdminBanUserRequest, opts ...http.CallOption) (*GetUserInfoReply, error) {
+	var out GetUserInfoReply
+	pattern := "/admin/api/v1/user/ban"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationAdminUserAdminBanUser))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *AdminUserHTTPClientImpl) AdminGetUser(ctx context.Context, in *AdminGetUserRequest, opts ...http.CallOption) (*GetUserInfoReply, error) {
+	var out GetUserInfoReply
+	pattern := "/admin/api/v1/user/detail"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationAdminUserAdminGetUser))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *AdminUserHTTPClientImpl) AdminListUsers(ctx context.Context, in *AdminListUsersRequest, opts ...http.CallOption) (*AdminListUsersReply, error) {
+	var out AdminListUsersReply
+	pattern := "/admin/api/v1/user/list"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationAdminUserAdminListUsers))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}

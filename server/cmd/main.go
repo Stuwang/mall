@@ -118,6 +118,18 @@ func main() {
 			IsAdmin:  u.Admin(),
 		}, nil
 	})
+	auth.SetActiveChecker(func(userID int64) error {
+		u, err := userdao.NewUserDao(nil).GetByID(userID)
+		if err != nil {
+			logger.Errorf("ActiveChecker GetByID userID=%d err=%v", userID, err)
+			return err
+		}
+		if u.Banned() {
+			logger.Errorf("ActiveChecker user banned userID=%d banUntil=%d", userID, u.BanUntil)
+			return codeerror.ErrorUserBanned
+		}
+		return nil
+	})
 
 	orderbiz.Init(cfg.Order.PayTimeoutSec, cfg.Point.PointsPerYuan)
 	orderbiz.StartTimeoutWorker(30 * time.Second)
@@ -126,13 +138,17 @@ func main() {
 
 	httpSrv := http.NewServer(server.HTTPOptions(cfg.Server.HTTPAddr)...)
 	helloworld.RegisterGreeterHTTPServer(httpSrv, Server{})
-	apiuser.RegisterUserHTTPServer(httpSrv, usercontroller.New())
+	userCtrl := usercontroller.New()
+	apiuser.RegisterUserHTTPServer(httpSrv, userCtrl)
+	apiuser.RegisterAdminUserHTTPServer(httpSrv, userCtrl)
 	apiasset.RegisterAssetHTTPServer(httpSrv, assetcontroller.New())
 	productCtrl := productcontroller.New()
 	apiproduct.RegisterProductHTTPServer(httpSrv, productCtrl)
 	apiproduct.RegisterAdminProductHTTPServer(httpSrv, productCtrl)
 	apicart.RegisterCartHTTPServer(httpSrv, cartcontroller.New())
-	apiorder.RegisterOrderHTTPServer(httpSrv, ordercontroller.New())
+	orderCtrl := ordercontroller.New()
+	apiorder.RegisterOrderHTTPServer(httpSrv, orderCtrl)
+	apiorder.RegisterAdminOrderHTTPServer(httpSrv, orderCtrl)
 
 	app := kratos.New(
 		kratos.Name("helloworld"),

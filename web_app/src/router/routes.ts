@@ -8,6 +8,13 @@ export const routeNames = {
   register: 'register',
   productDetail: 'productDetail',
   orders: 'orders',
+  orderDetail: 'orderDetail',
+  payCheckout: 'payCheckout',
+  mockPay: 'mockPay',
+  pointsPurchase: 'pointsPurchase',
+  help: 'help',
+  about: 'about',
+  contact: 'contact',
 } as const
 
 export const routes: RouteRecordRaw[] = [
@@ -58,6 +65,48 @@ export const routes: RouteRecordRaw[] = [
     name: routeNames.orders,
     component: () => import('@/views/order/OrderListView.vue'),
     meta: { title: '我的订单', requireAuth: true },
+  },
+  {
+    path: '/orders/:id',
+    name: routeNames.orderDetail,
+    component: () => import('@/views/order/OrderDetailView.vue'),
+    meta: { title: '订单详情', requireAuth: true },
+  },
+  {
+    path: '/pay/:id',
+    name: routeNames.payCheckout,
+    component: () => import('@/views/order/PayCheckoutView.vue'),
+    meta: { title: '确认支付', requireAuth: true },
+  },
+  {
+    path: '/mock-pay/:id',
+    name: routeNames.mockPay,
+    component: () => import('@/views/order/MockPayView.vue'),
+    meta: { title: 'Mock 支付', requireAuth: true },
+  },
+  {
+    path: '/points',
+    name: routeNames.pointsPurchase,
+    component: () => import('@/views/points/PointsPurchaseView.vue'),
+    meta: { title: '购买积分', requireAuth: true },
+  },
+  {
+    path: '/help',
+    name: routeNames.help,
+    component: () => import('@/views/mine/ContentView.vue'),
+    meta: { public: true, title: '帮助中心', contentKind: 'help' },
+  },
+  {
+    path: '/about',
+    name: routeNames.about,
+    component: () => import('@/views/mine/ContentView.vue'),
+    meta: { public: true, title: '关于我们', contentKind: 'about' },
+  },
+  {
+    path: '/contact',
+    name: routeNames.contact,
+    component: () => import('@/views/mine/ContentView.vue'),
+    meta: { public: true, title: '联系我们', contentKind: 'contact' },
   },
   {
     path: '/:pathMatch(.*)*',

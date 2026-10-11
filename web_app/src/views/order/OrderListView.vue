@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { appContext } from '@/app/AppContext'
 import { OrderStatus, type OrderInfo } from '@/api/types'
+import { routeNames } from '@/router/routes'
 import { formatFenToYuan, formatUnix } from '@/utils/format'
 import { orderStatusLabel } from '@/utils/labels'
 import { notifyError } from '@/utils/notify'
@@ -71,6 +72,10 @@ function onTabChange(name: number | string): void {
   void fetchOrders(true)
 }
 
+function openDetail(id: number): void {
+  void router.push({ name: routeNames.orderDetail, params: { id: String(id) } })
+}
+
 onMounted(() => {
   void fetchOrders(true)
 })
@@ -94,7 +99,12 @@ onMounted(() => {
       :immediate-check="false"
       @load="onListLoad"
     >
-      <div v-for="order in orders" :key="order.id" class="order-card">
+      <div
+        v-for="order in orders"
+        :key="order.id"
+        class="order-card"
+        @click="openDetail(order.id)"
+      >
         <div class="head">
           <span>{{ order.order_no }}</span>
           <span class="status">{{ orderStatusLabel(order.status) }}</span>

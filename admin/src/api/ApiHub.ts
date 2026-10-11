@@ -1,4 +1,5 @@
 import { HttpClient } from '@/api/http/HttpClient'
+import { AssetAdminApiService } from '@/api/services/AssetAdminApiService'
 import { AuthApiService } from '@/api/services/AuthApiService'
 import { CategoryAdminApiService } from '@/api/services/CategoryAdminApiService'
 import { OrderAdminApiService } from '@/api/services/OrderAdminApiService'
@@ -13,6 +14,7 @@ export class ApiHub {
   readonly http: HttpClient
   readonly auth: AuthApiService
   readonly users: UserAdminApiService
+  readonly assets: AssetAdminApiService
   readonly categories: CategoryAdminApiService
   readonly products: ProductAdminApiService
   readonly orders: OrderAdminApiService
@@ -23,6 +25,7 @@ export class ApiHub {
     })
     this.auth = new AuthApiService(this.http)
     this.users = new UserAdminApiService(this.http)
+    this.assets = new AssetAdminApiService(this.http)
     this.categories = new CategoryAdminApiService(this.http)
     this.products = new ProductAdminApiService(this.http)
     this.orders = new OrderAdminApiService(this.http)

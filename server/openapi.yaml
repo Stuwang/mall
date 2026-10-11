@@ -6,6 +6,58 @@ info:
     title: ""
     version: 0.0.1
 paths:
+    /admin/api/v1/asset/grant_points:
+        post:
+            tags:
+                - AdminAsset
+            summary: AdminGrantPoints
+            description: 后台手动给用户增加积分
+            operationId: AdminAsset_AdminGrantPoints
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/asset.v1.AdminGrantPointsRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/asset.v1.AdminGrantPointsReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
+    /admin/api/v1/asset/list:
+        post:
+            tags:
+                - AdminAsset
+            summary: AdminGetUserAssets
+            description: 查询指定用户资产列表
+            operationId: AdminAsset_AdminGetUserAssets
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/asset.v1.AdminGetUserAssetsRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/asset.v1.GetUserAssetsReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
     /admin/api/v1/category/create:
         post:
             tags:
@@ -595,6 +647,32 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/google.rpc.Status'
+    /mall/api/v1/info:
+        post:
+            tags:
+                - Mall
+            summary: GetMallInfo
+            description: 获取积分汇率、联系方式、帮助中心等展示信息
+            operationId: Mall_GetMallInfo
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/mall.v1.GetMallInfoRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/mall.v1.GetMallInfoReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
     /order/api/v1/cancel:
         post:
             tags:
@@ -1013,6 +1091,40 @@ paths:
                                 $ref: '#/components/schemas/google.rpc.Status'
 components:
     schemas:
+        asset.v1.AdminGetUserAssetsRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                userId:
+                    type: integer
+                    format: int64
+                type:
+                    enum:
+                        - ASSET_TYPE_POINT
+                    type: string
+                    description: 可选：按类型筛选，0 表示全部
+                    format: enum
+        asset.v1.AdminGrantPointsReply:
+            type: object
+            properties:
+                asset:
+                    $ref: '#/components/schemas/asset.v1.AssetInfo'
+        asset.v1.AdminGrantPointsRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                userId:
+                    type: integer
+                    format: int64
+                points:
+                    type: integer
+                    description: 增加的积分数，必须 > 0
+                    format: int64
+                remark:
+                    type: string
+                    description: 备注（可选）
         asset.v1.AssetHistory:
             type: object
             properties:
@@ -1265,6 +1377,37 @@ components:
                 name:
                     type: string
             description: The request message containing the user's name.
+        mall.v1.ContactInfo:
+            type: object
+            properties:
+                phone:
+                    type: string
+                email:
+                    type: string
+                wechat:
+                    type: string
+                address:
+                    type: string
+        mall.v1.GetMallInfoReply:
+            type: object
+            properties:
+                pointsPerYuan:
+                    type: integer
+                    description: 1 元 = N 积分（充值/抵扣共用汇率）
+                    format: int64
+                contact:
+                    $ref: '#/components/schemas/mall.v1.ContactInfo'
+                helpCenter:
+                    type: string
+                    description: 帮助中心文案（支持多行）
+                aboutUs:
+                    type: string
+                    description: 关于我们文案
+        mall.v1.GetMallInfoRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
         order.v1.AdminGetOrderRequest:
             type: object
             properties:
@@ -1939,6 +2082,8 @@ components:
                     description: 当前是否处于封禁中
             description: 用户信息
 tags:
+    - name: AdminAsset
+      description: 管理侧资产服务（需 admin）
     - name: AdminOrder
       description: 管理侧订单服务（需 admin）
     - name: AdminProduct
@@ -1951,6 +2096,8 @@ tags:
       description: 用户购物车服务
     - name: Greeter
       description: The greeting service definition.
+    - name: Mall
+      description: 商城公共信息（免登录）
     - name: Order
       description: 用户订单服务
     - name: Product

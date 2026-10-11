@@ -17,8 +17,23 @@ type Config struct {
 	Auth     AuthConfig     `yaml:"auth"`
 	Order    OrderConfig    `yaml:"order"`
 	Point    PointConfig    `yaml:"point"`
+	Mall     MallConfig     `yaml:"mall"`
 	// Admins 启动时幂等写入的管理员账号（按 username 去重）
 	Admins []AdminAccount `yaml:"admins"`
+}
+
+// MallConfig 商城展示信息（帮助中心 / 联系方式等）
+type MallConfig struct {
+	Contact    ContactConfig `yaml:"contact"`
+	HelpCenter string        `yaml:"help_center"`
+	AboutUs    string        `yaml:"about_us"`
+}
+
+type ContactConfig struct {
+	Phone   string `yaml:"phone"`
+	Email   string `yaml:"email"`
+	Wechat  string `yaml:"wechat"`
+	Address string `yaml:"address"`
 }
 
 // AdminAccount 初始管理员账号

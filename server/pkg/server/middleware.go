@@ -8,6 +8,7 @@ import (
 	khttp "github.com/go-kratos/kratos/v2/transport/http"
 
 	"helloworld/api/helloworld"
+	"helloworld/api/mall"
 	"helloworld/api/product"
 	"helloworld/api/user"
 	"helloworld/common/auth"
@@ -28,6 +29,8 @@ func Middlewares() []middleware.Middleware {
 				product.OperationProductListProductsByCategory,
 				product.OperationProductGetProduct,
 				product.OperationProductListCategories,
+				// 商城公共信息免登录
+				mall.OperationMallGetMallInfo,
 			),
 		),
 	}

@@ -1,4 +1,4 @@
-import { OrderStatus, PayType } from '@/api/types'
+import { OrderStatus, OrderType, PayType } from '@/api/types'
 
 export function orderStatusLabel(status: OrderStatus): string {
   switch (status) {
@@ -10,6 +10,17 @@ export function orderStatusLabel(status: OrderStatus): string {
       return '已取消'
     default:
       return '未知'
+  }
+}
+
+export function orderTypeLabel(orderType: OrderType): string {
+  switch (orderType) {
+    case OrderType.PRODUCT:
+      return '商品订单'
+    case OrderType.POINT:
+      return '积分充值'
+    default:
+      return '订单'
   }
 }
 

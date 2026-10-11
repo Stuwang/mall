@@ -117,3 +117,102 @@ func (c *AssetHTTPClientImpl) GetUserAssets(ctx context.Context, in *GetUserAsse
 	}
 	return &out, nil
 }
+
+const OperationAdminAssetAdminGetUserAssets = "/asset.v1.AdminAsset/AdminGetUserAssets"
+const OperationAdminAssetAdminGrantPoints = "/asset.v1.AdminAsset/AdminGrantPoints"
+
+type AdminAssetHTTPServer interface {
+	// AdminGetUserAssets 查询指定用户资产列表
+	AdminGetUserAssets(context.Context, *AdminGetUserAssetsRequest) (*GetUserAssetsReply, error)
+	// AdminGrantPoints 后台手动给用户增加积分
+	AdminGrantPoints(context.Context, *AdminGrantPointsRequest) (*AdminGrantPointsReply, error)
+}
+
+func RegisterAdminAssetHTTPServer(s *http.Server, srv AdminAssetHTTPServer) {
+	r := s.Route("/")
+	r.POST("/admin/api/v1/asset/list", _AdminAsset_AdminGetUserAssets0_HTTP_Handler(srv))
+	r.POST("/admin/api/v1/asset/grant_points", _AdminAsset_AdminGrantPoints0_HTTP_Handler(srv))
+}
+
+func _AdminAsset_AdminGetUserAssets0_HTTP_Handler(srv AdminAssetHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in AdminGetUserAssetsRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAdminAssetAdminGetUserAssets)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.AdminGetUserAssets(ctx, req.(*AdminGetUserAssetsRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GetUserAssetsReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _AdminAsset_AdminGrantPoints0_HTTP_Handler(srv AdminAssetHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in AdminGrantPointsRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAdminAssetAdminGrantPoints)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.AdminGrantPoints(ctx, req.(*AdminGrantPointsRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*AdminGrantPointsReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+type AdminAssetHTTPClient interface {
+	AdminGetUserAssets(ctx context.Context, req *AdminGetUserAssetsRequest, opts ...http.CallOption) (rsp *GetUserAssetsReply, err error)
+	AdminGrantPoints(ctx context.Context, req *AdminGrantPointsRequest, opts ...http.CallOption) (rsp *AdminGrantPointsReply, err error)
+}
+
+type AdminAssetHTTPClientImpl struct {
+	cc *http.Client
+}
+
+func NewAdminAssetHTTPClient(client *http.Client) AdminAssetHTTPClient {
+	return &AdminAssetHTTPClientImpl{client}
+}
+
+func (c *AdminAssetHTTPClientImpl) AdminGetUserAssets(ctx context.Context, in *AdminGetUserAssetsRequest, opts ...http.CallOption) (*GetUserAssetsReply, error) {
+	var out GetUserAssetsReply
+	pattern := "/admin/api/v1/asset/list"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationAdminAssetAdminGetUserAssets))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *AdminAssetHTTPClientImpl) AdminGrantPoints(ctx context.Context, in *AdminGrantPointsRequest, opts ...http.CallOption) (*AdminGrantPointsReply, error) {
+	var out AdminGrantPointsReply
+	pattern := "/admin/api/v1/asset/grant_points"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationAdminAssetAdminGrantPoints))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}

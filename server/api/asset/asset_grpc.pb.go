@@ -137,3 +137,127 @@ var Asset_ServiceDesc = grpc.ServiceDesc{
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "asset/asset.proto",
 }
+
+// AdminAssetClient is the client API for AdminAsset service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type AdminAssetClient interface {
+	// 查询指定用户资产列表
+	AdminGetUserAssets(ctx context.Context, in *AdminGetUserAssetsRequest, opts ...grpc.CallOption) (*GetUserAssetsReply, error)
+	// 后台手动给用户增加积分
+	AdminGrantPoints(ctx context.Context, in *AdminGrantPointsRequest, opts ...grpc.CallOption) (*AdminGrantPointsReply, error)
+}
+
+type adminAssetClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewAdminAssetClient(cc grpc.ClientConnInterface) AdminAssetClient {
+	return &adminAssetClient{cc}
+}
+
+func (c *adminAssetClient) AdminGetUserAssets(ctx context.Context, in *AdminGetUserAssetsRequest, opts ...grpc.CallOption) (*GetUserAssetsReply, error) {
+	out := new(GetUserAssetsReply)
+	err := c.cc.Invoke(ctx, "/asset.v1.AdminAsset/AdminGetUserAssets", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminAssetClient) AdminGrantPoints(ctx context.Context, in *AdminGrantPointsRequest, opts ...grpc.CallOption) (*AdminGrantPointsReply, error) {
+	out := new(AdminGrantPointsReply)
+	err := c.cc.Invoke(ctx, "/asset.v1.AdminAsset/AdminGrantPoints", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// AdminAssetServer is the server API for AdminAsset service.
+// All implementations should embed UnimplementedAdminAssetServer
+// for forward compatibility
+type AdminAssetServer interface {
+	// 查询指定用户资产列表
+	AdminGetUserAssets(context.Context, *AdminGetUserAssetsRequest) (*GetUserAssetsReply, error)
+	// 后台手动给用户增加积分
+	AdminGrantPoints(context.Context, *AdminGrantPointsRequest) (*AdminGrantPointsReply, error)
+}
+
+// UnimplementedAdminAssetServer should be embedded to have forward compatible implementations.
+type UnimplementedAdminAssetServer struct {
+}
+
+func (UnimplementedAdminAssetServer) AdminGetUserAssets(context.Context, *AdminGetUserAssetsRequest) (*GetUserAssetsReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AdminGetUserAssets not implemented")
+}
+func (UnimplementedAdminAssetServer) AdminGrantPoints(context.Context, *AdminGrantPointsRequest) (*AdminGrantPointsReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AdminGrantPoints not implemented")
+}
+
+// UnsafeAdminAssetServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to AdminAssetServer will
+// result in compilation errors.
+type UnsafeAdminAssetServer interface {
+	mustEmbedUnimplementedAdminAssetServer()
+}
+
+func RegisterAdminAssetServer(s grpc.ServiceRegistrar, srv AdminAssetServer) {
+	s.RegisterService(&AdminAsset_ServiceDesc, srv)
+}
+
+func _AdminAsset_AdminGetUserAssets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminGetUserAssetsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminAssetServer).AdminGetUserAssets(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/asset.v1.AdminAsset/AdminGetUserAssets",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminAssetServer).AdminGetUserAssets(ctx, req.(*AdminGetUserAssetsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminAsset_AdminGrantPoints_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminGrantPointsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminAssetServer).AdminGrantPoints(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/asset.v1.AdminAsset/AdminGrantPoints",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminAssetServer).AdminGrantPoints(ctx, req.(*AdminGrantPointsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// AdminAsset_ServiceDesc is the grpc.ServiceDesc for AdminAsset service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var AdminAsset_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "asset.v1.AdminAsset",
+	HandlerType: (*AdminAssetServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "AdminGetUserAssets",
+			Handler:    _AdminAsset_AdminGetUserAssets_Handler,
+		},
+		{
+			MethodName: "AdminGrantPoints",
+			Handler:    _AdminAsset_AdminGrantPoints_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "asset/asset.proto",
+}

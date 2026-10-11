@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
-import type { UserInfo } from '@/api/types'
+import { AssetType, type UserInfo } from '@/api/types'
 import { appContext } from '@/app/AppContext'
 import { formatUnix } from '@/utils/format'
 import { showError } from '@/utils/notify'
 
-const api = appContext.api.users
+const userApi = appContext.api.users
+const assetApi = appContext.api.assets
 const loading = ref(false)
 const list = ref<UserInfo[]>([])
 const total = ref(0)
@@ -18,10 +19,20 @@ const query = reactive({
   page_size: 20,
 })
 
+const pointsDialogVisible = ref(false)
+const pointsLoading = ref(false)
+const pointsSubmitting = ref(false)
+const pointsUser = ref<UserInfo | null>(null)
+const pointBalance = ref(0)
+const grantForm = reactive({
+  points: 100,
+  remark: '',
+})
+
 async function loadList(): Promise<void> {
   loading.value = true
   try {
-    const reply = await api.list({
+    const reply = await userApi.list({
       user_id: query.user_id || 0,
       keyword: query.keyword.trim(),
       page: query.page,
@@ -63,7 +74,7 @@ async function handleBan(row: UserInfo): Promise<void> {
       }
       banUntil = ts
     }
-    await api.ban({ user_id: row.id, ban_until: banUntil })
+    await userApi.ban({ user_id: row.id, ban_until: banUntil })
     ElMessage.success(banUntil === 0 ? '已解封' : '已封禁')
     await loadList()
   } catch (error) {
@@ -71,6 +82,51 @@ async function handleBan(row: UserInfo): Promise<void> {
       return
     }
     showError(error, '操作失败')
+  }
+}
+
+async function openPointsDialog(row: UserInfo): Promise<void> {
+  pointsUser.value = row
+  pointsDialogVisible.value = true
+  pointsLoading.value = true
+  grantForm.points = 100
+  grantForm.remark = ''
+  try {
+    const reply = await assetApi.getUserAssets({
+      user_id: row.id,
+      type: AssetType.POINT,
+    })
+    const point = (reply.assets ?? []).find((item) => item.type === AssetType.POINT)
+    pointBalance.value = point?.balance ?? 0
+  } catch (error) {
+    showError(error, '加载积分失败')
+    pointsDialogVisible.value = false
+  } finally {
+    pointsLoading.value = false
+  }
+}
+
+async function submitGrantPoints(): Promise<void> {
+  if (!pointsUser.value) return
+  if (!grantForm.points || grantForm.points <= 0) {
+    ElMessage.error('积分数必须大于 0')
+    return
+  }
+  pointsSubmitting.value = true
+  try {
+    const reply = await assetApi.grantPoints({
+      user_id: pointsUser.value.id,
+      points: grantForm.points,
+      remark: grantForm.remark.trim() || undefined,
+    })
+    pointBalance.value = reply.asset?.balance ?? pointBalance.value + grantForm.points
+    ElMessage.success('加积分成功')
+    grantForm.points = 100
+    grantForm.remark = ''
+  } catch (error) {
+    showError(error, '加积分失败')
+  } finally {
+    pointsSubmitting.value = false
   }
 }
 
@@ -124,8 +180,9 @@ onMounted(() => {
       <el-table-column label="创建时间" min-width="160">
         <template #default="{ row }">{{ formatUnix(row.ct) }}</template>
       </el-table-column>
-      <el-table-column label="操作" width="120" fixed="right">
+      <el-table-column label="操作" width="180" fixed="right">
         <template #default="{ row }">
+          <el-button link type="primary" @click="openPointsDialog(row)">积分</el-button>
           <el-button link type="primary" @click="handleBan(row)">
             {{ row.banned ? '解封/改期' : '封禁' }}
           </el-button>
@@ -150,6 +207,42 @@ onMounted(() => {
         "
       />
     </div>
+
+    <el-dialog
+      v-model="pointsDialogVisible"
+      :title="pointsUser ? `用户积分 · ${pointsUser.nickname || pointsUser.username}` : '用户积分'"
+      width="480px"
+      destroy-on-close
+    >
+      <div v-loading="pointsLoading" class="points-body">
+        <el-descriptions :column="1" border>
+          <el-descriptions-item label="用户 ID">{{ pointsUser?.id }}</el-descriptions-item>
+          <el-descriptions-item label="当前积分">{{ pointBalance }}</el-descriptions-item>
+        </el-descriptions>
+
+        <el-divider content-position="left">手动加积分</el-divider>
+
+        <el-form label-width="80px">
+          <el-form-item label="积分数" required>
+            <el-input-number v-model="grantForm.points" :min="1" :step="100" />
+          </el-form-item>
+          <el-form-item label="备注">
+            <el-input
+              v-model="grantForm.remark"
+              maxlength="64"
+              show-word-limit
+              placeholder="可选，如活动赠送"
+            />
+          </el-form-item>
+        </el-form>
+      </div>
+      <template #footer>
+        <el-button @click="pointsDialogVisible = false">关闭</el-button>
+        <el-button type="primary" :loading="pointsSubmitting" @click="submitGrantPoints">
+          确认加积分
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -162,5 +255,9 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
   margin-top: 16px;
+}
+
+.points-body {
+  min-height: 120px;
 }
 </style>

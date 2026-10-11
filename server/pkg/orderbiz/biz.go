@@ -239,6 +239,20 @@ func PayOrder(userID, orderID int64, payType ordermodel.PayType, usePoints int64
 				rate = currentPointsPerYuan()
 				o.PointsPerYuan = rate
 			}
+			if usePoints > 0 {
+				a, err := assetdao.NewAssetDao(tx).FindByUserAndType(userID, assetmodel.TypePoint)
+				if err != nil {
+					return err
+				}
+				balance := int64(0)
+				if a != nil {
+					balance = a.Balance
+				}
+				if usePoints > balance {
+					logger.Errorf("PayOrder points insufficient orderID=%d usePoints=%d balance=%d", orderID, usePoints, balance)
+					return codeerror.ErrorAssetInsufficient
+				}
+			}
 			pointCents := pointrate.PointsToCents(usePoints, rate)
 			if pointCents > o.TotalAmount {
 				return codeerror.ErrorParam.Errorf("points exceed order amount")

@@ -2,6 +2,7 @@ import { HttpClient } from '@/api/http/HttpClient'
 import { AssetApiService } from '@/api/services/AssetApiService'
 import { AuthApiService } from '@/api/services/AuthApiService'
 import { CartApiService } from '@/api/services/CartApiService'
+import { MallApiService } from '@/api/services/MallApiService'
 import { OrderApiService } from '@/api/services/OrderApiService'
 import { ProductApiService } from '@/api/services/ProductApiService'
 import { UserApiService } from '@/api/services/UserApiService'
@@ -18,6 +19,7 @@ export class ApiHub {
   readonly cart: CartApiService
   readonly orders: OrderApiService
   readonly assets: AssetApiService
+  readonly mall: MallApiService
 
   constructor(session: AuthSession) {
     this.http = new HttpClient({
@@ -29,5 +31,6 @@ export class ApiHub {
     this.cart = new CartApiService(this.http)
     this.orders = new OrderApiService(this.http)
     this.assets = new AssetApiService(this.http)
+    this.mall = new MallApiService(this.http)
   }
 }

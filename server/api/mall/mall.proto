@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package mall.v1;
+
+import "google/api/annotations.proto";
+import "base/base.proto";
+
+option go_package = "helloworld/api/mall;mall";
+
+// 商城公共信息（免登录）
+service Mall {
+  // 获取积分汇率、联系方式、帮助中心等展示信息
+  rpc GetMallInfo (GetMallInfoRequest) returns (GetMallInfoReply) {
+    option (google.api.http) = {
+      post: "/mall/api/v1/info"
+      body: "*"
+    };
+  }
+}
+
+message ContactInfo {
+  string phone = 1;
+  string email = 2;
+  string wechat = 3;
+  string address = 4;
+}
+
+message GetMallInfoRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+}
+
+message GetMallInfoReply {
+  // 1 元 = N 积分（充值/抵扣共用汇率）
+  int64 points_per_yuan = 1;
+  ContactInfo contact = 2;
+  // 帮助中心文案（支持多行）
+  string help_center = 3;
+  // 关于我们文案
+  string about_us = 4;
+}

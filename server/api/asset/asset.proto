@@ -26,6 +26,25 @@ service Asset {
   }
 }
 
+// 管理侧资产服务（需 admin）
+service AdminAsset {
+  // 查询指定用户资产列表
+  rpc AdminGetUserAssets (AdminGetUserAssetsRequest) returns (GetUserAssetsReply) {
+    option (google.api.http) = {
+      post: "/admin/api/v1/asset/list"
+      body: "*"
+    };
+  }
+
+  // 后台手动给用户增加积分
+  rpc AdminGrantPoints (AdminGrantPointsRequest) returns (AdminGrantPointsReply) {
+    option (google.api.http) = {
+      post: "/admin/api/v1/asset/grant_points"
+      body: "*"
+    };
+  }
+}
+
 // 资产类型
 enum AssetType {
   ASSET_TYPE_UNSPECIFIED = 0;
@@ -78,4 +97,24 @@ message GetAssetHistoryRequest {
 message GetAssetHistoryReply {
   repeated AssetHistory list = 1;
   int64 total = 2;
+}
+
+message AdminGetUserAssetsRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 user_id = 2;
+  // 可选：按类型筛选，0 表示全部
+  AssetType type = 3;
+}
+
+message AdminGrantPointsRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 user_id = 2;
+  // 增加的积分数，必须 > 0
+  int64 points = 3;
+  // 备注（可选）
+  string remark = 4;
+}
+
+message AdminGrantPointsReply {
+  AssetInfo asset = 1;
 }

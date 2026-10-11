@@ -14,6 +14,7 @@ import (
 	"helloworld/api/helloworld"
 	apiasset "helloworld/api/asset"
 	apicart "helloworld/api/cart"
+	apimall "helloworld/api/mall"
 	apiorder "helloworld/api/order"
 	apiproduct "helloworld/api/product"
 	apiuser "helloworld/api/user"
@@ -30,6 +31,7 @@ import (
 	"helloworld/pkg/dao/orderdao"
 	"helloworld/pkg/dao/productdao"
 	"helloworld/pkg/dao/userdao"
+	"helloworld/pkg/mallcontroller"
 	"helloworld/pkg/orderbiz"
 	"helloworld/pkg/ordercontroller"
 	"helloworld/pkg/productcontroller"
@@ -144,7 +146,9 @@ func main() {
 	userCtrl := usercontroller.New()
 	apiuser.RegisterUserHTTPServer(httpSrv, userCtrl)
 	apiuser.RegisterAdminUserHTTPServer(httpSrv, userCtrl)
-	apiasset.RegisterAssetHTTPServer(httpSrv, assetcontroller.New())
+	assetCtrl := assetcontroller.New()
+	apiasset.RegisterAssetHTTPServer(httpSrv, assetCtrl)
+	apiasset.RegisterAdminAssetHTTPServer(httpSrv, assetCtrl)
 	productCtrl := productcontroller.New()
 	apiproduct.RegisterProductHTTPServer(httpSrv, productCtrl)
 	apiproduct.RegisterAdminProductHTTPServer(httpSrv, productCtrl)
@@ -152,6 +156,7 @@ func main() {
 	orderCtrl := ordercontroller.New()
 	apiorder.RegisterOrderHTTPServer(httpSrv, orderCtrl)
 	apiorder.RegisterAdminOrderHTTPServer(httpSrv, orderCtrl)
+	apimall.RegisterMallHTTPServer(httpSrv, mallcontroller.New(cfg.Point.PointsPerYuan, cfg.Mall))
 
 	app := kratos.New(
 		kratos.Name("helloworld"),

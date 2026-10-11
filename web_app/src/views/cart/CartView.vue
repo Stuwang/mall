@@ -3,7 +3,6 @@ import { computed, onMounted, ref } from 'vue'
 import { showConfirmDialog } from 'vant'
 import { useRouter } from 'vue-router'
 import { appContext } from '@/app/AppContext'
-import { PayType } from '@/api/types'
 import { routeNames } from '@/router/routes'
 import { useCartStore } from '@/stores/cartStore'
 import { formatFenToYuan } from '@/utils/format'
@@ -71,15 +70,15 @@ async function checkout(): Promise<void> {
     const created = await orderApi.createCartOrder({
       cart_item_ids: checkedItems.value.map((item) => item.id),
     })
-    const orderId = created.order.id
-    await orderApi.pay({ order_id: orderId, pay_type: PayType.MOCK })
-    await orderApi.mockPaySuccess({ order_id: orderId })
-    notifySuccess('下单并支付成功')
     checkedIds.value = []
     await reload()
-    await router.push({ name: routeNames.orders })
+    notifySuccess('下单成功，请支付')
+    await router.push({
+      name: routeNames.payCheckout,
+      params: { id: String(created.order.id) },
+    })
   } catch (error) {
-    notifyError(error, '结算失败')
+    notifyError(error, '下单失败')
   } finally {
     submitting.value = false
   }

@@ -2,6 +2,7 @@ package productdao
 
 import (
 	"errors"
+	apicommon "helloworld/api/common"
 	"strings"
 	"time"
 
@@ -21,7 +22,7 @@ func (d *ProductDao) WithTx(tx *gorm.DB) *ProductDao {
 
 type ProductQuery struct {
 	CategoryID int64
-	Status     int32 // 0=全部
+	Status     apicommon.ProductStatus // 0=全部
 	Keyword    string
 	OnlyHot    bool
 	Page       int
@@ -33,9 +34,9 @@ func (d *ProductDao) Create(p *productmodel.Product) (*productmodel.Product, err
 		return nil, codeerror.OrSystem(codeerror.ErrorParam, "ProductDao.Create invalid param")
 	}
 	if p.Status == 0 {
-		p.Status = productmodel.StatusOff
+		p.Status = apicommon.ProductStatus_PRODUCT_STATUS_OFF
 	}
-	if p.Status != productmodel.StatusOn && p.Status != productmodel.StatusOff {
+	if p.Status != apicommon.ProductStatus_PRODUCT_STATUS_ON && p.Status != apicommon.ProductStatus_PRODUCT_STATUS_OFF {
 		return nil, codeerror.OrSystem(codeerror.ErrorParam, "ProductDao.Create invalid status=%d", p.Status)
 	}
 	now := time.Now().Unix()
@@ -105,8 +106,8 @@ func (d *ProductDao) Update(id int64, name, description string, price int64) (*p
 	return p, nil
 }
 
-func (d *ProductDao) SetStatus(id int64, status int32) (*productmodel.Product, error) {
-	if status != productmodel.StatusOn && status != productmodel.StatusOff {
+func (d *ProductDao) SetStatus(id int64, status apicommon.ProductStatus) (*productmodel.Product, error) {
+	if status != apicommon.ProductStatus_PRODUCT_STATUS_ON && status != apicommon.ProductStatus_PRODUCT_STATUS_OFF {
 		return nil, codeerror.OrSystem(codeerror.ErrorParam, "ProductDao.SetStatus invalid status=%d id=%d", status, id)
 	}
 	p, err := d.GetByID(id)

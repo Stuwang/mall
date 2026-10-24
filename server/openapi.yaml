@@ -1561,8 +1561,11 @@ components:
                 productCover:
                     type: string
                 productStatus:
-                    type: integer
-                    format: int32
+                    enum:
+                        - PRODUCT_STATUS_ON
+                        - PRODUCT_STATUS_OFF
+                    type: string
+                    format: enum
                 ct:
                     type: integer
                     format: int64

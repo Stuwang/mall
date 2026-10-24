@@ -23,9 +23,12 @@ type Config struct {
 	RootDir        string
 }
 
+// Scheme 逻辑文件 URI 的协议
+type Scheme string
+
 const (
-	SchemeLocalFile = "local_file"
-	SchemeOSS       = "oss"
+	SchemeLocalFile Scheme = "local_file"
+	SchemeOSS       Scheme = "oss"
 
 	// FilesHTTPPrefix 公开访问路径前缀
 	FilesHTTPPrefix = "/files/"
@@ -152,7 +155,7 @@ func (s *Store) Save(origName, contentType string, r io.Reader, size int64) (str
 		logger.Errorf("mediastore Save exceeds max written=%d max=%d", written, s.maxUploadBytes)
 		return "", codeerror.ErrorParam
 	}
-	uri := SchemeLocalFile + ":///" + key
+	uri := string(SchemeLocalFile) + ":///" + key
 	return uri, nil
 }
 
@@ -183,7 +186,7 @@ func (s *Store) Resolve(raw string) string {
 	if key, ok := parseLocalFileURI(raw); ok {
 		return s.filesURLPrefix + key
 	}
-	if strings.HasPrefix(raw, SchemeOSS+"://") {
+	if strings.HasPrefix(raw, string(SchemeOSS)+"://") {
 		logger.Errorf("mediastore Resolve oss not implemented uri=%s", raw)
 		return raw
 	}
@@ -197,11 +200,11 @@ func (s *Store) Normalize(raw string) string {
 	if raw == "" {
 		return ""
 	}
-	if strings.HasPrefix(raw, SchemeLocalFile+"://") || strings.HasPrefix(raw, SchemeOSS+"://") {
+	if strings.HasPrefix(raw, string(SchemeLocalFile)+"://") || strings.HasPrefix(raw, string(SchemeOSS)+"://") {
 		return raw
 	}
 	if key, ok := s.stripFilesURL(raw); ok {
-		return SchemeLocalFile + ":///" + key
+		return string(SchemeLocalFile) + ":///" + key
 	}
 	return raw
 }
@@ -250,10 +253,10 @@ func (s *Store) stripFilesURL(raw string) (string, bool) {
 }
 
 func parseLocalFileURI(raw string) (string, bool) {
-	const prefix = SchemeLocalFile + ":///"
+	const prefix = string(SchemeLocalFile) + ":///"
 	if !strings.HasPrefix(raw, prefix) {
 		// 兼容 local_file://key（两斜杠）
-		alt := SchemeLocalFile + "://"
+		alt := string(SchemeLocalFile) + "://"
 		if strings.HasPrefix(raw, alt) {
 			return cleanKey(strings.TrimPrefix(raw, alt))
 		}

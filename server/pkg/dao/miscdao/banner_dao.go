@@ -2,6 +2,7 @@ package miscdao
 
 import (
 	"errors"
+	apicommon "helloworld/api/common"
 	"strings"
 	"time"
 
@@ -18,15 +19,15 @@ func (d *BannerDao) WithTx(tx *gorm.DB) *BannerDao {
 	return &BannerDao{db: tx}
 }
 
-func (d *BannerDao) Create(imageURL string, sort int32, status int32) (*miscmodel.Banner, error) {
+func (d *BannerDao) Create(imageURL string, sort int32, status apicommon.MiscStatus) (*miscmodel.Banner, error) {
 	imageURL = strings.TrimSpace(imageURL)
 	if imageURL == "" {
 		return nil, codeerror.OrSystem(codeerror.ErrorParam, "BannerDao.Create empty image_url")
 	}
 	if status == 0 {
-		status = miscmodel.StatusOn
+		status = apicommon.MiscStatus_MISC_STATUS_ON
 	}
-	if status != miscmodel.StatusOn && status != miscmodel.StatusOff {
+	if status != apicommon.MiscStatus_MISC_STATUS_ON && status != apicommon.MiscStatus_MISC_STATUS_OFF {
 		return nil, codeerror.OrSystem(codeerror.ErrorParam, "BannerDao.Create invalid status=%d", status)
 	}
 	now := time.Now().Unix()
@@ -43,7 +44,7 @@ func (d *BannerDao) Create(imageURL string, sort int32, status int32) (*miscmode
 	return b, nil
 }
 
-func (d *BannerDao) Update(id int64, imageURL string, sort int32, status int32) (*miscmodel.Banner, error) {
+func (d *BannerDao) Update(id int64, imageURL string, sort int32, status apicommon.MiscStatus) (*miscmodel.Banner, error) {
 	b, err := d.GetByID(id)
 	if err != nil {
 		return nil, codeerror.OrSystem(err, "BannerDao.Update GetByID id=%d", id)
@@ -52,7 +53,7 @@ func (d *BannerDao) Update(id int64, imageURL string, sort int32, status int32) 
 	if imageURL == "" {
 		return nil, codeerror.OrSystem(codeerror.ErrorParam, "BannerDao.Update empty image_url id=%d", id)
 	}
-	if status != miscmodel.StatusOn && status != miscmodel.StatusOff {
+	if status != apicommon.MiscStatus_MISC_STATUS_ON && status != apicommon.MiscStatus_MISC_STATUS_OFF {
 		return nil, codeerror.OrSystem(codeerror.ErrorParam, "BannerDao.Update invalid status=%d id=%d", status, id)
 	}
 	b.ImageURL = imageURL
@@ -80,7 +81,7 @@ func (d *BannerDao) GetByID(id int64) (*miscmodel.Banner, error) {
 func (d *BannerDao) List(onlyOn bool) ([]miscmodel.Banner, error) {
 	q := d.db.Model(&miscmodel.Banner{})
 	if onlyOn {
-		q = q.Where("status = ?", miscmodel.StatusOn)
+		q = q.Where("status = ?", apicommon.MiscStatus_MISC_STATUS_ON)
 	}
 	var list []miscmodel.Banner
 	if err := q.Order("sort desc, id asc").Find(&list).Error; err != nil {

@@ -2,10 +2,10 @@ package productcontroller
 
 import (
 	"context"
+	apicommon "helloworld/api/common"
 
 	apiproduct "helloworld/api/product"
 	"helloworld/pkg/dao/productdao"
-	productmodel "helloworld/pkg/model/product"
 	"mall/kit/codeerror"
 	"mall/kit/logger"
 )
@@ -23,7 +23,7 @@ func New() *Controller {
 
 func (c *Controller) ListProducts(ctx context.Context, req *apiproduct.ListProductsRequest) (*apiproduct.ListProductsReply, error) {
 	list, total, err := productdao.NewProductDao(nil).List(productdao.ProductQuery{
-		Status:   productmodel.StatusOn,
+		Status:   apicommon.ProductStatus_PRODUCT_STATUS_ON,
 		Keyword:  req.Keyword,
 		Page:     int(req.Page),
 		PageSize: int(req.PageSize),
@@ -47,7 +47,7 @@ func (c *Controller) ListProductsByCategory(ctx context.Context, req *apiproduct
 	}
 	list, total, err := productdao.NewProductDao(nil).List(productdao.ProductQuery{
 		CategoryID: req.CategoryId,
-		Status:     productmodel.StatusOn,
+		Status:     apicommon.ProductStatus_PRODUCT_STATUS_ON,
 		Page:       int(req.Page),
 		PageSize:   int(req.PageSize),
 	})
@@ -73,7 +73,7 @@ func (c *Controller) GetProduct(ctx context.Context, req *apiproduct.GetProductR
 		logger.Errorf("GetProduct id=%d err=%v", req.Id, err)
 		return nil, err
 	}
-	if p.Status != productmodel.StatusOn {
+	if p.Status != apicommon.ProductStatus_PRODUCT_STATUS_ON {
 		logger.Errorf("GetProduct not on shelf id=%d status=%d", req.Id, p.Status)
 		return nil, codeerror.ErrorParam.Errorf("product not found")
 	}
@@ -96,7 +96,7 @@ func (c *Controller) ListCategories(ctx context.Context, req *apiproduct.ListCat
 
 func (c *Controller) ListHotProducts(ctx context.Context, req *apiproduct.ListHotProductsRequest) (*apiproduct.ListProductsReply, error) {
 	list, total, err := productdao.NewProductDao(nil).List(productdao.ProductQuery{
-		Status:   productmodel.StatusOn,
+		Status:   apicommon.ProductStatus_PRODUCT_STATUS_ON,
 		OnlyHot:  true,
 		Page:     int(req.Page),
 		PageSize: int(req.PageSize),

@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package im.common.v1;
+
+option go_package = "mall/im/api/common;common";
+
+// 消息来源
+enum Origin {
+  ORIGIN_UNSPECIFIED = 0;
+  ORIGIN_USER = 1;
+  ORIGIN_SYSTEM = 2;
+}
+
+// 谁能看见这条消息
+enum Visibility {
+  VISIBILITY_UNSPECIFIED = 0;
+  VISIBILITY_PEER_ONLY = 1;
+  VISIBILITY_SENDER_ONLY = 2;
+  VISIBILITY_BOTH = 3;
+}
+
+// 消息正文类型。当前只使用文本，其它取值预留。
+enum ContentType {
+  CONTENT_TYPE_UNSPECIFIED = 0;
+  CONTENT_TYPE_TEXT = 1;
+}

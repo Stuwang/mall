@@ -2,9 +2,9 @@ package ordercontroller
 
 import (
 	"context"
+	apicommon "helloworld/api/common"
 
 	apiorder "helloworld/api/order"
-	ordermodel "helloworld/pkg/model/order"
 	"helloworld/pkg/orderbiz"
 	"mall/kit/auth"
 	"mall/kit/codeerror"
@@ -70,7 +70,7 @@ func (c *Controller) PayOrder(ctx context.Context, req *apiorder.PayOrderRequest
 		logger.Errorf("PayOrder invalid order_id userID=%d", info.UserID)
 		return nil, codeerror.ErrorParam
 	}
-	created, err := orderbiz.PayOrder(info.UserID, req.OrderId, ordermodel.PayType(req.PayType), req.UsePoints)
+	created, err := orderbiz.PayOrder(info.UserID, req.OrderId, req.PayType, req.UsePoints)
 	if err != nil {
 		logger.Errorf("PayOrder userID=%d orderID=%d payType=%v usePoints=%d err=%v", info.UserID, req.OrderId, req.PayType, req.UsePoints, err)
 		return nil, err
@@ -98,7 +98,7 @@ func (c *Controller) CancelOrder(ctx context.Context, req *apiorder.CancelOrderR
 		logger.Errorf("CancelOrder invalid order_id userID=%d", info.UserID)
 		return nil, codeerror.ErrorParam
 	}
-	created, err := orderbiz.CancelOrder(info.UserID, req.OrderId, ordermodel.CancelReasonUser)
+	created, err := orderbiz.CancelOrder(info.UserID, req.OrderId, apicommon.CancelReason_CANCEL_REASON_USER)
 	if err != nil {
 		logger.Errorf("CancelOrder userID=%d orderID=%d err=%v", info.UserID, req.OrderId, err)
 		return nil, err
@@ -122,7 +122,7 @@ func (c *Controller) GetOrder(ctx context.Context, req *apiorder.GetOrderRequest
 
 func (c *Controller) ListOrders(ctx context.Context, req *apiorder.ListOrdersRequest) (*apiorder.ListOrdersReply, error) {
 	info := auth.MustFromContext(ctx)
-	list, total, err := orderbiz.ListOrders(info.UserID, ordermodel.OrderStatus(req.Status), int(req.Page), int(req.PageSize))
+	list, total, err := orderbiz.ListOrders(info.UserID, req.Status, int(req.Page), int(req.PageSize))
 	if err != nil {
 		logger.Errorf("ListOrders userID=%d err=%v", info.UserID, err)
 		return nil, err
@@ -155,16 +155,16 @@ func toOrderInfo(created *orderbiz.CreatedOrder) *apiorder.OrderInfo {
 		Id:            o.ID,
 		OrderNo:       o.OrderNo,
 		UserId:        o.UserID,
-		OrderType:     apiorder.OrderType(o.OrderType),
-		Status:        apiorder.OrderStatus(o.Status),
-		PayType:       apiorder.PayType(o.PayType),
+		OrderType:     o.OrderType,
+		Status:        o.Status,
+		PayType:       o.PayType,
 		TotalAmount:   o.TotalAmount,
 		CashAmount:    o.CashAmount,
 		PointAmount:   o.PointAmount,
 		PointsPerYuan: o.PointsPerYuan,
 		PayExpireAt:   o.PayExpireAt,
 		PaidAt:        o.PaidAt,
-		CancelReason:  apiorder.CancelReason(o.CancelReason),
+		CancelReason:  o.CancelReason,
 		Items:         items,
 		Ct:            o.Ct,
 		Ut:            o.Ut,

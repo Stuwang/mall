@@ -2,6 +2,7 @@ package assetdao
 
 import (
 	"errors"
+	apicommon "helloworld/api/common"
 
 	"gorm.io/gorm"
 	assetmodel "helloworld/pkg/model/asset"
@@ -38,7 +39,7 @@ func (d *HistoryDao) Create(h *assetmodel.UserAssetHistory) error {
 	return nil
 }
 
-func (d *HistoryDao) List(userID int64, assetType int32, page, pageSize int) ([]assetmodel.UserAssetHistory, int64, error) {
+func (d *HistoryDao) List(userID int64, assetType apicommon.AssetType, page, pageSize int) ([]assetmodel.UserAssetHistory, int64, error) {
 	if page <= 0 {
 		page = 1
 	}

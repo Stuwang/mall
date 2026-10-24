@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package common.v1;
+
+option go_package = "helloworld/api/common;common";
+
+// 订单类型
+enum OrderType {
+  ORDER_TYPE_UNSPECIFIED = 0;
+  ORDER_TYPE_PRODUCT = 1;
+  ORDER_TYPE_POINT = 2;
+}
+
+// 订单状态
+enum OrderStatus {
+  ORDER_STATUS_UNSPECIFIED = 0;
+  ORDER_STATUS_PENDING_PAY = 1;
+  ORDER_STATUS_PAID = 2;
+  ORDER_STATUS_CANCELLED = 3;
+}
+
+// 支付方式
+enum PayType {
+  PAY_TYPE_UNSPECIFIED = 0;
+  PAY_TYPE_WECHAT = 1;
+  PAY_TYPE_ALIPAY = 2;
+  PAY_TYPE_POINT = 3;
+  PAY_TYPE_MOCK = 4;
+}
+
+// 取消原因
+enum CancelReason {
+  CANCEL_REASON_UNSPECIFIED = 0;
+  CANCEL_REASON_USER = 1;
+  CANCEL_REASON_TIMEOUT = 2;
+}
+
+// 商品上下架
+enum ProductStatus {
+  PRODUCT_STATUS_UNSPECIFIED = 0;
+  PRODUCT_STATUS_ON = 1;
+  PRODUCT_STATUS_OFF = 2;
+}
+
+// 分类启用状态
+enum CategoryStatus {
+  CATEGORY_STATUS_UNSPECIFIED = 0;
+  CATEGORY_STATUS_ON = 1;
+  CATEGORY_STATUS_OFF = 2;
+}
+
+// Banner、公告启用状态
+enum MiscStatus {
+  MISC_STATUS_UNSPECIFIED = 0;
+  MISC_STATUS_ON = 1;
+  MISC_STATUS_OFF = 2;
+}
+
+// 资产类型
+enum AssetType {
+  ASSET_TYPE_UNSPECIFIED = 0;
+  ASSET_TYPE_POINT = 1;
+}

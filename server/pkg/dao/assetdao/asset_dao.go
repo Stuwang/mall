@@ -2,6 +2,7 @@ package assetdao
 
 import (
 	"errors"
+	apicommon "helloworld/api/common"
 	"time"
 
 	"gorm.io/gorm"
@@ -17,7 +18,7 @@ func (d *AssetDao) WithTx(tx *gorm.DB) *AssetDao {
 	return &AssetDao{db: tx}
 }
 
-func (d *AssetDao) ListByUserID(userID int64, assetType int32) ([]assetmodel.UserAsset, error) {
+func (d *AssetDao) ListByUserID(userID int64, assetType apicommon.AssetType) ([]assetmodel.UserAsset, error) {
 	q := d.db.Where("user_id = ?", userID)
 	if assetType > 0 {
 		q = q.Where("type = ?", assetType)
@@ -29,7 +30,7 @@ func (d *AssetDao) ListByUserID(userID int64, assetType int32) ([]assetmodel.Use
 	return list, nil
 }
 
-func (d *AssetDao) GetByUserAndType(userID int64, assetType int32) (*assetmodel.UserAsset, error) {
+func (d *AssetDao) GetByUserAndType(userID int64, assetType apicommon.AssetType) (*assetmodel.UserAsset, error) {
 	a, err := d.FindByUserAndType(userID, assetType)
 	if err != nil {
 		return nil, err
@@ -41,7 +42,7 @@ func (d *AssetDao) GetByUserAndType(userID int64, assetType int32) (*assetmodel.
 }
 
 // FindByUserAndType 查询资产；不存在时返回 nil, nil
-func (d *AssetDao) FindByUserAndType(userID int64, assetType int32) (*assetmodel.UserAsset, error) {
+func (d *AssetDao) FindByUserAndType(userID int64, assetType apicommon.AssetType) (*assetmodel.UserAsset, error) {
 	var a assetmodel.UserAsset
 	err := d.db.Where("user_id = ? AND type = ?", userID, assetType).First(&a).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {

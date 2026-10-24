@@ -2,6 +2,7 @@ package orderdao
 
 import (
 	"errors"
+	apicommon "helloworld/api/common"
 	"time"
 
 	"gorm.io/gorm"
@@ -62,10 +63,10 @@ func (d *OrderDao) Update(o *ordermodel.Order, fields ...string) error {
 
 type ListQuery struct {
 	UserID    int64
-	Status    ordermodel.OrderStatus // 0=全部
-	StartCt   int64                  // 下单时间起（含），0=不限
-	EndCt     int64                  // 下单时间止（含），0=不限
-	ProductID int64                  // 按订单明细商品过滤，0=不限
+	Status    apicommon.OrderStatus // 0=全部
+	StartCt   int64                 // 下单时间起（含），0=不限
+	EndCt     int64                 // 下单时间止（含），0=不限
+	ProductID int64                 // 按订单明细商品过滤，0=不限
 	Page      int
 	PageSize  int
 	// RequireUser 为 true 时必须带 UserID（用户侧列表）
@@ -122,7 +123,7 @@ func (d *OrderDao) ListExpiredPending(limit int, now int64) ([]ordermodel.Order,
 		limit = 100
 	}
 	var list []ordermodel.Order
-	err := d.db.Where("status = ? AND pay_expire_at > 0 AND pay_expire_at < ?", ordermodel.OrderStatusPendingPay, now).
+	err := d.db.Where("status = ? AND pay_expire_at > 0 AND pay_expire_at < ?", apicommon.OrderStatus_ORDER_STATUS_PENDING_PAY, now).
 		Order("id asc").Limit(limit).Find(&list).Error
 	if err != nil {
 		return nil, codeerror.OrSystem(err, "OrderDao.ListExpiredPending")

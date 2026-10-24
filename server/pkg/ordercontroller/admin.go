@@ -5,7 +5,6 @@ import (
 
 	apiorder "helloworld/api/order"
 	"helloworld/pkg/dao/orderdao"
-	ordermodel "helloworld/pkg/model/order"
 	"helloworld/pkg/orderbiz"
 	"mall/kit/auth"
 	"mall/kit/codeerror"
@@ -23,7 +22,7 @@ func (c *Controller) AdminListOrders(ctx context.Context, req *apiorder.AdminLis
 	}
 	list, total, err := orderbiz.AdminListOrders(orderdao.ListQuery{
 		UserID:    req.UserId,
-		Status:    ordermodel.OrderStatus(req.Status),
+		Status:    req.Status,
 		StartCt:   req.StartCt,
 		EndCt:     req.EndCt,
 		ProductID: req.ProductId,

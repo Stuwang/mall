@@ -2,8 +2,8 @@ package productcontroller
 
 import (
 	apiproduct "helloworld/api/product"
-	"mall/file/mediastore"
 	productmodel "helloworld/pkg/model/product"
+	"mall/file/mediastore"
 )
 
 func toProductInfo(p *productmodel.Product, images []productmodel.ProductImage) *apiproduct.ProductInfo {
@@ -22,7 +22,7 @@ func toProductInfo(p *productmodel.Product, images []productmodel.ProductImage) 
 		Description: p.Description,
 		Price:       p.Price,
 		Stock:       p.Stock,
-		Status:      apiproduct.ProductStatus(p.Status),
+		Status:      p.Status,
 		Images:      urls,
 		Ct:          p.Ct,
 		Ut:          p.Ut,
@@ -46,7 +46,7 @@ func toCategoryInfo(c *productmodel.Category) *apiproduct.CategoryInfo {
 		Id:     c.ID,
 		Name:   c.Name,
 		Sort:   c.Sort,
-		Status: apiproduct.CategoryStatus(c.Status),
+		Status: c.Status,
 		Ct:     c.Ct,
 		Ut:     c.Ut,
 	}

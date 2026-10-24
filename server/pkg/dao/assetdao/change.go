@@ -1,19 +1,20 @@
 package assetdao
 
 import (
+	apicommon "helloworld/api/common"
 	"time"
 
 	"gorm.io/gorm"
+	"helloworld/common/database"
 	"helloworld/pkg/bizerror"
 	assetmodel "helloworld/pkg/model/asset"
 	"mall/kit/codeerror"
-	"helloworld/common/database"
 )
 
 // ChangeReq 资产变更请求（内部能力，供后续发分/扣分使用）
 type ChangeReq struct {
 	UserID       int64
-	Type         int32
+	Type         apicommon.AssetType
 	Change       int64
 	IdempotentID string // 必填，用于幂等
 	BizType      string

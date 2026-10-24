@@ -4,6 +4,7 @@ package product.v1;
 
 import "google/api/annotations.proto";
 import "base/base.proto";
+import "common/common.proto";
 
 option go_package = "helloworld/api/product;product";
 
@@ -123,25 +124,11 @@ service AdminProduct {
   }
 }
 
-// 商品状态
-enum ProductStatus {
-  PRODUCT_STATUS_UNSPECIFIED = 0;
-  PRODUCT_STATUS_ON = 1;  // 上架
-  PRODUCT_STATUS_OFF = 2; // 下架
-}
-
-// 分类状态
-enum CategoryStatus {
-  CATEGORY_STATUS_UNSPECIFIED = 0;
-  CATEGORY_STATUS_ON = 1;
-  CATEGORY_STATUS_OFF = 2;
-}
-
 message CategoryInfo {
   int64 id = 1;
   string name = 2;
   int32 sort = 3;
-  CategoryStatus status = 4;
+  common.v1.CategoryStatus status = 4;
   int64 ct = 5;
   int64 ut = 6;
 }
@@ -154,7 +141,7 @@ message ProductInfo {
   // 价格，单位分
   int64 price = 5;
   int32 stock = 6;
-  ProductStatus status = 7;
+  common.v1.ProductStatus status = 7;
   // 商品图片列表（按顺序）
   repeated string images = 8;
   int64 ct = 9;
@@ -209,7 +196,7 @@ message AdminCreateCategoryRequest {
   helloworld.v1.BaseParam BaseParam = 1;
   string name = 2;
   int32 sort = 3;
-  CategoryStatus status = 4;
+  common.v1.CategoryStatus status = 4;
 }
 
 message AdminUpdateCategoryRequest {
@@ -217,7 +204,7 @@ message AdminUpdateCategoryRequest {
   int64 id = 2;
   string name = 3;
   int32 sort = 4;
-  CategoryStatus status = 5;
+  common.v1.CategoryStatus status = 5;
 }
 
 message AdminListCategoriesRequest {
@@ -236,7 +223,7 @@ message AdminCreateProductRequest {
   int64 price = 5;
   int32 stock = 6;
   repeated string images = 7;
-  ProductStatus status = 8;
+  common.v1.ProductStatus status = 8;
 }
 
 message AdminUpdateProductRequest {
@@ -251,7 +238,7 @@ message AdminUpdateProductRequest {
 message AdminSetProductStatusRequest {
   helloworld.v1.BaseParam BaseParam = 1;
   int64 id = 2;
-  ProductStatus status = 3;
+  common.v1.ProductStatus status = 3;
 }
 
 message AdminUpdateProductStockRequest {
@@ -277,7 +264,7 @@ message AdminListProductsRequest {
   int32 page = 2;
   int32 page_size = 3;
   int64 category_id = 4;
-  ProductStatus status = 5;
+  common.v1.ProductStatus status = 5;
   string keyword = 6;
 }
 

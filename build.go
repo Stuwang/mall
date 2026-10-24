@@ -45,11 +45,12 @@ func main() {
 func usage() {
 	fmt.Fprintf(os.Stderr, `用法: go run build.go <命令>
 
-  proto                 生成 pb（server/api、modules/user/api、modules/kit）
+  proto                 生成 pb（server/api、modules/user/api、modules/kit、im/api）
   build server          构建商城 API，输出 bin/server
   build allinone        构建一体包，输出 bin/allinone
   build kit|user|file   编译对应共享模块
-  build all             编译共享模块，并构建 server 与 allinone
+  build im              构建 IM，输出 bin/im
+  build all             编译共享模块，并构建 server、allinone 与 im
 `)
 }
 
@@ -66,6 +67,7 @@ func targets() []target {
 		{name: "file", pkg: "./modules/file/..."},
 		{name: "server", pkg: "./server/cmd", bin: "bin/server"},
 		{name: "allinone", pkg: "./server/cmd/allinone", bin: "bin/allinone"},
+		{name: "im", pkg: "./im/cmd", bin: "bin/im"},
 	}
 }
 
@@ -158,6 +160,10 @@ func generateProto() error {
 		return err
 	}
 
+	if err := generateImProto(serverDir); err != nil {
+		return err
+	}
+
 	openapiArgs := []string{
 		"--proto_path=./api",
 		"--proto_path=./third_party",
@@ -167,6 +173,22 @@ func generateProto() error {
 	openapiArgs = append(openapiArgs, protos...)
 	openapiArgs = append(openapiArgs, "user/user.proto")
 	return run(serverDir, "protoc", openapiArgs...)
+}
+
+// generateImProto 生成 im/api。不写入商城的 openapi.yaml。
+func generateImProto(serverDir string) error {
+	imOut := filepath.ToSlash(filepath.Join("..", "im", "api"))
+	userOut := filepath.ToSlash(filepath.Join("..", "modules", "user", "api"))
+	return run(serverDir, "protoc",
+		"--proto_path="+imOut,
+		"--proto_path="+userOut,
+		"--proto_path=./third_party",
+		"--go_out=paths=source_relative:"+imOut,
+		"--go-http_out=paths=source_relative:"+imOut,
+		"--go-grpc_out=require_unimplemented_servers=false,paths=source_relative:"+imOut,
+		"common/common.proto",
+		"im/im.proto",
+	)
 }
 
 // generateKitProto 生成 modules/kit 下的消息 proto。这些文件没有 HTTP/gRPC service。

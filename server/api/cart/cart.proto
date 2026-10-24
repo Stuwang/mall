@@ -4,6 +4,7 @@ package cart.v1;
 
 import "google/api/annotations.proto";
 import "base/base.proto";
+import "common/common.proto";
 
 option go_package = "helloworld/api/cart;cart";
 
@@ -52,7 +53,7 @@ message CartItem {
   int64 product_price = 6;
   int32 product_stock = 7;
   string product_cover = 8;
-  int32 product_status = 9;
+  common.v1.ProductStatus product_status = 9;
   int64 ct = 10;
   int64 ut = 11;
 }

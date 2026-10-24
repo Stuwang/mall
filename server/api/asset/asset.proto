@@ -4,6 +4,7 @@ package asset.v1;
 
 import "google/api/annotations.proto";
 import "base/base.proto";
+import "common/common.proto";
 
 option go_package = "helloworld/api/asset;asset";
 
@@ -53,16 +54,9 @@ service AdminAsset {
   }
 }
 
-// 资产类型
-enum AssetType {
-  ASSET_TYPE_UNSPECIFIED = 0;
-  // 积分
-  ASSET_TYPE_POINT = 1;
-}
-
 message AssetInfo {
   int64 user_id = 1;
-  AssetType type = 2;
+  common.v1.AssetType type = 2;
   int64 balance = 3;
   int64 ct = 4;
   int64 ut = 5;
@@ -71,7 +65,7 @@ message AssetInfo {
 message AssetHistory {
   int64 id = 1;
   int64 user_id = 2;
-  AssetType type = 3;
+  common.v1.AssetType type = 3;
   // 变更量（可正可负）
   int64 change = 4;
   // 变更后余额
@@ -87,7 +81,7 @@ message AssetHistory {
 message GetUserAssetsRequest {
   helloworld.v1.BaseParam BaseParam = 1;
   // 可选：按类型筛选，0 表示全部
-  AssetType type = 2;
+  common.v1.AssetType type = 2;
 }
 
 message GetUserAssetsReply {
@@ -97,7 +91,7 @@ message GetUserAssetsReply {
 message GetAssetHistoryRequest {
   helloworld.v1.BaseParam BaseParam = 1;
   // 可选：按类型筛选，0 表示全部
-  AssetType type = 2;
+  common.v1.AssetType type = 2;
   int32 page = 3;
   int32 page_size = 4;
 }
@@ -111,13 +105,13 @@ message AdminGetUserAssetsRequest {
   helloworld.v1.BaseParam BaseParam = 1;
   int64 user_id = 2;
   // 可选：按类型筛选，0 表示全部
-  AssetType type = 3;
+  common.v1.AssetType type = 3;
 }
 
 message AdminGetAssetHistoryRequest {
   helloworld.v1.BaseParam BaseParam = 1;
   int64 user_id = 2;
-  AssetType type = 3;
+  common.v1.AssetType type = 3;
   int32 page = 4;
   int32 page_size = 5;
 }

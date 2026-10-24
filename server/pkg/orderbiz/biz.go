@@ -2,20 +2,19 @@ package orderbiz
 
 import (
 	"fmt"
+	apicommon "helloworld/api/common"
 	"time"
 
 	"gorm.io/gorm"
+	"helloworld/common/database"
 	"helloworld/pkg/bizerror"
 	"helloworld/pkg/dao/assetdao"
 	"helloworld/pkg/dao/cartdao"
 	"helloworld/pkg/dao/orderdao"
 	"helloworld/pkg/dao/productdao"
-	assetmodel "helloworld/pkg/model/asset"
 	ordermodel "helloworld/pkg/model/order"
-	productmodel "helloworld/pkg/model/product"
 	"helloworld/pkg/pointrate"
 	"mall/kit/codeerror"
-	"helloworld/common/database"
 	"mall/kit/logger"
 )
 
@@ -103,7 +102,7 @@ func createProductOrderInternal(userID int64, lines []ProductLine, removeCartIDs
 			if err != nil {
 				return err
 			}
-			if p.Status != productmodel.StatusOn {
+			if p.Status != apicommon.ProductStatus_PRODUCT_STATUS_ON {
 				return codeerror.ErrorParam.Errorf("product not available")
 			}
 			if err := productDao.DecStock(p.ID, line.Quantity); err != nil {
@@ -124,8 +123,8 @@ func createProductOrderInternal(userID int64, lines []ProductLine, removeCartIDs
 		o := &ordermodel.Order{
 			OrderNo:       genOrderNo(userID),
 			UserID:        userID,
-			OrderType:     ordermodel.OrderTypeProduct,
-			Status:        ordermodel.OrderStatusPendingPay,
+			OrderType:     apicommon.OrderType_ORDER_TYPE_PRODUCT,
+			Status:        apicommon.OrderStatus_ORDER_STATUS_PENDING_PAY,
 			TotalAmount:   total,
 			CashAmount:    total, // 支付前默认全额现金，Pay 时按积分重算
 			PointAmount:   0,
@@ -174,8 +173,8 @@ func CreatePointOrder(userID, points int64) (*CreatedOrder, error) {
 	o := &ordermodel.Order{
 		OrderNo:       genOrderNo(userID),
 		UserID:        userID,
-		OrderType:     ordermodel.OrderTypePoint,
-		Status:        ordermodel.OrderStatusPendingPay,
+		OrderType:     apicommon.OrderType_ORDER_TYPE_POINT,
+		Status:        apicommon.OrderStatus_ORDER_STATUS_PENDING_PAY,
 		TotalAmount:   amount,
 		CashAmount:    amount,
 		PointAmount:   points, // 待到账积分
@@ -192,7 +191,7 @@ func CreatePointOrder(userID, points int64) (*CreatedOrder, error) {
 }
 
 // PayOrder 选择支付：usePoints 为抵扣积分；payType 为现金渠道（全额积分时传 POINT）
-func PayOrder(userID, orderID int64, payType ordermodel.PayType, usePoints int64) (*CreatedOrder, error) {
+func PayOrder(userID, orderID int64, payType apicommon.PayType, usePoints int64) (*CreatedOrder, error) {
 	if userID <= 0 || orderID <= 0 {
 		logger.Errorf("PayOrder invalid userID=%d orderID=%d", userID, orderID)
 		return nil, codeerror.ErrorParam
@@ -221,12 +220,12 @@ func PayOrder(userID, orderID int64, payType ordermodel.PayType, usePoints int64
 		}
 
 		switch o.OrderType {
-		case ordermodel.OrderTypePoint:
+		case apicommon.OrderType_ORDER_TYPE_POINT:
 			// 积分充值只能货币支付
-			if usePoints > 0 || payType == ordermodel.PayTypePoint {
+			if usePoints > 0 || payType == apicommon.PayType_PAY_TYPE_POINT {
 				return codeerror.ErrorParam.Errorf("point order cannot use point pay")
 			}
-			if payType != ordermodel.PayTypeWechat && payType != ordermodel.PayTypeAlipay && payType != ordermodel.PayTypeMock {
+			if payType != apicommon.PayType_PAY_TYPE_WECHAT && payType != apicommon.PayType_PAY_TYPE_ALIPAY && payType != apicommon.PayType_PAY_TYPE_MOCK {
 				return codeerror.ErrorParam
 			}
 			o.PayType = payType
@@ -234,14 +233,14 @@ func PayOrder(userID, orderID int64, payType ordermodel.PayType, usePoints int64
 			if err := orderDao.Update(o, "pay_type", "cash_amount"); err != nil {
 				return err
 			}
-		case ordermodel.OrderTypeProduct:
+		case apicommon.OrderType_ORDER_TYPE_PRODUCT:
 			rate := o.PointsPerYuan
 			if rate <= 0 {
 				rate = currentPointsPerYuan()
 				o.PointsPerYuan = rate
 			}
 			if usePoints > 0 {
-				a, err := assetdao.NewAssetDao(tx).FindByUserAndType(userID, assetmodel.TypePoint)
+				a, err := assetdao.NewAssetDao(tx).FindByUserAndType(userID, apicommon.AssetType_ASSET_TYPE_POINT)
 				if err != nil {
 					return err
 				}
@@ -264,7 +263,7 @@ func PayOrder(userID, orderID int64, payType ordermodel.PayType, usePoints int64
 
 			if cashCents == 0 {
 				// 全额积分
-				o.PayType = ordermodel.PayTypePoint
+				o.PayType = apicommon.PayType_PAY_TYPE_POINT
 				if err := orderDao.Update(o, "pay_type", "point_amount", "cash_amount", "points_per_yuan"); err != nil {
 					return err
 				}
@@ -272,7 +271,7 @@ func PayOrder(userID, orderID int64, payType ordermodel.PayType, usePoints int64
 					return err
 				}
 			} else {
-				if payType != ordermodel.PayTypeWechat && payType != ordermodel.PayTypeAlipay && payType != ordermodel.PayTypeMock {
+				if payType != apicommon.PayType_PAY_TYPE_WECHAT && payType != apicommon.PayType_PAY_TYPE_ALIPAY && payType != apicommon.PayType_PAY_TYPE_MOCK {
 					return codeerror.ErrorParam.Errorf("cash pay type required")
 				}
 				o.PayType = payType
@@ -310,7 +309,7 @@ func MockPaySuccess(userID, orderID int64) (*CreatedOrder, error) {
 		if err := ensurePendingPayable(o); err != nil {
 			return err
 		}
-		if o.PayType != ordermodel.PayTypeMock {
+		if o.PayType != apicommon.PayType_PAY_TYPE_MOCK {
 			return codeerror.ErrorParam.Errorf("pay type is not mock")
 		}
 		items, err := itemDao.ListByOrderID(o.ID)
@@ -330,13 +329,13 @@ func MockPaySuccess(userID, orderID int64) (*CreatedOrder, error) {
 	return result, nil
 }
 
-func CancelOrder(userID, orderID int64, reason ordermodel.CancelReason) (*CreatedOrder, error) {
+func CancelOrder(userID, orderID int64, reason apicommon.CancelReason) (*CreatedOrder, error) {
 	if userID <= 0 || orderID <= 0 {
 		logger.Errorf("CancelOrder invalid userID=%d orderID=%d", userID, orderID)
 		return nil, codeerror.ErrorParam
 	}
-	if reason == ordermodel.CancelReasonUnspecified {
-		reason = ordermodel.CancelReasonUser
+	if reason == apicommon.CancelReason_CANCEL_REASON_UNSPECIFIED {
+		reason = apicommon.CancelReason_CANCEL_REASON_USER
 	}
 	var result *CreatedOrder
 	err := database.GetDb().Transaction(func(tx *gorm.DB) error {
@@ -363,7 +362,7 @@ func CancelExpiredOrders() {
 	}
 	for i := range list {
 		o := list[i]
-		_, err := CancelOrder(o.UserID, o.ID, ordermodel.CancelReasonTimeout)
+		_, err := CancelOrder(o.UserID, o.ID, apicommon.CancelReason_CANCEL_REASON_TIMEOUT)
 		if err != nil {
 			logger.Errorf("CancelExpiredOrders cancel orderID=%d err=%v", o.ID, err)
 		}
@@ -390,7 +389,7 @@ func GetOrder(userID, orderID int64) (*CreatedOrder, error) {
 	return &CreatedOrder{Order: o, Items: items}, nil
 }
 
-func ListOrders(userID int64, status ordermodel.OrderStatus, page, pageSize int) ([]CreatedOrder, int64, error) {
+func ListOrders(userID int64, status apicommon.OrderStatus, page, pageSize int) ([]CreatedOrder, int64, error) {
 	return listOrders(orderdao.ListQuery{
 		UserID:      userID,
 		Status:      status,
@@ -437,18 +436,18 @@ func listOrders(q orderdao.ListQuery) ([]CreatedOrder, int64, error) {
 }
 
 func maybeAutoCancel(o *ordermodel.Order) error {
-	if o == nil || o.Status != ordermodel.OrderStatusPendingPay {
+	if o == nil || o.Status != apicommon.OrderStatus_ORDER_STATUS_PENDING_PAY {
 		return nil
 	}
 	if o.PayExpireAt > 0 && o.PayExpireAt < time.Now().Unix() {
-		_, err := CancelOrder(o.UserID, o.ID, ordermodel.CancelReasonTimeout)
+		_, err := CancelOrder(o.UserID, o.ID, apicommon.CancelReason_CANCEL_REASON_TIMEOUT)
 		return err
 	}
 	return nil
 }
 
 func ensurePendingPayable(o *ordermodel.Order) error {
-	if o.Status != ordermodel.OrderStatusPendingPay {
+	if o.Status != apicommon.OrderStatus_ORDER_STATUS_PENDING_PAY {
 		return bizerror.ErrorOrderStatus
 	}
 	if o.PayExpireAt > 0 && o.PayExpireAt < time.Now().Unix() {
@@ -462,12 +461,12 @@ func markPaidTx(tx *gorm.DB, o *ordermodel.Order) error {
 	now := time.Now().Unix()
 
 	switch o.OrderType {
-	case ordermodel.OrderTypeProduct:
+	case apicommon.OrderType_ORDER_TYPE_PRODUCT:
 		// 混合/全额积分：支付完成时扣积分
 		if o.PointAmount > 0 {
 			if _, err := assetdao.ChangeTx(tx, assetdao.ChangeReq{
 				UserID:       o.UserID,
-				Type:         assetmodel.TypePoint,
+				Type:         apicommon.AssetType_ASSET_TYPE_POINT,
 				Change:       -o.PointAmount,
 				IdempotentID: "order_pay_point_" + o.OrderNo,
 				BizType:      "order_pay_point",
@@ -477,10 +476,10 @@ func markPaidTx(tx *gorm.DB, o *ordermodel.Order) error {
 				return err
 			}
 		}
-	case ordermodel.OrderTypePoint:
+	case apicommon.OrderType_ORDER_TYPE_POINT:
 		if _, err := assetdao.ChangeTx(tx, assetdao.ChangeReq{
 			UserID:       o.UserID,
-			Type:         assetmodel.TypePoint,
+			Type:         apicommon.AssetType_ASSET_TYPE_POINT,
 			Change:       o.PointAmount,
 			IdempotentID: "order_point_" + o.OrderNo,
 			BizType:      "order_point_recharge",
@@ -493,7 +492,7 @@ func markPaidTx(tx *gorm.DB, o *ordermodel.Order) error {
 		return codeerror.ErrorParam
 	}
 
-	o.Status = ordermodel.OrderStatusPaid
+	o.Status = apicommon.OrderStatus_ORDER_STATUS_PAID
 	o.PaidAt = now
 	if err := orderDao.Update(o, "status", "paid_at", "point_amount", "cash_amount", "pay_type", "points_per_yuan"); err != nil {
 		return err
@@ -501,7 +500,7 @@ func markPaidTx(tx *gorm.DB, o *ordermodel.Order) error {
 	return nil
 }
 
-func cancelOrderTx(tx *gorm.DB, userID, orderID int64, reason ordermodel.CancelReason) (*CreatedOrder, error) {
+func cancelOrderTx(tx *gorm.DB, userID, orderID int64, reason apicommon.CancelReason) (*CreatedOrder, error) {
 	orderDao := orderdao.NewOrderDao(tx)
 	itemDao := orderdao.NewItemDao(tx)
 	productDao := productdao.NewProductDao(tx)
@@ -510,21 +509,21 @@ func cancelOrderTx(tx *gorm.DB, userID, orderID int64, reason ordermodel.CancelR
 	if err != nil {
 		return nil, err
 	}
-	if o.Status != ordermodel.OrderStatusPendingPay {
+	if o.Status != apicommon.OrderStatus_ORDER_STATUS_PENDING_PAY {
 		return nil, bizerror.ErrorOrderStatus
 	}
 	items, err := itemDao.ListByOrderID(o.ID)
 	if err != nil {
 		return nil, err
 	}
-	if o.OrderType == ordermodel.OrderTypeProduct {
+	if o.OrderType == apicommon.OrderType_ORDER_TYPE_PRODUCT {
 		for i := range items {
 			if err := productDao.IncStock(items[i].ProductID, items[i].Quantity); err != nil {
 				return nil, err
 			}
 		}
 	}
-	o.Status = ordermodel.OrderStatusCancelled
+	o.Status = apicommon.OrderStatus_ORDER_STATUS_CANCELLED
 	o.CancelReason = reason
 	if err := orderDao.Update(o, "status", "cancel_reason"); err != nil {
 		return nil, err

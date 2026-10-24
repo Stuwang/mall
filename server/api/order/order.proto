@@ -4,6 +4,7 @@ package order.v1;
 
 import "google/api/annotations.proto";
 import "base/base.proto";
+import "common/common.proto";
 
 option go_package = "helloworld/api/order;order";
 
@@ -93,33 +94,6 @@ service AdminOrder {
   }
 }
 
-enum OrderType {
-  ORDER_TYPE_UNSPECIFIED = 0;
-  ORDER_TYPE_PRODUCT = 1;
-  ORDER_TYPE_POINT = 2;
-}
-
-enum OrderStatus {
-  ORDER_STATUS_UNSPECIFIED = 0;
-  ORDER_STATUS_PENDING_PAY = 1;
-  ORDER_STATUS_PAID = 2;
-  ORDER_STATUS_CANCELLED = 3;
-}
-
-enum PayType {
-  PAY_TYPE_UNSPECIFIED = 0;
-  PAY_TYPE_WECHAT = 1;
-  PAY_TYPE_ALIPAY = 2;
-  PAY_TYPE_POINT = 3;
-  PAY_TYPE_MOCK = 4;
-}
-
-enum CancelReason {
-  CANCEL_REASON_UNSPECIFIED = 0;
-  CANCEL_REASON_USER = 1;
-  CANCEL_REASON_TIMEOUT = 2;
-}
-
 message OrderItemInfo {
   int64 id = 1;
   int64 product_id = 2;
@@ -133,9 +107,9 @@ message OrderInfo {
   int64 id = 1;
   string order_no = 2;
   int64 user_id = 3;
-  OrderType order_type = 4;
-  OrderStatus status = 5;
-  PayType pay_type = 6;
+  common.v1.OrderType order_type = 4;
+  common.v1.OrderStatus status = 5;
+  common.v1.PayType pay_type = 6;
   // 订单总价（分）
   int64 total_amount = 7;
   // 现金应付/已付（分）
@@ -146,7 +120,7 @@ message OrderInfo {
   int64 points_per_yuan = 10;
   int64 pay_expire_at = 11;
   int64 paid_at = 12;
-  CancelReason cancel_reason = 13;
+  common.v1.CancelReason cancel_reason = 13;
   repeated OrderItemInfo items = 14;
   int64 ct = 15;
   int64 ut = 16;
@@ -177,7 +151,7 @@ message PayOrderRequest {
   helloworld.v1.BaseParam BaseParam = 1;
   int64 order_id = 2;
   // 现金支付渠道：微信/支付宝/Mock；全额积分时传 POINT
-  PayType pay_type = 3;
+  common.v1.PayType pay_type = 3;
   // 商品单可抵扣的积分数（可与货币组合）
   int64 use_points = 4;
 }
@@ -199,7 +173,7 @@ message GetOrderRequest {
 
 message ListOrdersRequest {
   helloworld.v1.BaseParam BaseParam = 1;
-  OrderStatus status = 2; // 0=全部
+  common.v1.OrderStatus status = 2; // 0=全部
   int32 page = 3;
   int32 page_size = 4;
 }
@@ -224,7 +198,7 @@ message AdminListOrdersRequest {
   // 商品 id；0=全部（按订单明细匹配）
   int64 product_id = 5;
   // 订单状态；0=全部
-  OrderStatus status = 6;
+  common.v1.OrderStatus status = 6;
   int32 page = 7;
   int32 page_size = 8;
 }

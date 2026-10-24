@@ -2,14 +2,15 @@ package cartcontroller
 
 import (
 	"context"
+	apicommon "helloworld/api/common"
 
 	apicart "helloworld/api/cart"
 	"helloworld/pkg/bizerror"
 	"helloworld/pkg/dao/cartdao"
 	"helloworld/pkg/dao/productdao"
-	"mall/file/mediastore"
 	cartmodel "helloworld/pkg/model/cart"
 	productmodel "helloworld/pkg/model/product"
+	"mall/file/mediastore"
 	"mall/kit/auth"
 	"mall/kit/codeerror"
 	"mall/kit/logger"
@@ -40,7 +41,7 @@ func (c *Controller) AddToCart(ctx context.Context, req *apicart.AddToCartReques
 		logger.Errorf("AddToCart GetProduct productID=%d err=%v", req.ProductId, err)
 		return nil, err
 	}
-	if product.Status != productmodel.StatusOn {
+	if product.Status != apicommon.ProductStatus_PRODUCT_STATUS_ON {
 		logger.Errorf("AddToCart product not on shelf productID=%d status=%d", req.ProductId, product.Status)
 		return nil, codeerror.ErrorParam.Errorf("product not available")
 	}
@@ -151,7 +152,7 @@ func (c *Controller) UpdateCartQuantity(ctx context.Context, req *apicart.Update
 		logger.Errorf("UpdateCartQuantity GetProduct productID=%d err=%v", item.ProductID, err)
 		return nil, err
 	}
-	if product.Status != productmodel.StatusOn {
+	if product.Status != apicommon.ProductStatus_PRODUCT_STATUS_ON {
 		logger.Errorf("UpdateCartQuantity product not on shelf productID=%d status=%d", item.ProductID, product.Status)
 		return nil, codeerror.ErrorParam.Errorf("product not available")
 	}

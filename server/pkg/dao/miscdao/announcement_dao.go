@@ -2,6 +2,7 @@ package miscdao
 
 import (
 	"errors"
+	apicommon "helloworld/api/common"
 	"strings"
 	"time"
 
@@ -18,15 +19,15 @@ func (d *AnnouncementDao) WithTx(tx *gorm.DB) *AnnouncementDao {
 	return &AnnouncementDao{db: tx}
 }
 
-func (d *AnnouncementDao) Create(content string, sort int32, status int32) (*miscmodel.Announcement, error) {
+func (d *AnnouncementDao) Create(content string, sort int32, status apicommon.MiscStatus) (*miscmodel.Announcement, error) {
 	content = strings.TrimSpace(content)
 	if content == "" {
 		return nil, codeerror.OrSystem(codeerror.ErrorParam, "AnnouncementDao.Create empty content")
 	}
 	if status == 0 {
-		status = miscmodel.StatusOn
+		status = apicommon.MiscStatus_MISC_STATUS_ON
 	}
-	if status != miscmodel.StatusOn && status != miscmodel.StatusOff {
+	if status != apicommon.MiscStatus_MISC_STATUS_ON && status != apicommon.MiscStatus_MISC_STATUS_OFF {
 		return nil, codeerror.OrSystem(codeerror.ErrorParam, "AnnouncementDao.Create invalid status=%d", status)
 	}
 	now := time.Now().Unix()
@@ -43,7 +44,7 @@ func (d *AnnouncementDao) Create(content string, sort int32, status int32) (*mis
 	return a, nil
 }
 
-func (d *AnnouncementDao) Update(id int64, content string, sort int32, status int32) (*miscmodel.Announcement, error) {
+func (d *AnnouncementDao) Update(id int64, content string, sort int32, status apicommon.MiscStatus) (*miscmodel.Announcement, error) {
 	a, err := d.GetByID(id)
 	if err != nil {
 		return nil, codeerror.OrSystem(err, "AnnouncementDao.Update GetByID id=%d", id)
@@ -52,7 +53,7 @@ func (d *AnnouncementDao) Update(id int64, content string, sort int32, status in
 	if content == "" {
 		return nil, codeerror.OrSystem(codeerror.ErrorParam, "AnnouncementDao.Update empty content id=%d", id)
 	}
-	if status != miscmodel.StatusOn && status != miscmodel.StatusOff {
+	if status != apicommon.MiscStatus_MISC_STATUS_ON && status != apicommon.MiscStatus_MISC_STATUS_OFF {
 		return nil, codeerror.OrSystem(codeerror.ErrorParam, "AnnouncementDao.Update invalid status=%d id=%d", status, id)
 	}
 	a.Content = content
@@ -80,7 +81,7 @@ func (d *AnnouncementDao) GetByID(id int64) (*miscmodel.Announcement, error) {
 func (d *AnnouncementDao) List(onlyOn bool) ([]miscmodel.Announcement, error) {
 	q := d.db.Model(&miscmodel.Announcement{})
 	if onlyOn {
-		q = q.Where("status = ?", miscmodel.StatusOn)
+		q = q.Where("status = ?", apicommon.MiscStatus_MISC_STATUS_ON)
 	}
 	var list []miscmodel.Announcement
 	if err := q.Order("sort desc, id asc").Find(&list).Error; err != nil {

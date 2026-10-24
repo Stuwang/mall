@@ -5,8 +5,8 @@ import (
 
 	apimisc "helloworld/api/misc"
 	"helloworld/pkg/dao/miscdao"
-	"mall/file/mediastore"
 	miscmodel "helloworld/pkg/model/misc"
+	"mall/file/mediastore"
 	"mall/kit/auth"
 	"mall/kit/codeerror"
 	"mall/kit/logger"
@@ -46,7 +46,7 @@ func (c *Controller) AdminCreateBanner(ctx context.Context, req *apimisc.AdminCr
 		logger.Errorf("AdminCreateBanner RequireAdmin err=%v", err)
 		return nil, err
 	}
-	b, err := miscdao.NewBannerDao(nil).Create(mediastore.Get().Normalize(req.ImageUrl), req.Sort, int32(req.Status))
+	b, err := miscdao.NewBannerDao(nil).Create(mediastore.Get().Normalize(req.ImageUrl), req.Sort, req.Status)
 	if err != nil {
 		logger.Errorf("AdminCreateBanner err=%v", err)
 		return nil, err
@@ -63,7 +63,7 @@ func (c *Controller) AdminUpdateBanner(ctx context.Context, req *apimisc.AdminUp
 		logger.Errorf("AdminUpdateBanner invalid id=%d", req.Id)
 		return nil, codeerror.ErrorParam
 	}
-	b, err := miscdao.NewBannerDao(nil).Update(req.Id, mediastore.Get().Normalize(req.ImageUrl), req.Sort, int32(req.Status))
+	b, err := miscdao.NewBannerDao(nil).Update(req.Id, mediastore.Get().Normalize(req.ImageUrl), req.Sort, req.Status)
 	if err != nil {
 		logger.Errorf("AdminUpdateBanner id=%d err=%v", req.Id, err)
 		return nil, err
@@ -89,7 +89,7 @@ func (c *Controller) AdminCreateAnnouncement(ctx context.Context, req *apimisc.A
 		logger.Errorf("AdminCreateAnnouncement RequireAdmin err=%v", err)
 		return nil, err
 	}
-	a, err := miscdao.NewAnnouncementDao(nil).Create(req.Content, req.Sort, int32(req.Status))
+	a, err := miscdao.NewAnnouncementDao(nil).Create(req.Content, req.Sort, req.Status)
 	if err != nil {
 		logger.Errorf("AdminCreateAnnouncement err=%v", err)
 		return nil, err
@@ -106,7 +106,7 @@ func (c *Controller) AdminUpdateAnnouncement(ctx context.Context, req *apimisc.A
 		logger.Errorf("AdminUpdateAnnouncement invalid id=%d", req.Id)
 		return nil, codeerror.ErrorParam
 	}
-	a, err := miscdao.NewAnnouncementDao(nil).Update(req.Id, req.Content, req.Sort, int32(req.Status))
+	a, err := miscdao.NewAnnouncementDao(nil).Update(req.Id, req.Content, req.Sort, req.Status)
 	if err != nil {
 		logger.Errorf("AdminUpdateAnnouncement id=%d err=%v", req.Id, err)
 		return nil, err
@@ -135,7 +135,7 @@ func toBannerInfo(b *miscmodel.Banner) *apimisc.BannerInfo {
 		Id:       b.ID,
 		ImageUrl: mediastore.Get().Resolve(b.ImageURL),
 		Sort:     b.Sort,
-		Status:   apimisc.MiscStatus(b.Status),
+		Status:   b.Status,
 		Ct:       b.Ct,
 		Ut:       b.Ut,
 	}
@@ -157,7 +157,7 @@ func toAnnouncementInfo(a *miscmodel.Announcement) *apimisc.AnnouncementInfo {
 		Id:      a.ID,
 		Content: a.Content,
 		Sort:    a.Sort,
-		Status:  apimisc.MiscStatus(a.Status),
+		Status:  a.Status,
 		Ct:      a.Ct,
 		Ut:      a.Ut,
 	}

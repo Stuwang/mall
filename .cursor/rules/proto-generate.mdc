@@ -1,0 +1,24 @@
+---
+description: 修改 proto 后必须用根目录 build.go 生成 pb，禁止手改生成文件
+alwaysApply: true
+---
+
+# Proto → PB 生成约定
+
+## 流程
+
+1. **只改** `server/api/**/*.proto`（含 `server/api/common/common.proto`）、`modules/user/api/**/*.proto`、`modules/kit/**/*.proto`、`im/api/**/*.proto`（含 `im/api/common/common.proto`，及必要时 `server/third_party`）。不要手改 `*.pb.go` / `*_http.pb.go` / `*_grpc.pb.go` / `server/openapi.yaml`。
+2. 在仓库根目录生成：
+
+```bash
+go run build.go proto
+```
+
+3. 生成后按需改业务代码：controller 实现新 RPC、注册 HTTP Server、白名单等。
+4. 用 `go run build.go build server` 或 `go run build.go build im` 确认能编译。
+
+## 注意
+
+- `build.go proto` 会生成：`server/api`（路径含 `errors` 的除外，并写出 `server/openapi.yaml`）、`modules/user/api` 的用户接口、`modules/kit` 下的消息 proto（只产出 `.pb.go`）、`im/api`。
+- 新增 `service` 后，生成物里会有 `RegisterXxxHTTPServer`；须在 `main` 里挂上对应 controller。
+- 管理端接口路径约定：`/admin/api/v1/...`；用户端：`/<模块>/api/v1/...`。

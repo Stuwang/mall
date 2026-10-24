@@ -3,16 +3,17 @@ package assetcontroller
 import (
 	"context"
 	"fmt"
+	apicommon "helloworld/api/common"
 	"strings"
 	"time"
 
 	apiasset "helloworld/api/asset"
 	"helloworld/pkg/dao/assetdao"
-	"mall/user/dao"
 	assetmodel "helloworld/pkg/model/asset"
 	"mall/kit/auth"
 	"mall/kit/codeerror"
 	"mall/kit/logger"
+	"mall/user/dao"
 )
 
 var (
@@ -28,7 +29,7 @@ func New() *Controller {
 
 func (c *Controller) GetUserAssets(ctx context.Context, req *apiasset.GetUserAssetsRequest) (*apiasset.GetUserAssetsReply, error) {
 	info := auth.MustFromContext(ctx)
-	assetType := int32(req.Type)
+	assetType := req.Type
 	if assetType < 0 {
 		logger.Errorf("GetUserAssets invalid type=%d userID=%d", assetType, info.UserID)
 		return nil, codeerror.ErrorParam
@@ -40,10 +41,10 @@ func (c *Controller) GetUserAssets(ctx context.Context, req *apiasset.GetUserAss
 		return nil, err
 	}
 
-	if (assetType == 0 || assetType == assetmodel.TypePoint) && !hasType(list, assetmodel.TypePoint) {
+	if (assetType == 0 || assetType == apicommon.AssetType_ASSET_TYPE_POINT) && !hasType(list, apicommon.AssetType_ASSET_TYPE_POINT) {
 		list = append(list, assetmodel.UserAsset{
 			UserID:  info.UserID,
-			Type:    assetmodel.TypePoint,
+			Type:    apicommon.AssetType_ASSET_TYPE_POINT,
 			Balance: 0,
 		})
 	}
@@ -57,7 +58,7 @@ func (c *Controller) GetUserAssets(ctx context.Context, req *apiasset.GetUserAss
 
 func (c *Controller) GetAssetHistory(ctx context.Context, req *apiasset.GetAssetHistoryRequest) (*apiasset.GetAssetHistoryReply, error) {
 	info := auth.MustFromContext(ctx)
-	assetType := int32(req.Type)
+	assetType := req.Type
 	if assetType < 0 {
 		logger.Errorf("GetAssetHistory invalid type=%d userID=%d", assetType, info.UserID)
 		return nil, codeerror.ErrorParam
@@ -93,7 +94,7 @@ func (c *Controller) AdminGetUserAssets(ctx context.Context, req *apiasset.Admin
 		return nil, err
 	}
 
-	assetType := int32(req.Type)
+	assetType := req.Type
 	if assetType < 0 {
 		logger.Errorf("AdminGetUserAssets invalid type=%d userID=%d", assetType, req.UserId)
 		return nil, codeerror.ErrorParam
@@ -104,10 +105,10 @@ func (c *Controller) AdminGetUserAssets(ctx context.Context, req *apiasset.Admin
 		logger.Errorf("AdminGetUserAssets ListByUserID userID=%d type=%d err=%v", req.UserId, assetType, err)
 		return nil, err
 	}
-	if (assetType == 0 || assetType == assetmodel.TypePoint) && !hasType(list, assetmodel.TypePoint) {
+	if (assetType == 0 || assetType == apicommon.AssetType_ASSET_TYPE_POINT) && !hasType(list, apicommon.AssetType_ASSET_TYPE_POINT) {
 		list = append(list, assetmodel.UserAsset{
 			UserID:  req.UserId,
-			Type:    assetmodel.TypePoint,
+			Type:    apicommon.AssetType_ASSET_TYPE_POINT,
 			Balance: 0,
 		})
 	}
@@ -133,7 +134,7 @@ func (c *Controller) AdminGetAssetHistory(ctx context.Context, req *apiasset.Adm
 		return nil, err
 	}
 
-	assetType := int32(req.Type)
+	assetType := req.Type
 	if assetType < 0 {
 		logger.Errorf("AdminGetAssetHistory invalid type=%d userID=%d", assetType, req.UserId)
 		return nil, codeerror.ErrorParam
@@ -177,7 +178,7 @@ func (c *Controller) AdminGrantPoints(ctx context.Context, req *apiasset.AdminGr
 	idempotentID := fmt.Sprintf("admin_grant_points_%d_%d_%d", admin.UserID, req.UserId, time.Now().UnixNano())
 	asset, err := assetdao.Change(assetdao.ChangeReq{
 		UserID:       req.UserId,
-		Type:         assetmodel.TypePoint,
+		Type:         apicommon.AssetType_ASSET_TYPE_POINT,
 		Change:       req.Points,
 		IdempotentID: idempotentID,
 		BizType:      "admin_grant_points",
@@ -191,7 +192,7 @@ func (c *Controller) AdminGrantPoints(ctx context.Context, req *apiasset.AdminGr
 	return &apiasset.AdminGrantPointsReply{Asset: toAssetInfo(asset)}, nil
 }
 
-func hasType(list []assetmodel.UserAsset, t int32) bool {
+func hasType(list []assetmodel.UserAsset, t apicommon.AssetType) bool {
 	for i := range list {
 		if list[i].Type == t {
 			return true
@@ -206,7 +207,7 @@ func toAssetInfo(a *assetmodel.UserAsset) *apiasset.AssetInfo {
 	}
 	return &apiasset.AssetInfo{
 		UserId:  a.UserID,
-		Type:    apiasset.AssetType(a.Type),
+		Type:    a.Type,
 		Balance: a.Balance,
 		Ct:      a.Ct,
 		Ut:      a.Ut,
@@ -220,7 +221,7 @@ func toHistory(h *assetmodel.UserAssetHistory) *apiasset.AssetHistory {
 	return &apiasset.AssetHistory{
 		Id:           h.ID,
 		UserId:       h.UserID,
-		Type:         apiasset.AssetType(h.Type),
+		Type:         h.Type,
 		Change:       h.Change,
 		Balance:      h.Balance,
 		IdempotentId: h.IdempotentID,

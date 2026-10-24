@@ -6,11 +6,11 @@ import (
 
 	"gorm.io/gorm"
 	apiproduct "helloworld/api/product"
+	"helloworld/common/database"
 	"helloworld/pkg/dao/productdao"
 	productmodel "helloworld/pkg/model/product"
 	"mall/kit/auth"
 	"mall/kit/codeerror"
-	"helloworld/common/database"
 	"mall/kit/logger"
 )
 
@@ -19,7 +19,7 @@ func (c *Controller) AdminCreateCategory(ctx context.Context, req *apiproduct.Ad
 		logger.Errorf("AdminCreateCategory RequireAdmin err=%v", err)
 		return nil, err
 	}
-	cat, err := productdao.NewCategoryDao(nil).Create(req.Name, req.Sort, int32(req.Status))
+	cat, err := productdao.NewCategoryDao(nil).Create(req.Name, req.Sort, req.Status)
 	if err != nil {
 		logger.Errorf("AdminCreateCategory name=%s err=%v", req.Name, err)
 		return nil, err
@@ -36,7 +36,7 @@ func (c *Controller) AdminUpdateCategory(ctx context.Context, req *apiproduct.Ad
 		logger.Errorf("AdminUpdateCategory invalid id=%d", req.Id)
 		return nil, codeerror.ErrorParam
 	}
-	cat, err := productdao.NewCategoryDao(nil).Update(req.Id, req.Name, req.Sort, int32(req.Status))
+	cat, err := productdao.NewCategoryDao(nil).Update(req.Id, req.Name, req.Sort, req.Status)
 	if err != nil {
 		logger.Errorf("AdminUpdateCategory id=%d err=%v", req.Id, err)
 		return nil, err
@@ -81,7 +81,7 @@ func (c *Controller) AdminCreateProduct(ctx context.Context, req *apiproduct.Adm
 			Description: req.Description,
 			Price:       req.Price,
 			Stock:       req.Stock,
-			Status:      int32(req.Status),
+			Status:      req.Status,
 		})
 		if err != nil {
 			return err
@@ -153,7 +153,7 @@ func (c *Controller) AdminSetProductStatus(ctx context.Context, req *apiproduct.
 		logger.Errorf("AdminSetProductStatus invalid id=%d", req.Id)
 		return nil, codeerror.ErrorParam
 	}
-	p, err := productdao.NewProductDao(nil).SetStatus(req.Id, int32(req.Status))
+	p, err := productdao.NewProductDao(nil).SetStatus(req.Id, req.Status)
 	if err != nil {
 		logger.Errorf("AdminSetProductStatus id=%d status=%v err=%v", req.Id, req.Status, err)
 		return nil, err
@@ -258,7 +258,7 @@ func (c *Controller) AdminListProducts(ctx context.Context, req *apiproduct.Admi
 	}
 	list, total, err := productdao.NewProductDao(nil).List(productdao.ProductQuery{
 		CategoryID: req.CategoryId,
-		Status:     int32(req.Status),
+		Status:     req.Status,
 		Keyword:    strings.TrimSpace(req.Keyword),
 		Page:       int(req.Page),
 		PageSize:   int(req.PageSize),

@@ -1,0 +1,19 @@
+---
+description: 接口和库表枚举以 proto common 为唯一定义，Go 直接使用生成类型
+alwaysApply: true
+---
+
+# 枚举类型
+
+接口或库表里出现的枚举，只在该服务的 common proto 里定义一次：
+
+- 商城：`server/api/common/common.proto`，生成包 `helloworld/api/common`
+- IM：`im/api/common/common.proto`，生成包 `mall/im/api/common`
+
+业务 proto 引用这些枚举，不要在各服务 proto 里再声明一份。model、dao、biz、controller 的字段、参数和变量直接使用生成出来的类型，例如 `common.ProductStatus`、`common.OrderStatus`。不要再声明同含义的 Go 类型，也不要在边界上做 `Status(req.Status)` 这类转换。
+
+商品状态和分类状态是两个 proto 枚举，数字可以相同，类型不能混用。
+
+只在进程内部使用、不进接口也不进库表的取值，仍用 Go 的 `type` 声明新类型，不要用 `int`、`int32`、`string` 等基本类型承载。例如登录方式、软删标记、文件 scheme。
+
+改枚举只改 proto，然后在仓库根目录执行 `go run build.go proto`。不要手改 `*.pb.go`。

@@ -2,6 +2,7 @@ package productdao
 
 import (
 	"errors"
+	apicommon "helloworld/api/common"
 	"strings"
 	"time"
 
@@ -18,13 +19,13 @@ func (d *CategoryDao) WithTx(tx *gorm.DB) *CategoryDao {
 	return &CategoryDao{db: tx}
 }
 
-func (d *CategoryDao) Create(name string, sort int32, status int32) (*productmodel.Category, error) {
+func (d *CategoryDao) Create(name string, sort int32, status apicommon.CategoryStatus) (*productmodel.Category, error) {
 	name = strings.TrimSpace(name)
 	if name == "" {
 		return nil, codeerror.OrSystem(codeerror.ErrorParam, "CategoryDao.Create empty name")
 	}
 	if status == 0 {
-		status = productmodel.StatusOn
+		status = apicommon.CategoryStatus_CATEGORY_STATUS_ON
 	}
 	now := time.Now().Unix()
 	c := &productmodel.Category{
@@ -40,7 +41,7 @@ func (d *CategoryDao) Create(name string, sort int32, status int32) (*productmod
 	return c, nil
 }
 
-func (d *CategoryDao) Update(id int64, name string, sort int32, status int32) (*productmodel.Category, error) {
+func (d *CategoryDao) Update(id int64, name string, sort int32, status apicommon.CategoryStatus) (*productmodel.Category, error) {
 	c, err := d.GetByID(id)
 	if err != nil {
 		return nil, codeerror.OrSystem(err, "CategoryDao.Update GetByID id=%d", id)
@@ -49,7 +50,7 @@ func (d *CategoryDao) Update(id int64, name string, sort int32, status int32) (*
 	if name == "" {
 		return nil, codeerror.OrSystem(codeerror.ErrorParam, "CategoryDao.Update empty name id=%d", id)
 	}
-	if status != productmodel.StatusOn && status != productmodel.StatusOff {
+	if status != apicommon.CategoryStatus_CATEGORY_STATUS_ON && status != apicommon.CategoryStatus_CATEGORY_STATUS_OFF {
 		return nil, codeerror.OrSystem(codeerror.ErrorParam, "CategoryDao.Update invalid status=%d id=%d", status, id)
 	}
 	c.Name = name
@@ -77,7 +78,7 @@ func (d *CategoryDao) GetByID(id int64) (*productmodel.Category, error) {
 func (d *CategoryDao) List(onlyOn bool) ([]productmodel.Category, error) {
 	q := d.db.Model(&productmodel.Category{})
 	if onlyOn {
-		q = q.Where("status = ?", productmodel.StatusOn)
+		q = q.Where("status = ?", apicommon.CategoryStatus_CATEGORY_STATUS_ON)
 	}
 	var list []productmodel.Category
 	if err := q.Order("sort desc, id asc").Find(&list).Error; err != nil {

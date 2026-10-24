@@ -47,8 +47,8 @@ require (
 	modernc.org/sqlite v1.23.1 // indirect
 )
 
-replace mall/kit => ../kit
+replace mall/kit => ../modules/kit
 
-replace mall/user => ../user
+replace mall/user => ../modules/user
 
-replace mall/file => ../file
+replace mall/file => ../modules/file

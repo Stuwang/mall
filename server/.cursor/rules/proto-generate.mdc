@@ -1,5 +1,5 @@
 ---
-description: 修改 proto 后必须用 generate.sh 生成 pb，禁止手改生成文件
+description: 修改 proto 后必须用根目录 build.go 生成 pb，禁止手改生成文件
 alwaysApply: true
 ---
 
@@ -7,25 +7,18 @@ alwaysApply: true
 
 ## 流程
 
-1. **只改** `api/**/*.proto`，以及用户模块的 `../user/api/**/*.proto`（及必要时 `third_party` 依赖）。不要手改 `*.pb.go` / `*_http.pb.go` / `*_grpc.pb.go` / 根目录 `openapi.yaml`。
-2. 在项目根目录执行生成脚本（会跑 `protoc`，产出 go / http / grpc / openapi）：
+1. **只改** `server/api/**/*.proto` 和 `modules/user/api/**/*.proto`（及必要时 `server/third_party`）。不要手改 `*.pb.go` / `*_http.pb.go` / `*_grpc.pb.go` / `server/openapi.yaml`。
+2. 在仓库根目录生成：
 
 ```bash
-# Linux / macOS / Git Bash
-sh generate.sh
+go run build.go proto
 ```
 
-Windows（PowerShell）请用 Git Bash，因脚本依赖 `find`：
-
-```powershell
-& "C:\Program Files\Git\usr\bin\bash.exe" -lc "cd /d/me/mall/server && sh generate.sh"
-```
-
-3. 生成后按需改业务代码：controller 实现新 RPC、`cmd/main.go` 注册 HTTP Server、白名单等。
-4. 用 `go build ./cmd`（或 `CGO_ENABLED=0 go build -o NUL .\cmd\`）确认能编译。
+3. 生成后按需改业务代码：controller 实现新 RPC、注册 HTTP Server、白名单等。
+4. 用 `go run build.go build server` 确认能编译。
 
 ## 注意
 
-- `generate.sh` 会扫描 `api` 下所有 `.proto`（排除 errors），并另行生成 `../user/api` 的用户接口。
+- `build.go proto` 会扫描 `server/api` 下所有 `.proto`（路径含 `errors` 的除外），并生成 `modules/user/api` 的用户接口，同时写出 `server/openapi.yaml`。
 - 新增 `service` 后，生成物里会有 `RegisterXxxHTTPServer`；须在 `main` 里挂上对应 controller。
 - 管理端接口路径约定：`/admin/api/v1/...`；用户端：`/<模块>/api/v1/...`。

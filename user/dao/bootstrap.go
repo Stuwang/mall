@@ -5,15 +5,20 @@ import (
 	"time"
 
 	"gorm.io/gorm"
-	"helloworld/common/config"
-	usermodel "helloworld/pkg/model/user"
 	"mall/kit/codeerror"
-	"mall/kit/database"
 	"mall/kit/logger"
+	usermodel "mall/user/model"
 )
 
+// AdminAccount 启动时幂等写入的管理员账号。
+type AdminAccount struct {
+	Username string
+	Password string
+	Nickname string
+}
+
 // EnsureAdmins 按配置幂等写入管理员：username 已存在则跳过创建（必要时补 is_admin）
-func EnsureAdmins(accounts []config.AdminAccount) error {
+func EnsureAdmins(accounts []AdminAccount) error {
 	for i, acc := range accounts {
 		username := strings.TrimSpace(acc.Username)
 		password := acc.Password
@@ -66,7 +71,7 @@ func ensureAdminAccount(username, password, nickname string) (created bool, err 
 		Ct:       now,
 		Ut:       now,
 	}
-	txErr := database.GetDb().Transaction(func(tx *gorm.DB) error {
+	txErr := defaultDB(nil).Transaction(func(tx *gorm.DB) error {
 		userDao := NewUserDao(tx)
 		loginDaoTx := NewLoginDao(tx)
 		exists, e := loginDaoTx.ExistsPasswordAccount(username)

@@ -8,7 +8,7 @@ import (
 
 	apiasset "helloworld/api/asset"
 	"helloworld/pkg/dao/assetdao"
-	"helloworld/pkg/dao/userdao"
+	"mall/user/dao"
 	assetmodel "helloworld/pkg/model/asset"
 	"mall/kit/auth"
 	"mall/kit/codeerror"

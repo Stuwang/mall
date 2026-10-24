@@ -15,8 +15,8 @@ import (
 	apimisc "helloworld/api/misc"
 	apiorder "helloworld/api/order"
 	apiproduct "helloworld/api/product"
-	apiuser "helloworld/api/user"
 	"helloworld/common/config"
+	"helloworld/common/database"
 	"helloworld/pkg/assetcontroller"
 	"helloworld/pkg/cartcontroller"
 	"helloworld/pkg/dao/assetdao"
@@ -24,20 +24,20 @@ import (
 	"helloworld/pkg/dao/miscdao"
 	"helloworld/pkg/dao/orderdao"
 	"helloworld/pkg/dao/productdao"
-	"helloworld/pkg/dao/userdao"
 	"helloworld/pkg/mallcontroller"
-	"helloworld/pkg/mediacontroller"
-	"helloworld/pkg/mediastore"
 	"helloworld/pkg/misccontroller"
 	"helloworld/pkg/orderbiz"
 	"helloworld/pkg/ordercontroller"
 	"helloworld/pkg/productcontroller"
 	"helloworld/pkg/server"
-	"helloworld/pkg/usercontroller"
+	"mall/file/mediacontroller"
+	"mall/file/mediastore"
 	"mall/kit/auth"
 	"mall/kit/codeerror"
-	"mall/kit/database"
 	"mall/kit/logger"
+	apiuser "mall/user/api/user"
+	"mall/user/controller"
+	"mall/user/dao"
 
 	_ "github.com/go-kratos/kratos/v2/encoding/json"
 )
@@ -63,11 +63,20 @@ func Init(cfg *config.Config) {
 	logger.InitLogger(cfg.Logger.Filename)
 	logger.Infof("begin to start")
 	database.InitDb(cfg.Database.Filename)
+	userdao.SetDB(database.GetDb())
 
 	if err := userdao.AutoMigrate(); err != nil {
 		logger.Fatalf("auto migrate user: %v", err)
 	}
-	if err := userdao.EnsureAdmins(cfg.Admins); err != nil {
+	admins := make([]userdao.AdminAccount, 0, len(cfg.Admins))
+	for _, a := range cfg.Admins {
+		admins = append(admins, userdao.AdminAccount{
+			Username: a.Username,
+			Password: a.Password,
+			Nickname: a.Nickname,
+		})
+	}
+	if err := userdao.EnsureAdmins(admins); err != nil {
 		logger.Fatalf("ensure admins: %v", err)
 	}
 	if err := assetdao.AutoMigrate(); err != nil {
@@ -125,7 +134,11 @@ func Init(cfg *config.Config) {
 
 	orderbiz.Init(cfg.Order.PayTimeoutSec, cfg.Point.PointsPerYuan)
 	orderbiz.StartTimeoutWorker(30 * time.Second)
-	if err := mediastore.Init(cfg.Storage); err != nil {
+	if err := mediastore.Init(mediastore.Config{
+		PublicBase:     cfg.Storage.PublicBase,
+		MaxUploadBytes: cfg.Storage.MaxUploadBytes,
+		RootDir:        cfg.Storage.Local.RootDir,
+	}); err != nil {
 		logger.Fatalf("mediastore init: %v", err)
 	}
 }

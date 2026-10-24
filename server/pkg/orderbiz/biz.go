@@ -15,7 +15,7 @@ import (
 	productmodel "helloworld/pkg/model/product"
 	"helloworld/pkg/pointrate"
 	"mall/kit/codeerror"
-	"mall/kit/database"
+	"helloworld/common/database"
 	"mall/kit/logger"
 )
 

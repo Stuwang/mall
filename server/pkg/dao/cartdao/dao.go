@@ -4,7 +4,7 @@ import (
 	"gorm.io/gorm"
 	cartmodel "helloworld/pkg/model/cart"
 	"mall/kit/codeerror"
-	"mall/kit/database"
+	"helloworld/common/database"
 )
 
 func defaultDB(db *gorm.DB) *gorm.DB {

@@ -7,7 +7,7 @@ import (
 	"helloworld/pkg/bizerror"
 	assetmodel "helloworld/pkg/model/asset"
 	"mall/kit/codeerror"
-	"mall/kit/database"
+	"helloworld/common/database"
 )
 
 // ChangeReq 资产变更请求（内部能力，供后续发分/扣分使用）

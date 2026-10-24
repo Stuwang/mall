@@ -7,7 +7,7 @@ alwaysApply: true
 
 ## 流程
 
-1. **只改** `api/**/*.proto`（及必要时 `third_party` 依赖），不要手改 `*.pb.go` / `*_http.pb.go` / `*_grpc.pb.go` / 根目录 `openapi.yaml`。
+1. **只改** `api/**/*.proto`，以及用户模块的 `../user/api/**/*.proto`（及必要时 `third_party` 依赖）。不要手改 `*.pb.go` / `*_http.pb.go` / `*_grpc.pb.go` / 根目录 `openapi.yaml`。
 2. 在项目根目录执行生成脚本（会跑 `protoc`，产出 go / http / grpc / openapi）：
 
 ```bash
@@ -26,6 +26,6 @@ Windows（PowerShell）请用 Git Bash，因脚本依赖 `find`：
 
 ## 注意
 
-- `generate.sh` 会扫描 `api` 下所有 `.proto`（排除 errors），一次全量生成即可。
+- `generate.sh` 会扫描 `api` 下所有 `.proto`（排除 errors），并另行生成 `../user/api` 的用户接口。
 - 新增 `service` 后，生成物里会有 `RegisterXxxHTTPServer`；须在 `main` 里挂上对应 controller。
 - 管理端接口路径约定：`/admin/api/v1/...`；用户端：`/<模块>/api/v1/...`。

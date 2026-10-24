@@ -19,8 +19,8 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"helloworld/common/config"
+	"helloworld/common/database"
 	"helloworld/internal/app"
-	"mall/kit/database"
 	"mall/kit/logger"
 )
 

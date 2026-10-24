@@ -4,8 +4,8 @@ import (
 	"errors"
 
 	"gorm.io/gorm"
-	usermodel "helloworld/pkg/model/user"
 	"mall/kit/codeerror"
+	usermodel "mall/user/model"
 )
 
 type LoginDao struct {

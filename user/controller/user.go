@@ -4,12 +4,12 @@ import (
 	"context"
 	"strings"
 
-	apiuser "helloworld/api/user"
-	"helloworld/pkg/dao/userdao"
-	usermodel "helloworld/pkg/model/user"
 	"mall/kit/auth"
 	"mall/kit/codeerror"
 	"mall/kit/logger"
+	apiuser "mall/user/api/user"
+	"mall/user/dao"
+	usermodel "mall/user/model"
 )
 
 var (

@@ -2,7 +2,7 @@ package productcontroller
 
 import (
 	apiproduct "helloworld/api/product"
-	"helloworld/pkg/mediastore"
+	"mall/file/mediastore"
 	productmodel "helloworld/pkg/model/product"
 )
 

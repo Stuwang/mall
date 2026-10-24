@@ -11,7 +11,7 @@ import (
 	"helloworld/api/mall"
 	"helloworld/api/misc"
 	"helloworld/api/product"
-	"helloworld/api/user"
+	"mall/user/api/user"
 	"mall/kit/auth"
 	"mall/kit/httpx"
 )

@@ -5,7 +5,7 @@ import (
 
 	apimisc "helloworld/api/misc"
 	"helloworld/pkg/dao/miscdao"
-	"helloworld/pkg/mediastore"
+	"mall/file/mediastore"
 	miscmodel "helloworld/pkg/model/misc"
 	"mall/kit/auth"
 	"mall/kit/codeerror"

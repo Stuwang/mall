@@ -4,17 +4,16 @@ import (
 	"strings"
 	"testing"
 
-	"helloworld/common/config"
 	"mall/kit/logger"
 )
 
 func TestResolveNormalizeRoundTrip(t *testing.T) {
 	logger.InitLogger("")
 	dir := t.TempDir()
-	if err := Init(config.StorageConfig{
+	if err := Init(Config{
 		PublicBase:     "http://localhost:8080",
 		MaxUploadBytes: 1 << 20,
-		Local:          config.LocalStorageCfg{RootDir: dir},
+		RootDir:        dir,
 	}); err != nil {
 		t.Fatal(err)
 	}

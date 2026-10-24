@@ -12,10 +12,16 @@ import (
 
 	"github.com/google/uuid"
 
-	"helloworld/common/config"
 	"mall/kit/codeerror"
 	"mall/kit/logger"
 )
+
+// Config 本地文件存储配置，由宿主服务填入。
+type Config struct {
+	PublicBase     string
+	MaxUploadBytes int64
+	RootDir        string
+}
 
 const (
 	SchemeLocalFile = "local_file"
@@ -58,8 +64,8 @@ type Store struct {
 }
 
 // Init 初始化全局存储
-func Init(cfg config.StorageConfig) error {
-	root := strings.TrimSpace(cfg.Local.RootDir)
+func Init(cfg Config) error {
+	root := strings.TrimSpace(cfg.RootDir)
 	if root == "" {
 		root = "data/images"
 	}

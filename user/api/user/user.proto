@@ -5,7 +5,7 @@ package user.v1;
 import "google/api/annotations.proto";
 import "base/base.proto";
 
-option go_package = "helloworld/api/user;user";
+option go_package = "mall/user/api/user;user";
 
 // 用户管理服务
 service User {

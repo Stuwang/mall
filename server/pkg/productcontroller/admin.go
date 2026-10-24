@@ -10,7 +10,7 @@ import (
 	productmodel "helloworld/pkg/model/product"
 	"mall/kit/auth"
 	"mall/kit/codeerror"
-	"mall/kit/database"
+	"helloworld/common/database"
 	"mall/kit/logger"
 )
 

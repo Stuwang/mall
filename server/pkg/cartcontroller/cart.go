@@ -7,7 +7,7 @@ import (
 	"helloworld/pkg/bizerror"
 	"helloworld/pkg/dao/cartdao"
 	"helloworld/pkg/dao/productdao"
-	"helloworld/pkg/mediastore"
+	"mall/file/mediastore"
 	cartmodel "helloworld/pkg/model/cart"
 	productmodel "helloworld/pkg/model/product"
 	"mall/kit/auth"

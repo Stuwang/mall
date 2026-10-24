@@ -4,9 +4,8 @@ import (
 	"time"
 
 	"gorm.io/gorm"
-	usermodel "helloworld/pkg/model/user"
 	"mall/kit/codeerror"
-	"mall/kit/database"
+	usermodel "mall/user/model"
 )
 
 // CreateUserWithPassword 跨 user / user_login 事务注册
@@ -18,7 +17,7 @@ func CreateUserWithPassword(nickname, username, password string) (*usermodel.Use
 		Ct:       now,
 		Ut:       now,
 	}
-	err := database.GetDb().Transaction(func(tx *gorm.DB) error {
+	err := defaultDB(nil).Transaction(func(tx *gorm.DB) error {
 		userDao := NewUserDao(tx)
 		loginDao := NewLoginDao(tx)
 

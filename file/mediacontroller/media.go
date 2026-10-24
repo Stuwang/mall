@@ -8,7 +8,7 @@ import (
 
 	khttp "github.com/go-kratos/kratos/v2/transport/http"
 
-	"helloworld/pkg/mediastore"
+	"mall/file/mediastore"
 	"mall/kit/auth"
 	"mall/kit/codeerror"
 	"mall/kit/logger"

@@ -45,7 +45,7 @@ func main() {
 func usage() {
 	fmt.Fprintf(os.Stderr, `用法: go run build.go <命令>
 
-  proto                 生成 pb（server/api 与 modules/user/api）
+  proto                 生成 pb（server/api、modules/user/api、modules/kit）
   build server          构建商城 API，输出 bin/server
   build allinone        构建一体包，输出 bin/allinone
   build kit|user|file   编译对应共享模块
@@ -123,6 +123,10 @@ func generateProto() error {
 	if err != nil {
 		return err
 	}
+	if err := generateKitProto(root); err != nil {
+		return err
+	}
+
 	serverDir := filepath.Join(root, "server")
 	protos, err := serverProtos(serverDir)
 	if err != nil {
@@ -163,6 +167,48 @@ func generateProto() error {
 	openapiArgs = append(openapiArgs, protos...)
 	openapiArgs = append(openapiArgs, "user/user.proto")
 	return run(serverDir, "protoc", openapiArgs...)
+}
+
+// generateKitProto 生成 modules/kit 下的消息 proto。这些文件没有 HTTP/gRPC service。
+func generateKitProto(root string) error {
+	kitDir := filepath.Join(root, "modules", "kit")
+	protos, err := protoFiles(kitDir)
+	if err != nil {
+		return err
+	}
+	if len(protos) == 0 {
+		return nil
+	}
+	kitDir = filepath.ToSlash(kitDir)
+	thirdParty := filepath.ToSlash(filepath.Join(root, "server", "third_party"))
+	args := []string{
+		"--proto_path=" + kitDir,
+		"--proto_path=" + thirdParty,
+		"--go_out=paths=source_relative:" + kitDir,
+	}
+	args = append(args, protos...)
+	return run(root, "protoc", args...)
+}
+
+// protoFiles 返回相对 dir 的 .proto 路径。
+func protoFiles(dir string) ([]string, error) {
+	var out []string
+	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() || !strings.HasSuffix(d.Name(), ".proto") {
+			return nil
+		}
+		rel, err := filepath.Rel(dir, path)
+		if err != nil {
+			return err
+		}
+		out = append(out, filepath.ToSlash(rel))
+		return nil
+	})
+	sort.Strings(out)
+	return out, err
 }
 
 // serverProtos 返回相对 server 目录的 proto 路径，跳过路径中含 errors 的文件。

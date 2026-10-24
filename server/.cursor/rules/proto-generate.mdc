@@ -7,7 +7,7 @@ alwaysApply: true
 
 ## 流程
 
-1. **只改** `server/api/**/*.proto` 和 `modules/user/api/**/*.proto`（及必要时 `server/third_party`）。不要手改 `*.pb.go` / `*_http.pb.go` / `*_grpc.pb.go` / `server/openapi.yaml`。
+1. **只改** `server/api/**/*.proto`、`modules/user/api/**/*.proto`、`modules/kit/**/*.proto`（及必要时 `server/third_party`）。不要手改 `*.pb.go` / `*_http.pb.go` / `*_grpc.pb.go` / `server/openapi.yaml`。
 2. 在仓库根目录生成：
 
 ```bash
@@ -19,6 +19,6 @@ go run build.go proto
 
 ## 注意
 
-- `build.go proto` 会扫描 `server/api` 下所有 `.proto`（路径含 `errors` 的除外），并生成 `modules/user/api` 的用户接口，同时写出 `server/openapi.yaml`。
+- `build.go proto` 会生成三处：`server/api`（路径含 `errors` 的除外，并写出 `server/openapi.yaml`）、`modules/user/api` 的用户接口、`modules/kit` 下的消息 proto（只产出 `.pb.go`）。
 - 新增 `service` 后，生成物里会有 `RegisterXxxHTTPServer`；须在 `main` 里挂上对应 controller。
 - 管理端接口路径约定：`/admin/api/v1/...`；用户端：`/<模块>/api/v1/...`。

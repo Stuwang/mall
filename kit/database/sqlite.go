@@ -3,7 +3,7 @@ package database
 import (
 	"github.com/glebarez/sqlite" // pure go, no CGO
 	"gorm.io/gorm"
-	"helloworld/base/logger"
+	"mall/kit/logger"
 )
 
 var (

@@ -2,9 +2,9 @@ package miscdao
 
 import (
 	"gorm.io/gorm"
-	"helloworld/base/codeerror"
-	"helloworld/common/database"
 	miscmodel "helloworld/pkg/model/misc"
+	"mall/kit/codeerror"
+	"mall/kit/database"
 )
 
 func defaultDB(db *gorm.DB) *gorm.DB {

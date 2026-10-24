@@ -4,10 +4,10 @@ import (
 	"context"
 
 	apiproduct "helloworld/api/product"
-	"helloworld/base/codeerror"
-	"helloworld/base/logger"
 	"helloworld/pkg/dao/productdao"
 	productmodel "helloworld/pkg/model/product"
+	"mall/kit/codeerror"
+	"mall/kit/logger"
 )
 
 var (

@@ -4,15 +4,16 @@ import (
 	"context"
 
 	apicart "helloworld/api/cart"
-	"helloworld/base/codeerror"
-	"helloworld/base/logger"
-	"helloworld/common/auth"
+	"helloworld/pkg/bizerror"
 	"helloworld/pkg/dao/cartdao"
 	"helloworld/pkg/dao/productdao"
 	"helloworld/pkg/mediastore"
 	cartmodel "helloworld/pkg/model/cart"
-	"helloworld/pkg/model/common"
 	productmodel "helloworld/pkg/model/product"
+	"mall/kit/auth"
+	"mall/kit/codeerror"
+	"mall/kit/logger"
+	"mall/kit/model/common"
 )
 
 var _ apicart.CartHTTPServer = (*Controller)(nil)
@@ -61,7 +62,7 @@ func (c *Controller) AddToCart(ctx context.Context, req *apicart.AddToCartReques
 		targetQty = qty
 		if targetQty > product.Stock {
 			logger.Errorf("AddToCart stock insufficient productID=%d stock=%d qty=%d", req.ProductId, product.Stock, targetQty)
-			return nil, codeerror.ErrorStockInsufficient
+			return nil, bizerror.ErrorStockInsufficient
 		}
 		if anyItem != nil && anyItem.Deleted == common.DeletedYes {
 			if err := cartDao.Revive(anyItem, targetQty); err != nil {
@@ -84,7 +85,7 @@ func (c *Controller) AddToCart(ctx context.Context, req *apicart.AddToCartReques
 		targetQty = item.Quantity + qty
 		if targetQty > product.Stock {
 			logger.Errorf("AddToCart stock insufficient productID=%d stock=%d qty=%d", req.ProductId, product.Stock, targetQty)
-			return nil, codeerror.ErrorStockInsufficient
+			return nil, bizerror.ErrorStockInsufficient
 		}
 		itemID := item.ID
 		item, err = cartDao.UpdateQuantity(itemID, info.UserID, targetQty)
@@ -156,7 +157,7 @@ func (c *Controller) UpdateCartQuantity(ctx context.Context, req *apicart.Update
 	}
 	if req.Quantity > product.Stock {
 		logger.Errorf("UpdateCartQuantity stock insufficient productID=%d stock=%d qty=%d", item.ProductID, product.Stock, req.Quantity)
-		return nil, codeerror.ErrorStockInsufficient
+		return nil, bizerror.ErrorStockInsufficient
 	}
 
 	item, err = cartDao.UpdateQuantity(req.Id, info.UserID, req.Quantity)

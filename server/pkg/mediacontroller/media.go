@@ -8,14 +8,14 @@ import (
 
 	khttp "github.com/go-kratos/kratos/v2/transport/http"
 
-	"helloworld/base/codeerror"
-	"helloworld/base/logger"
-	"helloworld/common/auth"
 	"helloworld/pkg/mediastore"
+	"mall/kit/auth"
+	"mall/kit/codeerror"
+	"mall/kit/logger"
 )
 
 const (
-	uploadPath = "/admin/api/v1/media/upload"
+	uploadPath  = "/admin/api/v1/media/upload"
 	filesPrefix = mediastore.FilesHTTPPrefix
 )
 

@@ -1,6 +1,6 @@
 package product
 
-import "helloworld/pkg/model/common"
+import "mall/kit/model/common"
 
 const (
 	StatusOn  int32 = 1 // 上架 / 启用

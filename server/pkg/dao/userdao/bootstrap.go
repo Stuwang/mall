@@ -5,11 +5,11 @@ import (
 	"time"
 
 	"gorm.io/gorm"
-	"helloworld/base/codeerror"
-	"helloworld/base/logger"
 	"helloworld/common/config"
-	"helloworld/common/database"
 	usermodel "helloworld/pkg/model/user"
+	"mall/kit/codeerror"
+	"mall/kit/database"
+	"mall/kit/logger"
 )
 
 // EnsureAdmins 按配置幂等写入管理员：username 已存在则跳过创建（必要时补 is_admin）

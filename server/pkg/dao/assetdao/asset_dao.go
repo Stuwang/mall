@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"gorm.io/gorm"
-	"helloworld/base/codeerror"
 	assetmodel "helloworld/pkg/model/asset"
+	"mall/kit/codeerror"
 )
 
 type AssetDao struct {

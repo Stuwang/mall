@@ -8,9 +8,9 @@ type Order struct {
 	OrderType     OrderType    `json:"order_type" gorm:"column:order_type"`
 	Status        OrderStatus  `json:"status" gorm:"column:status;index"`
 	PayType       PayType      `json:"pay_type" gorm:"column:pay_type"`
-	TotalAmount   int64        `json:"total_amount" gorm:"column:total_amount"`     // 订单总价（分）
-	CashAmount    int64        `json:"cash_amount" gorm:"column:cash_amount"`       // 现金应付/已付（分）
-	PointAmount   int64        `json:"point_amount" gorm:"column:point_amount"`     // 使用积分数 / 充值积分数
+	TotalAmount   int64        `json:"total_amount" gorm:"column:total_amount"`       // 订单总价（分）
+	CashAmount    int64        `json:"cash_amount" gorm:"column:cash_amount"`         // 现金应付/已付（分）
+	PointAmount   int64        `json:"point_amount" gorm:"column:point_amount"`       // 使用积分数 / 充值积分数
 	PointsPerYuan int64        `json:"points_per_yuan" gorm:"column:points_per_yuan"` // 汇率快照：1 元 = N 积分
 	PayExpireAt   int64        `json:"pay_expire_at" gorm:"column:pay_expire_at"`
 	PaidAt        int64        `json:"paid_at" gorm:"column:paid_at"`

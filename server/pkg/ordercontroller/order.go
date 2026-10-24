@@ -4,11 +4,11 @@ import (
 	"context"
 
 	apiorder "helloworld/api/order"
-	"helloworld/base/codeerror"
-	"helloworld/base/logger"
-	"helloworld/common/auth"
 	ordermodel "helloworld/pkg/model/order"
 	"helloworld/pkg/orderbiz"
+	"mall/kit/auth"
+	"mall/kit/codeerror"
+	"mall/kit/logger"
 )
 
 var (

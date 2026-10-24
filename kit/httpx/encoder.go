@@ -1,11 +1,11 @@
-package server
+package httpx
 
 import (
 	"encoding/json"
 	stdhttp "net/http"
 
-	"helloworld/base/codeerror"
-	"helloworld/base/logger"
+	"mall/kit/codeerror"
+	"mall/kit/logger"
 )
 
 // CommonResp 统一 HTTP 响应包装

@@ -7,12 +7,12 @@ import (
 	"time"
 
 	apiasset "helloworld/api/asset"
-	"helloworld/base/codeerror"
-	"helloworld/base/logger"
-	"helloworld/common/auth"
 	"helloworld/pkg/dao/assetdao"
 	"helloworld/pkg/dao/userdao"
 	assetmodel "helloworld/pkg/model/asset"
+	"mall/kit/auth"
+	"mall/kit/codeerror"
+	"mall/kit/logger"
 )
 
 var (

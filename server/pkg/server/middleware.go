@@ -12,7 +12,8 @@ import (
 	"helloworld/api/misc"
 	"helloworld/api/product"
 	"helloworld/api/user"
-	"helloworld/common/auth"
+	"mall/kit/auth"
+	"mall/kit/httpx"
 )
 
 // Middlewares 返回 HTTP 服务默认中间件链
@@ -53,7 +54,7 @@ func HTTPOptions(addr string) []khttp.ServerOption {
 	return []khttp.ServerOption{
 		khttp.Address(addr),
 		khttp.Middleware(Middlewares()...),
-		khttp.ResponseEncoder(ResponseEncoder),
-		khttp.ErrorEncoder(ErrorEncoder),
+		khttp.ResponseEncoder(httpx.ResponseEncoder),
+		khttp.ErrorEncoder(httpx.ErrorEncoder),
 	}
 }

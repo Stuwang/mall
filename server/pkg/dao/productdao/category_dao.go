@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"gorm.io/gorm"
-	"helloworld/base/codeerror"
 	productmodel "helloworld/pkg/model/product"
+	"mall/kit/codeerror"
 )
 
 type CategoryDao struct {

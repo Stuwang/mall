@@ -4,12 +4,12 @@ import (
 	"context"
 
 	apimisc "helloworld/api/misc"
-	"helloworld/base/codeerror"
-	"helloworld/base/logger"
-	"helloworld/common/auth"
 	"helloworld/pkg/dao/miscdao"
 	"helloworld/pkg/mediastore"
 	miscmodel "helloworld/pkg/model/misc"
+	"mall/kit/auth"
+	"mall/kit/codeerror"
+	"mall/kit/logger"
 )
 
 var (

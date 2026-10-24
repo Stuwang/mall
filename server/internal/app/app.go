@@ -8,19 +8,15 @@ import (
 	"github.com/go-kratos/kratos/v2"
 	khttp "github.com/go-kratos/kratos/v2/transport/http"
 
-	"helloworld/api/helloworld"
 	apiasset "helloworld/api/asset"
 	apicart "helloworld/api/cart"
+	"helloworld/api/helloworld"
 	apimall "helloworld/api/mall"
 	apimisc "helloworld/api/misc"
 	apiorder "helloworld/api/order"
 	apiproduct "helloworld/api/product"
 	apiuser "helloworld/api/user"
-	"helloworld/base/codeerror"
-	"helloworld/base/logger"
-	"helloworld/common/auth"
 	"helloworld/common/config"
-	"helloworld/common/database"
 	"helloworld/pkg/assetcontroller"
 	"helloworld/pkg/cartcontroller"
 	"helloworld/pkg/dao/assetdao"
@@ -38,6 +34,10 @@ import (
 	"helloworld/pkg/productcontroller"
 	"helloworld/pkg/server"
 	"helloworld/pkg/usercontroller"
+	"mall/kit/auth"
+	"mall/kit/codeerror"
+	"mall/kit/database"
+	"mall/kit/logger"
 
 	_ "github.com/go-kratos/kratos/v2/encoding/json"
 )
@@ -86,7 +86,10 @@ func Init(cfg *config.Config) {
 		logger.Fatalf("auto migrate misc: %v", err)
 	}
 
-	auth.Init(cfg.Auth, cfg.Env)
+	auth.Init(auth.Config{
+		JWTSecret:      cfg.Auth.JWTSecret,
+		JWTExpireHours: cfg.Auth.JWTExpireHours,
+	}, cfg.Env)
 	auth.SetUserLoader(func(userID int64) (*auth.AuthInfo, error) {
 		u, err := userdao.NewUserDao(nil).GetByID(userID)
 		if err != nil {

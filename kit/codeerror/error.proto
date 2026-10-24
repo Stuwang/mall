@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package codeerror;
-option go_package = "common-hub/base/codeerror";
+option go_package = "mall/kit/codeerror";
 
 message CodeError {
   int32 code = 1;

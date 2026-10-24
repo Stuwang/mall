@@ -4,12 +4,12 @@ import (
 	"context"
 
 	apiorder "helloworld/api/order"
-	"helloworld/base/codeerror"
-	"helloworld/base/logger"
-	"helloworld/common/auth"
 	"helloworld/pkg/dao/orderdao"
 	ordermodel "helloworld/pkg/model/order"
 	"helloworld/pkg/orderbiz"
+	"mall/kit/auth"
+	"mall/kit/codeerror"
+	"mall/kit/logger"
 )
 
 func (c *Controller) AdminListOrders(ctx context.Context, req *apiorder.AdminListOrdersRequest) (*apiorder.ListOrdersReply, error) {

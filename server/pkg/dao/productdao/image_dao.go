@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"gorm.io/gorm"
-	"helloworld/base/codeerror"
-	"helloworld/pkg/model/common"
 	productmodel "helloworld/pkg/model/product"
+	"mall/kit/codeerror"
+	"mall/kit/model/common"
 )
 
 type ImageDao struct {

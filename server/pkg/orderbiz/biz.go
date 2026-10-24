@@ -5,9 +5,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
-	"helloworld/base/codeerror"
-	"helloworld/base/logger"
-	"helloworld/common/database"
+	"helloworld/pkg/bizerror"
 	"helloworld/pkg/dao/assetdao"
 	"helloworld/pkg/dao/cartdao"
 	"helloworld/pkg/dao/orderdao"
@@ -16,11 +14,14 @@ import (
 	ordermodel "helloworld/pkg/model/order"
 	productmodel "helloworld/pkg/model/product"
 	"helloworld/pkg/pointrate"
+	"mall/kit/codeerror"
+	"mall/kit/database"
+	"mall/kit/logger"
 )
 
 var (
-	payTimeoutSec  int64 = 15 * 60
-	pointsPerYuan  int64 = 100 // 1 元 = 100 积分（可配置，下单时快照）
+	payTimeoutSec int64 = 15 * 60
+	pointsPerYuan int64 = 100 // 1 元 = 100 积分（可配置，下单时快照）
 )
 
 // Init 初始化订单业务配置
@@ -250,7 +251,7 @@ func PayOrder(userID, orderID int64, payType ordermodel.PayType, usePoints int64
 				}
 				if usePoints > balance {
 					logger.Errorf("PayOrder points insufficient orderID=%d usePoints=%d balance=%d", orderID, usePoints, balance)
-					return codeerror.ErrorAssetInsufficient
+					return bizerror.ErrorAssetInsufficient
 				}
 			}
 			pointCents := pointrate.PointsToCents(usePoints, rate)
@@ -448,10 +449,10 @@ func maybeAutoCancel(o *ordermodel.Order) error {
 
 func ensurePendingPayable(o *ordermodel.Order) error {
 	if o.Status != ordermodel.OrderStatusPendingPay {
-		return codeerror.ErrorOrderStatus
+		return bizerror.ErrorOrderStatus
 	}
 	if o.PayExpireAt > 0 && o.PayExpireAt < time.Now().Unix() {
-		return codeerror.ErrorPayExpired
+		return bizerror.ErrorPayExpired
 	}
 	return nil
 }
@@ -510,7 +511,7 @@ func cancelOrderTx(tx *gorm.DB, userID, orderID int64, reason ordermodel.CancelR
 		return nil, err
 	}
 	if o.Status != ordermodel.OrderStatusPendingPay {
-		return nil, codeerror.ErrorOrderStatus
+		return nil, bizerror.ErrorOrderStatus
 	}
 	items, err := itemDao.ListByOrderID(o.ID)
 	if err != nil {

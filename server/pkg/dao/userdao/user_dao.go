@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"gorm.io/gorm"
-	"helloworld/base/codeerror"
 	usermodel "helloworld/pkg/model/user"
+	"mall/kit/codeerror"
 )
 
 type UserDao struct {

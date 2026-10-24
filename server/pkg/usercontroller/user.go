@@ -5,11 +5,11 @@ import (
 	"strings"
 
 	apiuser "helloworld/api/user"
-	"helloworld/base/codeerror"
-	"helloworld/base/logger"
-	"helloworld/common/auth"
 	"helloworld/pkg/dao/userdao"
 	usermodel "helloworld/pkg/model/user"
+	"mall/kit/auth"
+	"mall/kit/codeerror"
+	"mall/kit/logger"
 )
 
 var (

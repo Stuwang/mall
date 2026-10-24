@@ -2,9 +2,9 @@ package userdao
 
 import (
 	"gorm.io/gorm"
-	"helloworld/base/codeerror"
-	"helloworld/common/database"
 	usermodel "helloworld/pkg/model/user"
+	"mall/kit/codeerror"
+	"mall/kit/database"
 )
 
 func defaultDB(db *gorm.DB) *gorm.DB {

@@ -3,7 +3,7 @@ package codeerror
 import (
 	"fmt"
 
-	"helloworld/base/logger"
+	"mall/kit/logger"
 )
 
 func (ce CodeError) Error() string {
@@ -17,7 +17,7 @@ func (ce CodeError) Is(o CodeError) bool {
 func (ce CodeError) Errorf(msg string, args ...interface{}) CodeError {
 	return CodeError{
 		Code: ce.Code,
-		Msg:  fmt.Sprintf(msg, args),
+		Msg:  fmt.Sprintf(msg, args...),
 	}
 }
 
@@ -63,11 +63,7 @@ var (
 	ErrorUserExists   = CodeError{Code: 1006, Msg: "user already exists"}
 	ErrorUserNotFound = CodeError{Code: 1007, Msg: "user not found"}
 	ErrorPassword     = CodeError{Code: 1008, Msg: "password error"}
-	ErrorForbidden         = CodeError{Code: 1009, Msg: "forbidden"}
-	ErrorStockInsufficient = CodeError{Code: 1010, Msg: "stock insufficient"}
-	ErrorAssetInsufficient = CodeError{Code: 1011, Msg: "asset insufficient"}
-	ErrorOrderStatus       = CodeError{Code: 1012, Msg: "order status invalid"}
-	ErrorPayExpired        = CodeError{Code: 1013, Msg: "pay expired"}
-	ErrorUserBanned        = CodeError{Code: 1014, Msg: "user banned"}
-	ErrorSystem            = CodeError{Code: 1, Msg: "system error"}
+	ErrorForbidden    = CodeError{Code: 1009, Msg: "forbidden"}
+	ErrorUserBanned   = CodeError{Code: 1014, Msg: "user banned"}
+	ErrorSystem       = CodeError{Code: 1, Msg: "system error"}
 )

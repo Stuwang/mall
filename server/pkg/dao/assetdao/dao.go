@@ -2,9 +2,9 @@ package assetdao
 
 import (
 	"gorm.io/gorm"
-	"helloworld/base/codeerror"
-	"helloworld/common/database"
 	assetmodel "helloworld/pkg/model/asset"
+	"mall/kit/codeerror"
+	"mall/kit/database"
 )
 
 func defaultDB(db *gorm.DB) *gorm.DB {

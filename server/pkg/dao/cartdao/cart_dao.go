@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"gorm.io/gorm"
-	"helloworld/base/codeerror"
 	cartmodel "helloworld/pkg/model/cart"
-	"helloworld/pkg/model/common"
+	"mall/kit/codeerror"
+	"mall/kit/model/common"
 )
 
 type CartDao struct {

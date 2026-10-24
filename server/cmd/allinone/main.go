@@ -18,10 +18,10 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"helloworld/base/logger"
 	"helloworld/common/config"
-	"helloworld/common/database"
 	"helloworld/internal/app"
+	"mall/kit/database"
+	"mall/kit/logger"
 )
 
 //go:embed all:static/admin

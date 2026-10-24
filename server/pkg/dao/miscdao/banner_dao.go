@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"gorm.io/gorm"
-	"helloworld/base/codeerror"
 	miscmodel "helloworld/pkg/model/misc"
+	"mall/kit/codeerror"
 )
 
 type BannerDao struct {

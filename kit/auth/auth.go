@@ -11,10 +11,17 @@ import (
 	"github.com/go-kratos/kratos/v2/transport"
 	khttp "github.com/go-kratos/kratos/v2/transport/http"
 	"github.com/golang-jwt/jwt/v5"
-	"helloworld/base/codeerror"
-	"helloworld/base/logger"
-	"helloworld/common/config"
+	"mall/kit/codeerror"
+	"mall/kit/logger"
 )
+
+const EnvTest = "test"
+
+// Config 鉴权配置，由各服务从自己的配置文件填入。
+type Config struct {
+	JWTSecret      string
+	JWTExpireHours int
+}
 
 const headerUserID = "UserId"
 
@@ -41,8 +48,8 @@ type UserLoader func(userID int64) (*AuthInfo, error)
 type ActiveChecker func(userID int64) error
 
 type options struct {
-	whitelist     map[string]struct{}
-	pathPrefixes  []string
+	whitelist    map[string]struct{}
+	pathPrefixes []string
 }
 
 type Option func(*options)
@@ -72,7 +79,7 @@ var (
 )
 
 // Init 根据配置初始化鉴权（须在 Middleware 使用前调用）
-func Init(cfg config.AuthConfig, envName string) {
+func Init(cfg Config, envName string) {
 	env = envName
 	jwtSecret = []byte(cfg.JWTSecret)
 	if len(jwtSecret) == 0 {
@@ -95,7 +102,7 @@ func SetActiveChecker(checker ActiveChecker) {
 }
 
 func isTestEnv() bool {
-	return env == config.EnvTest
+	return env == EnvTest
 }
 
 // NewContext 将鉴权信息写入 context

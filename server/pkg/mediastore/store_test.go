@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"helloworld/base/logger"
 	"helloworld/common/config"
+	"mall/kit/logger"
 )
 
 func TestResolveNormalizeRoundTrip(t *testing.T) {

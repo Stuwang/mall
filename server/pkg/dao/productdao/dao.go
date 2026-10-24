@@ -2,9 +2,9 @@ package productdao
 
 import (
 	"gorm.io/gorm"
-	"helloworld/base/codeerror"
-	"helloworld/common/database"
 	productmodel "helloworld/pkg/model/product"
+	"mall/kit/codeerror"
+	"mall/kit/database"
 )
 
 func defaultDB(db *gorm.DB) *gorm.DB {

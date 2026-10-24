@@ -6,12 +6,12 @@ import (
 
 	"gorm.io/gorm"
 	apiproduct "helloworld/api/product"
-	"helloworld/base/codeerror"
-	"helloworld/base/logger"
-	"helloworld/common/auth"
-	"helloworld/common/database"
 	"helloworld/pkg/dao/productdao"
 	productmodel "helloworld/pkg/model/product"
+	"mall/kit/auth"
+	"mall/kit/codeerror"
+	"mall/kit/database"
+	"mall/kit/logger"
 )
 
 func (c *Controller) AdminCreateCategory(ctx context.Context, req *apiproduct.AdminCreateCategoryRequest) (*apiproduct.AdminCategoryReply, error) {

@@ -3,20 +3,24 @@ module helloworld
 go 1.23
 
 require (
-	github.com/glebarez/sqlite v1.11.0
 	github.com/go-kratos/kratos/v2 v2.8.2
-	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/uuid v1.6.0
-	github.com/silentred/gid v1.0.3
-	go.uber.org/atomic v1.12.0
-	go.uber.org/zap v1.27.0
 	golang.org/x/sync v0.10.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20250115164207-1a7da9e5054f
 	google.golang.org/grpc v1.70.0
 	google.golang.org/protobuf v1.36.4
-	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/gorm v1.31.2
+	mall/kit v0.0.0
+)
+
+require (
+	github.com/glebarez/sqlite v1.11.0 // indirect
+	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
+	github.com/silentred/gid v1.0.3 // indirect
+	go.uber.org/atomic v1.12.0 // indirect
+	go.uber.org/zap v1.27.0 // indirect
+	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 )
 
 require (
@@ -40,3 +44,5 @@ require (
 	modernc.org/memory v1.5.0 // indirect
 	modernc.org/sqlite v1.23.1 // indirect
 )
+
+replace mall/kit => ../kit

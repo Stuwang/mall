@@ -1,6 +1,6 @@
 package cart
 
-import "helloworld/pkg/model/common"
+import "mall/kit/model/common"
 
 // CartItem 购物车项
 type CartItem struct {

@@ -2,9 +2,9 @@ package orderdao
 
 import (
 	"gorm.io/gorm"
-	"helloworld/base/codeerror"
-	"helloworld/common/database"
 	ordermodel "helloworld/pkg/model/order"
+	"mall/kit/codeerror"
+	"mall/kit/database"
 )
 
 func defaultDB(db *gorm.DB) *gorm.DB {

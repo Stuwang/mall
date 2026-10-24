@@ -12,9 +12,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"helloworld/base/codeerror"
-	"helloworld/base/logger"
 	"helloworld/common/config"
+	"mall/kit/codeerror"
+	"mall/kit/logger"
 )
 
 const (

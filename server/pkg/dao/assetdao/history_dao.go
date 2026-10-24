@@ -4,8 +4,8 @@ import (
 	"errors"
 
 	"gorm.io/gorm"
-	"helloworld/base/codeerror"
 	assetmodel "helloworld/pkg/model/asset"
+	"mall/kit/codeerror"
 )
 
 type HistoryDao struct {

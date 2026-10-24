@@ -6,8 +6,9 @@ import (
 	"time"
 
 	"gorm.io/gorm"
-	"helloworld/base/codeerror"
+	"helloworld/pkg/bizerror"
 	productmodel "helloworld/pkg/model/product"
+	"mall/kit/codeerror"
 )
 
 type ProductDao struct {
@@ -151,7 +152,7 @@ func (d *ProductDao) DecStock(id int64, qty int32) error {
 		return codeerror.OrSystem(res.Error, "ProductDao.DecStock id=%d qty=%d", id, qty)
 	}
 	if res.RowsAffected == 0 {
-		return codeerror.OrSystem(codeerror.ErrorStockInsufficient, "ProductDao.DecStock insufficient id=%d qty=%d", id, qty)
+		return codeerror.OrSystem(bizerror.ErrorStockInsufficient, "ProductDao.DecStock insufficient id=%d qty=%d", id, qty)
 	}
 	return nil
 }

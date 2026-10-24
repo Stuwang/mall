@@ -4,9 +4,10 @@ import (
 	"time"
 
 	"gorm.io/gorm"
-	"helloworld/base/codeerror"
-	"helloworld/common/database"
+	"helloworld/pkg/bizerror"
 	assetmodel "helloworld/pkg/model/asset"
+	"mall/kit/codeerror"
+	"mall/kit/database"
 )
 
 // ChangeReq 资产变更请求（内部能力，供后续发分/扣分使用）
@@ -64,7 +65,7 @@ func ChangeTx(tx *gorm.DB, req ChangeReq) (*assetmodel.UserAsset, error) {
 	}
 	if a == nil {
 		if req.Change < 0 {
-			return nil, codeerror.ErrorAssetInsufficient
+			return nil, bizerror.ErrorAssetInsufficient
 		}
 		a = &assetmodel.UserAsset{
 			UserID:  req.UserID,
@@ -79,7 +80,7 @@ func ChangeTx(tx *gorm.DB, req ChangeReq) (*assetmodel.UserAsset, error) {
 	} else {
 		next := a.Balance + req.Change
 		if next < 0 {
-			return nil, codeerror.ErrorAssetInsufficient
+			return nil, bizerror.ErrorAssetInsufficient
 		}
 		a.Balance = next
 		if err := assetDao.UpdateBalance(a); err != nil {

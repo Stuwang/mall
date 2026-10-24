@@ -4,9 +4,9 @@ import (
 	"time"
 
 	"gorm.io/gorm"
-	"helloworld/base/codeerror"
-	"helloworld/common/database"
 	usermodel "helloworld/pkg/model/user"
+	"mall/kit/codeerror"
+	"mall/kit/database"
 )
 
 // CreateUserWithPassword 跨 user / user_login 事务注册

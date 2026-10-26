@@ -79,7 +79,14 @@ func (c *UserController) History(ctx context.Context, req *api.HistoryRequest) (
 
 func (c *UserController) Send(ctx context.Context, req *api.SendRequest) (*api.SendReply, error) {
 	a := auth.MustFromContext(ctx)
-	reply, pushes, err := biz.Send(a.UserID, req.GetPeerUserId(), req.GetClientMsgId(), req.GetContentType(), req.GetText())
+	reply, pushes, err := biz.Send(
+		a.UserID,
+		req.GetPeerUserId(),
+		req.GetClientMsgId(),
+		req.GetContentType(),
+		req.GetText(),
+		req.GetImageUri(),
+	)
 	if err != nil {
 		logger.Errorf("Send user=%d peer=%d err=%v", a.UserID, req.GetPeerUserId(), err)
 		return nil, err

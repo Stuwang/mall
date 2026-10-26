@@ -1,6 +1,6 @@
 import { appContext } from '@/app/AppContext'
 import type { Conversation, Msg, OnlineUser } from '@/api/types'
-import { ContentTypeText } from '@/api/types'
+import { ContentTypeImage, ContentTypeText } from '@/api/types'
 import { makeConvId, newClientMsgId } from '@/utils/conv'
 import { LocalStore } from './LocalStore'
 import type { LocalConv, LocalMsg } from './types'
@@ -94,8 +94,8 @@ export class ImClient {
     this.userId = userId
     this.store.bindUser(userId)
     this.ws.connect(token)
-    this.syncTimer = window.setInterval(() => void this.syncAll(), 30000)
-    void this.syncAll()
+    this.syncTimer = window.setInterval(() => void this.syncAll(false), 30000)
+    void this.syncAll(true)
     void this.refreshOnline()
     this.emit()
   }
@@ -116,6 +116,9 @@ export class ImClient {
   async refreshOnline(): Promise<void> {
     const reply = await appContext.api.im.listOnline()
     this.online = reply.list || []
+    for (const u of this.online) {
+      this.store.patchPeerProfile(u.user_id, u.nickname, u.avatar)
+    }
     this.emit()
   }
 
@@ -134,13 +137,13 @@ export class ImClient {
     this.emit()
   }
 
-  async syncAll(): Promise<void> {
+  async syncAll(fullList = false): Promise<void> {
     if (this.userId <= 0 || this.syncing) {
       return
     }
     this.syncing = true
     try {
-      await this.syncConvList()
+      await this.syncConvList(fullList)
       const convs = this.store.listConvs()
       for (const c of convs) {
         if (c.peer?.user_id) {
@@ -157,7 +160,7 @@ export class ImClient {
   }
 
   async syncPeer(peerUserId: number): Promise<void> {
-    await this.syncConvList()
+    await this.syncConvList(false)
     await this.syncHistory(peerUserId)
     if (this.activePeerId === peerUserId) {
       this.markPeerRead(peerUserId)
@@ -175,6 +178,44 @@ export class ImClient {
     if (!trimmed) {
       return
     }
+    await this.sendMessage(peerUserId, {
+      contentType: ContentTypeText,
+      text: trimmed,
+      peerNickname,
+      peerAvatar,
+    })
+  }
+
+  async sendImage(
+    peerUserId: number,
+    file: File,
+    peerNickname = '',
+    peerAvatar = '',
+  ): Promise<void> {
+    const uploaded = await appContext.api.auth.uploadMedia(file)
+    if (!uploaded?.uri) {
+      throw new Error('上传未返回文件地址')
+    }
+    await this.sendMessage(peerUserId, {
+      contentType: ContentTypeImage,
+      imageUri: uploaded.uri,
+      imageUrl: uploaded.url || '',
+      peerNickname,
+      peerAvatar,
+    })
+  }
+
+  private async sendMessage(
+    peerUserId: number,
+    opts: {
+      contentType: number
+      text?: string
+      imageUri?: string
+      imageUrl?: string
+      peerNickname?: string
+      peerAvatar?: string
+    },
+  ): Promise<void> {
     const convId = makeConvId(this.userId, peerUserId)
     const clientMsgId = newClientMsgId()
     const now = Math.floor(Date.now() / 1000)
@@ -182,8 +223,8 @@ export class ImClient {
       conv_id: convId,
       peer: {
         user_id: peerUserId,
-        nickname: peerNickname || `用户${peerUserId}`,
-        avatar: peerAvatar,
+        nickname: opts.peerNickname || `用户${peerUserId}`,
+        avatar: opts.peerAvatar || '',
       },
       last_seq: 0,
       last_msg_id: 0,
@@ -199,8 +240,11 @@ export class ImClient {
       sender_id: this.userId,
       origin: 1,
       client_msg_id: clientMsgId,
-      content_type: ContentTypeText,
-      content: { text: trimmed },
+      content_type: opts.contentType,
+      content: {
+        text: opts.text || '',
+        image_url: opts.imageUrl || '',
+      },
       ct: now,
       ut: now,
       pending: true,
@@ -212,8 +256,9 @@ export class ImClient {
       const reply = await appContext.api.im.send({
         peer_user_id: peerUserId,
         client_msg_id: clientMsgId,
-        content_type: ContentTypeText,
-        text: trimmed,
+        content_type: opts.contentType,
+        text: opts.text || '',
+        image_uri: opts.imageUri || '',
       })
       this.applyServerMsg(reply.msg)
       this.applyServerConv(reply.conv)
@@ -240,7 +285,7 @@ export class ImClient {
     if (peerId > 0) {
       await this.syncPeer(peerId)
     } else {
-      await this.syncConvList()
+      await this.syncConvList(false)
       this.emit()
     }
   }
@@ -277,8 +322,8 @@ export class ImClient {
     this.store.upsertConv(next)
   }
 
-  private async syncConvList(): Promise<void> {
-    let cursor = this.store.getListCursor()
+  private async syncConvList(full = false): Promise<void> {
+    let cursor = full ? 0 : this.store.getListCursor()
     for (;;) {
       const reply = await appContext.api.im.listConv({ after_seq: cursor, limit: 100 })
       const list = reply.list || []
@@ -286,6 +331,9 @@ export class ImClient {
         this.applyServerConv(c)
       }
       if (!list.length) {
+        if (full) {
+          this.store.setListCursor(cursor)
+        }
         break
       }
       const maxSeq = Math.max(...list.map((c) => c.last_seq))

@@ -67,6 +67,8 @@ message Peer {
 
 message MsgContent {
   string text = 1;
+  // 图片可访问路径（如 /files/...），仅图片消息有值
+  string image_url = 2;
 }
 
 // 下行消息。seq 是当前用户这一侧的同步序号，更新后变成更大的新值。
@@ -156,7 +158,10 @@ message SendRequest {
   int64 peer_user_id = 2;
   string client_msg_id = 3;
   im.common.v1.ContentType content_type = 4;
+  // 文本消息正文；图片消息可空
   string text = 5;
+  // 图片逻辑 URI 或 /files/ 路径；图片消息必填
+  string image_uri = 6;
 }
 
 message SendReply {
@@ -177,6 +182,7 @@ message InternalSendRequest {
   string request_id = 6;
   im.common.v1.ContentType content_type = 7;
   string text = 8;
+  string image_uri = 9;
 }
 
 message InternalUpdateRequest {
@@ -186,6 +192,7 @@ message InternalUpdateRequest {
   // 为真且这条已经是该侧最新消息时，才刷新该侧预览和排序时间
   bool sender_preview = 4;
   bool peer_preview = 5;
+  string image_uri = 6;
 }
 
 message InternalSendReply {

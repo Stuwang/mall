@@ -19,8 +19,9 @@ enum Visibility {
   VISIBILITY_BOTH = 3;
 }
 
-// 消息正文类型。当前只使用文本，其它取值预留。
+// 消息正文类型。
 enum ContentType {
   CONTENT_TYPE_UNSPECIFIED = 0;
   CONTENT_TYPE_TEXT = 1;
+  CONTENT_TYPE_IMAGE = 2;
 }

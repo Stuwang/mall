@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { ContentTypeImage, ContentTypeText } from '@/api/types'
 import UserAvatar from '@/components/UserAvatar.vue'
 import { useAuthStore } from '@/stores/authStore'
 import { useImLive, useImStore } from '@/stores/imStore'
@@ -17,6 +18,7 @@ const peerId = computed(() => Number(route.params.peerId))
 const draft = ref('')
 const sending = ref(false)
 const listRef = ref<HTMLElement | null>(null)
+const fileInput = ref<HTMLInputElement | null>(null)
 
 const peerNickname = computed(() => {
   const conv = imStore.convs.find((c) => c.peer?.user_id === peerId.value)
@@ -91,6 +93,35 @@ async function onSend(): Promise<void> {
   }
 }
 
+function pickImage(): void {
+  if (sending.value) {
+    return
+  }
+  fileInput.value?.click()
+}
+
+async function onImageSelected(ev: Event): Promise<void> {
+  const input = ev.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file || sending.value) {
+    return
+  }
+  if (!file.type.startsWith('image/')) {
+    notifyError(null, '请选择图片文件')
+    return
+  }
+  sending.value = true
+  try {
+    await imStore.sendImage(peerId.value, file, peerNickname.value, peerAvatar.value)
+    await scrollBottom()
+  } catch (error) {
+    notifyError(error, '发送图片失败')
+  } finally {
+    sending.value = false
+  }
+}
+
 function isMine(senderId: number): boolean {
   return senderId === selfId.value
 }
@@ -100,6 +131,14 @@ function senderName(senderId: number): string {
     return selfNickname.value
   }
   return peerNickname.value
+}
+
+function isImage(m: { content_type?: number }): boolean {
+  return m.content_type === ContentTypeImage
+}
+
+function isText(m: { content_type?: number }): boolean {
+  return !m.content_type || m.content_type === ContentTypeText
 }
 </script>
 
@@ -121,8 +160,15 @@ function senderName(senderId: number): string {
           :src="peerAvatar"
           :size="40"
         />
-        <div class="bubble" :class="{ pending: m.pending, failed: m.failed }">
-          <div class="text">{{ m.content?.text }}</div>
+        <div class="bubble" :class="{ pending: m.pending, failed: m.failed, image: isImage(m) }">
+          <img
+            v-if="isImage(m) && m.content?.image_url"
+            class="msg-image"
+            :src="m.content.image_url"
+            alt="图片"
+          />
+          <div v-else-if="isText(m)" class="text">{{ m.content?.text }}</div>
+          <div v-else class="text muted">[不支持的消息]</div>
           <div class="meta">
             <span v-if="m.pending">发送中</span>
             <span v-else-if="m.failed">失败</span>
@@ -140,6 +186,16 @@ function senderName(senderId: number): string {
       </div>
     </div>
     <div class="composer">
+      <button type="button" class="img-btn" :disabled="sending" @click="pickImage">
+        <van-icon name="photo-o" />
+      </button>
+      <input
+        ref="fileInput"
+        class="hidden-input"
+        type="file"
+        accept="image/jpeg,image/png,image/gif,image/webp"
+        @change="onImageSelected"
+      />
       <van-field
         v-model="draft"
         rows="1"
@@ -192,6 +248,10 @@ function senderName(senderId: number): string {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
+.bubble.image {
+  padding: 6px;
+}
+
 .msg-row:not(.mine) .bubble {
   border-top-left-radius: 4px;
 }
@@ -215,11 +275,23 @@ function senderName(senderId: number): string {
   font-size: 15px;
 }
 
+.msg-image {
+  display: block;
+  max-width: 220px;
+  max-height: 280px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
 .meta {
   margin-top: 4px;
   font-size: 11px;
   color: var(--im-muted);
   text-align: right;
+}
+
+.bubble.image .meta {
+  padding: 0 6px 2px;
 }
 
 .composer {
@@ -229,6 +301,29 @@ function senderName(senderId: number): string {
   padding: 8px 12px calc(8px + var(--im-safe-bottom));
   background: #fff;
   border-top: 1px solid #ebedf0;
+}
+
+.img-btn {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: #f7f8fa;
+  color: #323233;
+  font-size: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.img-btn:disabled {
+  opacity: 0.5;
+}
+
+.hidden-input {
+  display: none;
 }
 
 .composer :deep(.van-field) {

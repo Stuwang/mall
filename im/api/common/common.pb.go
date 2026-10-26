@@ -124,12 +124,13 @@ func (Visibility) EnumDescriptor() ([]byte, []int) {
 	return file_common_common_proto_rawDescGZIP(), []int{1}
 }
 
-// 消息正文类型。当前只使用文本，其它取值预留。
+// 消息正文类型。
 type ContentType int32
 
 const (
 	ContentType_CONTENT_TYPE_UNSPECIFIED ContentType = 0
 	ContentType_CONTENT_TYPE_TEXT        ContentType = 1
+	ContentType_CONTENT_TYPE_IMAGE       ContentType = 2
 )
 
 // Enum value maps for ContentType.
@@ -137,10 +138,12 @@ var (
 	ContentType_name = map[int32]string{
 		0: "CONTENT_TYPE_UNSPECIFIED",
 		1: "CONTENT_TYPE_TEXT",
+		2: "CONTENT_TYPE_IMAGE",
 	}
 	ContentType_value = map[string]int32{
 		"CONTENT_TYPE_UNSPECIFIED": 0,
 		"CONTENT_TYPE_TEXT":        1,
+		"CONTENT_TYPE_IMAGE":       2,
 	}
 )
 
@@ -185,10 +188,11 @@ const file_common_common_proto_rawDesc = "" +
 	"\x16VISIBILITY_UNSPECIFIED\x10\x00\x12\x18\n" +
 	"\x14VISIBILITY_PEER_ONLY\x10\x01\x12\x1a\n" +
 	"\x16VISIBILITY_SENDER_ONLY\x10\x02\x12\x13\n" +
-	"\x0fVISIBILITY_BOTH\x10\x03*B\n" +
+	"\x0fVISIBILITY_BOTH\x10\x03*Z\n" +
 	"\vContentType\x12\x1c\n" +
 	"\x18CONTENT_TYPE_UNSPECIFIED\x10\x00\x12\x15\n" +
-	"\x11CONTENT_TYPE_TEXT\x10\x01B\x1bZ\x19mall/im/api/common;commonb\x06proto3"
+	"\x11CONTENT_TYPE_TEXT\x10\x01\x12\x16\n" +
+	"\x12CONTENT_TYPE_IMAGE\x10\x02B\x1bZ\x19mall/im/api/common;commonb\x06proto3"
 
 var (
 	file_common_common_proto_rawDescOnce sync.Once

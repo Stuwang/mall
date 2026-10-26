@@ -48,8 +48,8 @@ export const useImStore = defineStore('im', () => {
     refresh()
   }
 
-  async function syncAll(): Promise<void> {
-    await imClient.syncAll()
+  async function syncAll(fullList = false): Promise<void> {
+    await imClient.syncAll(fullList)
     refresh()
   }
 
@@ -73,6 +73,16 @@ export const useImStore = defineStore('im', () => {
     refresh()
   }
 
+  async function sendImage(
+    peerUserId: number,
+    file: File,
+    nickname = '',
+    avatar = '',
+  ): Promise<void> {
+    await imClient.sendImage(peerUserId, file, nickname, avatar)
+    refresh()
+  }
+
   return {
     convs,
     online,
@@ -90,6 +100,7 @@ export const useImStore = defineStore('im', () => {
     syncPeer,
     openLocalChat,
     sendText,
+    sendImage,
   }
 })
 

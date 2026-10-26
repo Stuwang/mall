@@ -53,7 +53,7 @@ func setup(t *testing.T) (userA, userB, userC int64) {
 func TestFieldDocExample(t *testing.T) {
 	a, b, _ := setup(t)
 
-	reply, pushes, err := biz.Send(a, b, "client01", apicommon.ContentType_CONTENT_TYPE_TEXT, "你好")
+	reply, pushes, err := biz.Send(a, b, "client01", apicommon.ContentType_CONTENT_TYPE_TEXT, "你好", "")
 	if err != nil {
 		t.Fatalf("send: %v", err)
 	}
@@ -145,11 +145,11 @@ func TestFieldDocExample(t *testing.T) {
 
 func TestIdempotency(t *testing.T) {
 	a, b, _ := setup(t)
-	r1, _, err := biz.Send(a, b, "client02", apicommon.ContentType_CONTENT_TYPE_TEXT, "same")
+	r1, _, err := biz.Send(a, b, "client02", apicommon.ContentType_CONTENT_TYPE_TEXT, "same", "")
 	if err != nil {
 		t.Fatalf("first: %v", err)
 	}
-	r2, pushes, err := biz.Send(a, b, "client02", apicommon.ContentType_CONTENT_TYPE_TEXT, "same")
+	r2, pushes, err := biz.Send(a, b, "client02", apicommon.ContentType_CONTENT_TYPE_TEXT, "same", "")
 	if err != nil {
 		t.Fatalf("retry: %v", err)
 	}
@@ -159,7 +159,7 @@ func TestIdempotency(t *testing.T) {
 	if len(pushes) != 0 {
 		t.Fatalf("idempotent retry should not push, got %d", len(pushes))
 	}
-	_, _, err = biz.Send(a, b, "client02", apicommon.ContentType_CONTENT_TYPE_TEXT, "different")
+	_, _, err = biz.Send(a, b, "client02", apicommon.ContentType_CONTENT_TYPE_TEXT, "different", "")
 	ce, ok := codeerror.As(err)
 	if !ok || !ce.Is(bizerror.ErrorIdempotency) {
 		t.Fatalf("want idempotency error, got %v", err)
@@ -168,10 +168,10 @@ func TestIdempotency(t *testing.T) {
 
 func TestListCursorAcrossConvs(t *testing.T) {
 	a, b, c := setup(t)
-	if _, _, err := biz.Send(a, b, "ab-msg-01", apicommon.ContentType_CONTENT_TYPE_TEXT, "toB"); err != nil {
+	if _, _, err := biz.Send(a, b, "ab-msg-01", apicommon.ContentType_CONTENT_TYPE_TEXT, "toB", ""); err != nil {
 		t.Fatalf("send B: %v", err)
 	}
-	if _, _, err := biz.Send(a, c, "ac-msg-01", apicommon.ContentType_CONTENT_TYPE_TEXT, "toC"); err != nil {
+	if _, _, err := biz.Send(a, c, "ac-msg-01", apicommon.ContentType_CONTENT_TYPE_TEXT, "toC", ""); err != nil {
 		t.Fatalf("send C: %v", err)
 	}
 	// A 的序号跨会话递增：与 B 是 1，与 C 是 2。
@@ -207,7 +207,7 @@ func TestHistoryEmptyWithoutMember(t *testing.T) {
 
 func TestInternalSenderOnlyNoPreview(t *testing.T) {
 	a, b, _ := setup(t)
-	if _, _, err := biz.Send(a, b, "seed-msg1", apicommon.ContentType_CONTENT_TYPE_TEXT, "seed"); err != nil {
+	if _, _, err := biz.Send(a, b, "seed-msg1", apicommon.ContentType_CONTENT_TYPE_TEXT, "seed", ""); err != nil {
 		t.Fatalf("seed: %v", err)
 	}
 	listBefore, err := biz.ListConv(a, 0, 0)

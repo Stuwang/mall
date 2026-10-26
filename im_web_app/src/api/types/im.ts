@@ -1,6 +1,7 @@
 import type { WithBaseParam } from './common'
 
 export const ContentTypeText = 1
+export const ContentTypeImage = 2
 export const OriginUser = 1
 export const OriginSystem = 2
 
@@ -11,7 +12,8 @@ export interface Peer {
 }
 
 export interface MsgContent {
-  text: string
+  text?: string
+  image_url?: string
 }
 
 export interface Msg {
@@ -72,7 +74,8 @@ export interface SendRequest extends WithBaseParam {
   peer_user_id: number
   client_msg_id: string
   content_type: number
-  text: string
+  text?: string
+  image_uri?: string
 }
 
 export interface SendReply {

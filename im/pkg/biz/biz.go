@@ -69,7 +69,12 @@ func avatarURL(uri string) string {
 }
 
 // Send 用户发送。双方可见，两侧预览都更新。
-func Send(senderID, peerUserID int64, clientMsgID string, contentType apicommon.ContentType, text string) (*api.SendReply, []PushItem, error) {
+func Send(
+	senderID, peerUserID int64,
+	clientMsgID string,
+	contentType apicommon.ContentType,
+	text, imageURI string,
+) (*api.SendReply, []PushItem, error) {
 	if err := validatePeer(senderID, peerUserID); err != nil {
 		return nil, nil, err
 	}
@@ -79,32 +84,29 @@ func Send(senderID, peerUserID int64, clientMsgID string, contentType apicommon.
 	if err := validateContentType(contentType); err != nil {
 		return nil, nil, err
 	}
-	if err := validateText(text, textMaxRunes); err != nil {
+	content, fingerprint, preview, err := prepareBody(contentType, text, imageURI)
+	if err != nil {
 		return nil, nil, err
 	}
 	if err := requireUser(peerUserID); err != nil {
 		return nil, nil, err
 	}
 
-	content, err := encodeContent(text)
-	if err != nil {
-		return nil, nil, codeerror.OrSystem(err, "Send encodeContent")
-	}
-
 	var out writeResult
 	err = database.GetDb().Transaction(func(tx *gorm.DB) error {
 		res, err := createMessage(tx, createParams{
-			SenderID:         senderID,
-			PeerUserID:       peerUserID,
-			Origin:           apicommon.Origin_ORIGIN_USER,
-			Visibility:       apicommon.Visibility_VISIBILITY_BOTH,
-			SenderPreview:    true,
-			PeerPreview:      true,
-			IdempotencyKey:   clientMsgID,
-			ContentType:      contentType,
-			Content:          content,
-			CompareText:      text,
-			CompareContentTy: contentType,
+			SenderID:            senderID,
+			PeerUserID:          peerUserID,
+			Origin:              apicommon.Origin_ORIGIN_USER,
+			Visibility:          apicommon.Visibility_VISIBILITY_BOTH,
+			SenderPreview:       true,
+			PeerPreview:         true,
+			IdempotencyKey:      clientMsgID,
+			ContentType:         contentType,
+			Content:             content,
+			CompareFingerprint:  fingerprint,
+			CompareContentTy:    contentType,
+			Preview:             preview,
 		})
 		if err != nil {
 			return err
@@ -147,9 +149,6 @@ func InternalSend(req *api.InternalSendRequest) (*api.InternalSendReply, []PushI
 	if err := validateContentType(req.GetContentType()); err != nil {
 		return nil, nil, err
 	}
-	if err := validateText(req.GetText(), textMaxRunes); err != nil {
-		return nil, nil, err
-	}
 	if err := validateVisibility(req.GetVisibility()); err != nil {
 		return nil, nil, err
 	}
@@ -162,6 +161,10 @@ func InternalSend(req *api.InternalSendRequest) (*api.InternalSendReply, []PushI
 		logger.Errorf("InternalSend peer_preview on invisible side peer=%d", peerID)
 		return nil, nil, bizerror.ErrorBadMessage
 	}
+	content, fingerprint, preview, err := prepareBody(req.GetContentType(), req.GetText(), req.GetImageUri())
+	if err != nil {
+		return nil, nil, err
+	}
 	if err := requireUser(senderID); err != nil {
 		return nil, nil, err
 	}
@@ -169,25 +172,21 @@ func InternalSend(req *api.InternalSendRequest) (*api.InternalSendReply, []PushI
 		return nil, nil, err
 	}
 
-	content, err := encodeContent(req.GetText())
-	if err != nil {
-		return nil, nil, codeerror.OrSystem(err, "InternalSend encodeContent")
-	}
-
 	var out writeResult
 	err = database.GetDb().Transaction(func(tx *gorm.DB) error {
 		res, err := createMessage(tx, createParams{
-			SenderID:         senderID,
-			PeerUserID:       peerID,
-			Origin:           apicommon.Origin_ORIGIN_SYSTEM,
-			Visibility:       vis,
-			SenderPreview:    req.GetSenderPreview(),
-			PeerPreview:      req.GetPeerPreview(),
-			IdempotencyKey:   req.GetRequestId(),
-			ContentType:      req.GetContentType(),
-			Content:          content,
-			CompareText:      req.GetText(),
-			CompareContentTy: req.GetContentType(),
+			SenderID:           senderID,
+			PeerUserID:         peerID,
+			Origin:             apicommon.Origin_ORIGIN_SYSTEM,
+			Visibility:         vis,
+			SenderPreview:      req.GetSenderPreview(),
+			PeerPreview:        req.GetPeerPreview(),
+			IdempotencyKey:     req.GetRequestId(),
+			ContentType:        req.GetContentType(),
+			Content:            content,
+			CompareFingerprint: fingerprint,
+			CompareContentTy:   req.GetContentType(),
+			Preview:            preview,
 		})
 		if err != nil {
 			return err
@@ -217,12 +216,9 @@ func InternalUpdate(req *api.InternalUpdateRequest) (*api.InternalSendReply, []P
 	if err := validateContentType(req.GetContentType()); err != nil {
 		return nil, nil, err
 	}
-	if err := validateText(req.GetText(), textMaxRunes); err != nil {
-		return nil, nil, err
-	}
-	content, err := encodeContent(req.GetText())
+	content, _, preview, err := prepareBody(req.GetContentType(), req.GetText(), req.GetImageUri())
 	if err != nil {
-		return nil, nil, codeerror.OrSystem(err, "InternalUpdate encodeContent")
+		return nil, nil, err
 	}
 
 	var out writeResult
@@ -260,7 +256,7 @@ func InternalUpdate(req *api.InternalUpdateRequest) (*api.InternalSendReply, []P
 			PeerPreview:   req.GetPeerPreview(),
 			SenderID:      senderID,
 			PeerID:        peerID,
-			PreviewText:   req.GetText(),
+			Preview:       preview,
 		})
 		if err != nil {
 			return err
@@ -403,17 +399,18 @@ func History(userID, peerUserID, afterSeq int64, limit int32) (*api.HistoryReply
 }
 
 type createParams struct {
-	SenderID         int64
-	PeerUserID       int64
-	Origin           apicommon.Origin
-	Visibility       apicommon.Visibility
-	SenderPreview    bool
-	PeerPreview      bool
-	IdempotencyKey   string
-	ContentType      apicommon.ContentType
-	Content          string
-	CompareText      string
-	CompareContentTy apicommon.ContentType
+	SenderID           int64
+	PeerUserID         int64
+	Origin             apicommon.Origin
+	Visibility         apicommon.Visibility
+	SenderPreview      bool
+	PeerPreview        bool
+	IdempotencyKey     string
+	ContentType        apicommon.ContentType
+	Content            string
+	CompareFingerprint string
+	CompareContentTy   apicommon.ContentType
+	Preview            string
 }
 
 type updateParams struct {
@@ -423,7 +420,35 @@ type updateParams struct {
 	PeerPreview   bool
 	SenderID      int64
 	PeerID        int64
-	PreviewText   string
+	Preview       string
+}
+
+// prepareBody 按类型校验并编码正文，返回库内 JSON、幂等指纹、列表预览文案。
+func prepareBody(ct apicommon.ContentType, text, imageURI string) (content, fingerprint, preview string, err error) {
+	switch ct {
+	case apicommon.ContentType_CONTENT_TYPE_TEXT:
+		if err = validateText(text, textMaxRunes); err != nil {
+			return "", "", "", err
+		}
+		content, err = encodeTextContent(text)
+		if err != nil {
+			return "", "", "", codeerror.OrSystem(err, "prepareBody encodeText")
+		}
+		return content, text, PreviewText(text, 50), nil
+	case apicommon.ContentType_CONTENT_TYPE_IMAGE:
+		uri, nerr := normalizeImageURI(imageURI)
+		if nerr != nil {
+			return "", "", "", nerr
+		}
+		content, err = encodeImageContent(uri)
+		if err != nil {
+			return "", "", "", codeerror.OrSystem(err, "prepareBody encodeImage")
+		}
+		return content, uri, imagePreview, nil
+	default:
+		logger.Errorf("prepareBody unsupported type=%d", ct)
+		return "", "", "", bizerror.ErrorBadMessage
+	}
 }
 
 func createMessage(tx *gorm.DB, p createParams) (writeResult, error) {
@@ -433,7 +458,7 @@ func createMessage(tx *gorm.DB, p createParams) (writeResult, error) {
 		return writeResult{}, err
 	}
 	if existing != nil {
-		if existing.ContentType != p.CompareContentTy || decodeText(existing.Content) != p.CompareText {
+		if existing.ContentType != p.CompareContentTy || contentFingerprint(existing.ContentType, existing.Content) != p.CompareFingerprint {
 			logger.Errorf("createMessage idempotency conflict sender=%d key=%s", p.SenderID, p.IdempotencyKey)
 			return writeResult{}, bizerror.ErrorIdempotency
 		}
@@ -493,7 +518,7 @@ func createMessage(tx *gorm.DB, p createParams) (writeResult, error) {
 			return writeResult{}, getErr
 		}
 		if again != nil {
-			if again.ContentType != p.CompareContentTy || decodeText(again.Content) != p.CompareText {
+			if again.ContentType != p.CompareContentTy || contentFingerprint(again.ContentType, again.Content) != p.CompareFingerprint {
 				return writeResult{}, bizerror.ErrorIdempotency
 			}
 			return writeResult{Msg: again}, nil
@@ -501,7 +526,7 @@ func createMessage(tx *gorm.DB, p createParams) (writeResult, error) {
 		return writeResult{}, err
 	}
 
-	preview := PreviewText(p.CompareText, 50)
+	preview := p.Preview
 	for _, uid := range visibleIDs {
 		m := members[uid]
 		m.LastSeq = seqs[uid]
@@ -568,7 +593,7 @@ func updateMessage(tx *gorm.DB, msg *model.Message, p updateParams) (writeResult
 		return writeResult{}, err
 	}
 
-	preview := PreviewText(p.PreviewText, 50)
+	preview := p.Preview
 	for _, uid := range visibleIDs {
 		peer := p.PeerID
 		if uid == p.PeerID {

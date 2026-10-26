@@ -47,9 +47,15 @@ export class LocalStore {
 
   upsertConv(conv: LocalConv): void {
     const prev = this.state.convs[conv.conv_id]
+    const peer = {
+      user_id: conv.peer?.user_id || prev?.peer?.user_id || 0,
+      nickname: conv.peer?.nickname || prev?.peer?.nickname || '',
+      avatar: conv.peer?.avatar || prev?.peer?.avatar || '',
+    }
     this.state.convs[conv.conv_id] = {
       ...prev,
       ...conv,
+      peer,
       history_cursor: conv.history_cursor ?? prev?.history_cursor ?? 0,
       // 服务端快照不得冲掉本机已读水位
       read_seq: conv.read_seq ?? prev?.read_seq ?? 0,
@@ -58,7 +64,18 @@ export class LocalStore {
   }
 
   ensureLocalConv(conv: LocalConv): void {
-    if (this.state.convs[conv.conv_id]) {
+    const prev = this.state.convs[conv.conv_id]
+    if (prev) {
+      if (conv.peer?.avatar || conv.peer?.nickname) {
+        this.upsertConv({
+          ...prev,
+          peer: {
+            user_id: prev.peer?.user_id || conv.peer.user_id,
+            nickname: conv.peer.nickname || prev.peer?.nickname || '',
+            avatar: conv.peer.avatar || prev.peer?.avatar || '',
+          },
+        })
+      }
       return
     }
     this.state.convs[conv.conv_id] = {
@@ -68,6 +85,27 @@ export class LocalStore {
       local_only: true,
     }
     this.persist()
+  }
+
+  /** 用在线列表等来源补全会话对方昵称/头像 */
+  patchPeerProfile(peerUserId: number, nickname?: string, avatar?: string): void {
+    const conv = Object.values(this.state.convs).find((c) => c.peer?.user_id === peerUserId)
+    if (!conv?.peer) {
+      return
+    }
+    const nextNick = nickname || conv.peer.nickname || ''
+    const nextAvatar = avatar || conv.peer.avatar || ''
+    if (nextNick === (conv.peer.nickname || '') && nextAvatar === (conv.peer.avatar || '')) {
+      return
+    }
+    this.upsertConv({
+      ...conv,
+      peer: {
+        ...conv.peer,
+        nickname: nextNick,
+        avatar: nextAvatar,
+      },
+    })
   }
 
   getMessages(convId: string): LocalMsg[] {

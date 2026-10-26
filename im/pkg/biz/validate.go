@@ -2,9 +2,11 @@ package biz
 
 import (
 	"regexp"
+	"strings"
 	"unicode/utf8"
 
 	apicommon "mall/im/api/common"
+	"mall/file/mediastore"
 	"mall/im/pkg/bizerror"
 	"mall/kit/logger"
 )
@@ -33,11 +35,48 @@ func validateText(text string, maxRunes int) error {
 }
 
 func validateContentType(ct apicommon.ContentType) error {
-	if ct != apicommon.ContentType_CONTENT_TYPE_TEXT {
+	switch ct {
+	case apicommon.ContentType_CONTENT_TYPE_TEXT,
+		apicommon.ContentType_CONTENT_TYPE_IMAGE:
+		return nil
+	default:
 		logger.Errorf("im content_type unsupported type=%d", ct)
 		return bizerror.ErrorBadMessage
 	}
-	return nil
+}
+
+// normalizeImageURI 校验并归一化为 local_file URI；失败返回业务错误。
+func normalizeImageURI(raw string) (string, error) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		logger.Errorf("im image_uri empty")
+		return "", bizerror.ErrorBadMessage
+	}
+	uri := mediastore.Get().Normalize(raw)
+	key, ok := parseLocalFileKey(uri)
+	if !ok {
+		logger.Errorf("im image_uri invalid raw=%s uri=%s", raw, uri)
+		return "", bizerror.ErrorBadMessage
+	}
+	f, _, err := mediastore.Get().Open(key)
+	if err != nil {
+		logger.Errorf("im image_uri open key=%s err=%v", key, err)
+		return "", bizerror.ErrorBadMessage
+	}
+	_ = f.Close()
+	return uri, nil
+}
+
+func parseLocalFileKey(uri string) (string, bool) {
+	const prefix = "local_file:///"
+	if strings.HasPrefix(uri, prefix) {
+		return strings.TrimPrefix(uri, prefix), true
+	}
+	alt := "local_file://"
+	if strings.HasPrefix(uri, alt) {
+		return strings.TrimPrefix(uri, alt), true
+	}
+	return "", false
 }
 
 func validateIdempotencyKey(key string) error {

@@ -5,30 +5,70 @@ import (
 
 	apicommon "mall/im/api/common"
 	api "mall/im/api/im"
+	"mall/file/mediastore"
 	"mall/im/pkg/model"
 	"mall/kit/logger"
 )
 
-type textContent struct {
-	Text string `json:"text"`
+type msgPayload struct {
+	Text     string `json:"text,omitempty"`
+	ImageURI string `json:"image_uri,omitempty"`
 }
 
-func encodeContent(text string) (string, error) {
-	bs, err := json.Marshal(textContent{Text: text})
+const imagePreview = "[图片]"
+
+func encodeTextContent(text string) (string, error) {
+	bs, err := json.Marshal(msgPayload{Text: text})
 	if err != nil {
-		logger.Errorf("encodeContent marshal err=%v", err)
+		logger.Errorf("encodeTextContent marshal err=%v", err)
 		return "", err
 	}
 	return string(bs), nil
 }
 
-func decodeText(content string) string {
-	var c textContent
-	if err := json.Unmarshal([]byte(content), &c); err != nil {
-		logger.Errorf("decodeText unmarshal err=%v", err)
-		return ""
+func encodeImageContent(imageURI string) (string, error) {
+	bs, err := json.Marshal(msgPayload{ImageURI: imageURI})
+	if err != nil {
+		logger.Errorf("encodeImageContent marshal err=%v", err)
+		return "", err
 	}
-	return c.Text
+	return string(bs), nil
+}
+
+func decodePayload(content string) msgPayload {
+	var c msgPayload
+	if err := json.Unmarshal([]byte(content), &c); err != nil {
+		logger.Errorf("decodePayload unmarshal err=%v", err)
+		return msgPayload{}
+	}
+	return c
+}
+
+func decodeText(content string) string {
+	return decodePayload(content).Text
+}
+
+func decodeImageURI(content string) string {
+	return decodePayload(content).ImageURI
+}
+
+func contentFingerprint(ct apicommon.ContentType, content string) string {
+	p := decodePayload(content)
+	switch ct {
+	case apicommon.ContentType_CONTENT_TYPE_IMAGE:
+		return p.ImageURI
+	default:
+		return p.Text
+	}
+}
+
+func toAPIContent(ct apicommon.ContentType, raw string) *api.MsgContent {
+	p := decodePayload(raw)
+	out := &api.MsgContent{Text: p.Text}
+	if ct == apicommon.ContentType_CONTENT_TYPE_IMAGE && p.ImageURI != "" {
+		out.ImageUrl = mediastore.Get().PathURL(p.ImageURI)
+	}
+	return out
 }
 
 func seqForViewer(m *model.Message, viewerID int64) int64 {
@@ -57,7 +97,7 @@ func toAPIMsg(m *model.Message, viewerID int64) *api.Msg {
 		Origin:      m.Origin,
 		ClientMsgId: clientMsgIDForUser(m),
 		ContentType: m.ContentType,
-		Content:     &api.MsgContent{Text: decodeText(m.Content)},
+		Content:     toAPIContent(m.ContentType, m.Content),
 		Ct:          m.Ct,
 		Ut:          m.Ut,
 	}

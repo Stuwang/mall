@@ -16,12 +16,22 @@ const refreshing = ref(false)
 async function onRefresh(): Promise<void> {
   refreshing.value = true
   try {
-    await imStore.syncAll()
+    await Promise.all([imStore.syncAll(true), imStore.refreshOnline()])
   } catch (error) {
     notifyError(error, '同步失败')
   } finally {
     refreshing.value = false
   }
+}
+
+function previewText(c: (typeof imStore.convs)[number]): string {
+  if (c.last_msg?.preview) {
+    return c.last_msg.preview
+  }
+  if (c.local_only) {
+    return '草稿会话'
+  }
+  return ''
 }
 
 function openChat(peerId: number): void {
@@ -66,9 +76,7 @@ function unreadBadge(peerId: number): string | undefined {
               <span class="time muted">{{ formatTime(c.sort_ut) }}</span>
             </div>
             <div class="bottom">
-              <span class="preview muted">
-                {{ c.last_msg?.preview || (c.local_only ? '草稿会话' : '') }}
-              </span>
+              <span class="preview muted">{{ previewText(c) }}</span>
               <van-badge v-if="unreadBadge(c.peer.user_id)" :content="unreadBadge(c.peer.user_id)" />
             </div>
           </div>

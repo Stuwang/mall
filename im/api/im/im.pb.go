@@ -86,8 +86,10 @@ func (x *Peer) GetAvatar() string {
 }
 
 type MsgContent struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Text          string                 `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Text  string                 `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
+	// 图片可访问路径（如 /files/...），仅图片消息有值
+	ImageUrl      string `protobuf:"bytes,2,opt,name=image_url,json=imageUrl,proto3" json:"image_url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -125,6 +127,13 @@ func (*MsgContent) Descriptor() ([]byte, []int) {
 func (x *MsgContent) GetText() string {
 	if x != nil {
 		return x.Text
+	}
+	return ""
+}
+
+func (x *MsgContent) GetImageUrl() string {
+	if x != nil {
+		return x.ImageUrl
 	}
 	return ""
 }
@@ -829,12 +838,15 @@ func (x *HistoryReply) GetHasMore() bool {
 }
 
 type SendRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	BaseParam     *base.BaseParam        `protobuf:"bytes,1,opt,name=BaseParam,proto3" json:"BaseParam,omitempty"`
-	PeerUserId    int64                  `protobuf:"varint,2,opt,name=peer_user_id,json=peerUserId,proto3" json:"peer_user_id,omitempty"`
-	ClientMsgId   string                 `protobuf:"bytes,3,opt,name=client_msg_id,json=clientMsgId,proto3" json:"client_msg_id,omitempty"`
-	ContentType   common.ContentType     `protobuf:"varint,4,opt,name=content_type,json=contentType,proto3,enum=im.common.v1.ContentType" json:"content_type,omitempty"`
-	Text          string                 `protobuf:"bytes,5,opt,name=text,proto3" json:"text,omitempty"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	BaseParam   *base.BaseParam        `protobuf:"bytes,1,opt,name=BaseParam,proto3" json:"BaseParam,omitempty"`
+	PeerUserId  int64                  `protobuf:"varint,2,opt,name=peer_user_id,json=peerUserId,proto3" json:"peer_user_id,omitempty"`
+	ClientMsgId string                 `protobuf:"bytes,3,opt,name=client_msg_id,json=clientMsgId,proto3" json:"client_msg_id,omitempty"`
+	ContentType common.ContentType     `protobuf:"varint,4,opt,name=content_type,json=contentType,proto3,enum=im.common.v1.ContentType" json:"content_type,omitempty"`
+	// 文本消息正文；图片消息可空
+	Text string `protobuf:"bytes,5,opt,name=text,proto3" json:"text,omitempty"`
+	// 图片逻辑 URI 或 /files/ 路径；图片消息必填
+	ImageUri      string `protobuf:"bytes,6,opt,name=image_uri,json=imageUri,proto3" json:"image_uri,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -900,6 +912,13 @@ func (x *SendRequest) GetContentType() common.ContentType {
 func (x *SendRequest) GetText() string {
 	if x != nil {
 		return x.Text
+	}
+	return ""
+}
+
+func (x *SendRequest) GetImageUri() string {
+	if x != nil {
+		return x.ImageUri
 	}
 	return ""
 }
@@ -970,6 +989,7 @@ type InternalSendRequest struct {
 	RequestId     string             `protobuf:"bytes,6,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
 	ContentType   common.ContentType `protobuf:"varint,7,opt,name=content_type,json=contentType,proto3,enum=im.common.v1.ContentType" json:"content_type,omitempty"`
 	Text          string             `protobuf:"bytes,8,opt,name=text,proto3" json:"text,omitempty"`
+	ImageUri      string             `protobuf:"bytes,9,opt,name=image_uri,json=imageUri,proto3" json:"image_uri,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1060,14 +1080,22 @@ func (x *InternalSendRequest) GetText() string {
 	return ""
 }
 
+func (x *InternalSendRequest) GetImageUri() string {
+	if x != nil {
+		return x.ImageUri
+	}
+	return ""
+}
+
 type InternalUpdateRequest struct {
 	state       protoimpl.MessageState `protogen:"open.v1"`
 	MsgId       int64                  `protobuf:"varint,1,opt,name=msg_id,json=msgId,proto3" json:"msg_id,omitempty"`
 	ContentType common.ContentType     `protobuf:"varint,2,opt,name=content_type,json=contentType,proto3,enum=im.common.v1.ContentType" json:"content_type,omitempty"`
 	Text        string                 `protobuf:"bytes,3,opt,name=text,proto3" json:"text,omitempty"`
 	// 为真且这条已经是该侧最新消息时，才刷新该侧预览和排序时间
-	SenderPreview bool `protobuf:"varint,4,opt,name=sender_preview,json=senderPreview,proto3" json:"sender_preview,omitempty"`
-	PeerPreview   bool `protobuf:"varint,5,opt,name=peer_preview,json=peerPreview,proto3" json:"peer_preview,omitempty"`
+	SenderPreview bool   `protobuf:"varint,4,opt,name=sender_preview,json=senderPreview,proto3" json:"sender_preview,omitempty"`
+	PeerPreview   bool   `protobuf:"varint,5,opt,name=peer_preview,json=peerPreview,proto3" json:"peer_preview,omitempty"`
+	ImageUri      string `protobuf:"bytes,6,opt,name=image_uri,json=imageUri,proto3" json:"image_uri,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1135,6 +1163,13 @@ func (x *InternalUpdateRequest) GetPeerPreview() bool {
 		return x.PeerPreview
 	}
 	return false
+}
+
+func (x *InternalUpdateRequest) GetImageUri() string {
+	if x != nil {
+		return x.ImageUri
+	}
+	return ""
 }
 
 type InternalSendReply struct {
@@ -1215,10 +1250,11 @@ const file_im_im_proto_rawDesc = "" +
 	"\x04Peer\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x1a\n" +
 	"\bnickname\x18\x02 \x01(\tR\bnickname\x12\x16\n" +
-	"\x06avatar\x18\x03 \x01(\tR\x06avatar\" \n" +
+	"\x06avatar\x18\x03 \x01(\tR\x06avatar\"=\n" +
 	"\n" +
 	"MsgContent\x12\x12\n" +
-	"\x04text\x18\x01 \x01(\tR\x04text\"\xc1\x02\n" +
+	"\x04text\x18\x01 \x01(\tR\x04text\x12\x1b\n" +
+	"\timage_url\x18\x02 \x01(\tR\bimageUrl\"\xc1\x02\n" +
 	"\x03Msg\x12\x15\n" +
 	"\x06msg_id\x18\x01 \x01(\x03R\x05msgId\x12\x17\n" +
 	"\aconv_id\x18\x02 \x01(\tR\x06convId\x12\x10\n" +
@@ -1275,18 +1311,19 @@ const file_im_im_proto_rawDesc = "" +
 	"\x04list\x18\x01 \x03(\v2\n" +
 	".im.v1.MsgR\x04list\x12\x19\n" +
 	"\blast_seq\x18\x02 \x01(\x03R\alastSeq\x12\x19\n" +
-	"\bhas_more\x18\x03 \x01(\bR\ahasMore\"\xdd\x01\n" +
+	"\bhas_more\x18\x03 \x01(\bR\ahasMore\"\xfa\x01\n" +
 	"\vSendRequest\x126\n" +
 	"\tBaseParam\x18\x01 \x01(\v2\x18.helloworld.v1.BaseParamR\tBaseParam\x12 \n" +
 	"\fpeer_user_id\x18\x02 \x01(\x03R\n" +
 	"peerUserId\x12\"\n" +
 	"\rclient_msg_id\x18\x03 \x01(\tR\vclientMsgId\x12<\n" +
 	"\fcontent_type\x18\x04 \x01(\x0e2\x19.im.common.v1.ContentTypeR\vcontentType\x12\x12\n" +
-	"\x04text\x18\x05 \x01(\tR\x04text\"R\n" +
+	"\x04text\x18\x05 \x01(\tR\x04text\x12\x1b\n" +
+	"\timage_uri\x18\x06 \x01(\tR\bimageUri\"R\n" +
 	"\tSendReply\x12\x1c\n" +
 	"\x03msg\x18\x01 \x01(\v2\n" +
 	".im.v1.MsgR\x03msg\x12'\n" +
-	"\x04conv\x18\x02 \x01(\v2\x13.im.v1.ConversationR\x04conv\"\xc9\x02\n" +
+	"\x04conv\x18\x02 \x01(\v2\x13.im.v1.ConversationR\x04conv\"\xe6\x02\n" +
 	"\x13InternalSendRequest\x12\x1b\n" +
 	"\tsender_id\x18\x01 \x01(\x03R\bsenderId\x12 \n" +
 	"\fpeer_user_id\x18\x02 \x01(\x03R\n" +
@@ -1299,13 +1336,15 @@ const file_im_im_proto_rawDesc = "" +
 	"\n" +
 	"request_id\x18\x06 \x01(\tR\trequestId\x12<\n" +
 	"\fcontent_type\x18\a \x01(\x0e2\x19.im.common.v1.ContentTypeR\vcontentType\x12\x12\n" +
-	"\x04text\x18\b \x01(\tR\x04text\"\xca\x01\n" +
+	"\x04text\x18\b \x01(\tR\x04text\x12\x1b\n" +
+	"\timage_uri\x18\t \x01(\tR\bimageUri\"\xe7\x01\n" +
 	"\x15InternalUpdateRequest\x12\x15\n" +
 	"\x06msg_id\x18\x01 \x01(\x03R\x05msgId\x12<\n" +
 	"\fcontent_type\x18\x02 \x01(\x0e2\x19.im.common.v1.ContentTypeR\vcontentType\x12\x12\n" +
 	"\x04text\x18\x03 \x01(\tR\x04text\x12%\n" +
 	"\x0esender_preview\x18\x04 \x01(\bR\rsenderPreview\x12!\n" +
-	"\fpeer_preview\x18\x05 \x01(\bR\vpeerPreview\"}\n" +
+	"\fpeer_preview\x18\x05 \x01(\bR\vpeerPreview\x12\x1b\n" +
+	"\timage_uri\x18\x06 \x01(\tR\bimageUri\"}\n" +
 	"\x11InternalSendReply\x12\x15\n" +
 	"\x06msg_id\x18\x01 \x01(\x03R\x05msgId\x12\x17\n" +
 	"\aconv_id\x18\x02 \x01(\tR\x06convId\x12\x1d\n" +

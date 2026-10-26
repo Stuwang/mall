@@ -27,9 +27,19 @@ const peerNickname = computed(() => {
   return online?.nickname || `用户${peerId.value}`
 })
 
+const peerAvatar = computed(() => {
+  const conv = imStore.convs.find((c) => c.peer?.user_id === peerId.value)
+  if (conv?.peer?.avatar) {
+    return conv.peer.avatar
+  }
+  return imStore.online.find((u) => u.user_id === peerId.value)?.avatar || ''
+})
+
 const selfNickname = computed(
   () => authStore.user?.nickname || authStore.user?.username || '我',
 )
+
+const selfAvatar = computed(() => authStore.user?.avatar || '')
 
 const selfId = computed(() => authStore.user?.id ?? 0)
 
@@ -71,7 +81,7 @@ async function onSend(): Promise<void> {
   }
   sending.value = true
   try {
-    await imStore.sendText(peerId.value, text, peerNickname.value)
+    await imStore.sendText(peerId.value, text, peerNickname.value, peerAvatar.value)
     draft.value = ''
     await scrollBottom()
   } catch (error) {
@@ -108,6 +118,7 @@ function senderName(senderId: number): string {
           class="avatar"
           :user-id="m.sender_id || peerId"
           :nickname="senderName(m.sender_id)"
+          :src="peerAvatar"
           :size="40"
         />
         <div class="bubble" :class="{ pending: m.pending, failed: m.failed }">
@@ -123,6 +134,7 @@ function senderName(senderId: number): string {
           class="avatar"
           :user-id="selfId"
           :nickname="selfNickname"
+          :src="selfAvatar"
           :size="40"
         />
       </div>

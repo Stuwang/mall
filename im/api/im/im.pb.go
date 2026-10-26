@@ -25,9 +25,11 @@ const (
 )
 
 type Peer struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Nickname      string                 `protobuf:"bytes,2,opt,name=nickname,proto3" json:"nickname,omitempty"`
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	UserId   int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Nickname string                 `protobuf:"bytes,2,opt,name=nickname,proto3" json:"nickname,omitempty"`
+	// 头像可访问路径（如 /files/...）
+	Avatar        string `protobuf:"bytes,3,opt,name=avatar,proto3" json:"avatar,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -72,6 +74,13 @@ func (x *Peer) GetUserId() int64 {
 func (x *Peer) GetNickname() string {
 	if x != nil {
 		return x.Nickname
+	}
+	return ""
+}
+
+func (x *Peer) GetAvatar() string {
+	if x != nil {
+		return x.Avatar
 	}
 	return ""
 }
@@ -462,10 +471,12 @@ func (x *ListOnlineRequest) GetBaseParam() *base.BaseParam {
 }
 
 type OnlineUser struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Nickname      string                 `protobuf:"bytes,2,opt,name=nickname,proto3" json:"nickname,omitempty"`
-	ConnCount     int32                  `protobuf:"varint,3,opt,name=conn_count,json=connCount,proto3" json:"conn_count,omitempty"`
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	UserId    int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Nickname  string                 `protobuf:"bytes,2,opt,name=nickname,proto3" json:"nickname,omitempty"`
+	ConnCount int32                  `protobuf:"varint,3,opt,name=conn_count,json=connCount,proto3" json:"conn_count,omitempty"`
+	// 头像可访问路径（如 /files/...）
+	Avatar        string `protobuf:"bytes,4,opt,name=avatar,proto3" json:"avatar,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -519,6 +530,13 @@ func (x *OnlineUser) GetConnCount() int32 {
 		return x.ConnCount
 	}
 	return 0
+}
+
+func (x *OnlineUser) GetAvatar() string {
+	if x != nil {
+		return x.Avatar
+	}
+	return ""
 }
 
 type ListOnlineReply struct {
@@ -1193,10 +1211,11 @@ var File_im_im_proto protoreflect.FileDescriptor
 
 const file_im_im_proto_rawDesc = "" +
 	"\n" +
-	"\vim/im.proto\x12\x05im.v1\x1a\x0fbase/base.proto\x1a\x13common/common.proto\x1a\x1cgoogle/api/annotations.proto\";\n" +
+	"\vim/im.proto\x12\x05im.v1\x1a\x0fbase/base.proto\x1a\x13common/common.proto\x1a\x1cgoogle/api/annotations.proto\"S\n" +
 	"\x04Peer\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x1a\n" +
-	"\bnickname\x18\x02 \x01(\tR\bnickname\" \n" +
+	"\bnickname\x18\x02 \x01(\tR\bnickname\x12\x16\n" +
+	"\x06avatar\x18\x03 \x01(\tR\x06avatar\" \n" +
 	"\n" +
 	"MsgContent\x12\x12\n" +
 	"\x04text\x18\x01 \x01(\tR\x04text\"\xc1\x02\n" +
@@ -1229,13 +1248,14 @@ const file_im_im_proto_rawDesc = "" +
 	"\asort_ut\x18\x05 \x01(\x03R\x06sortUt\x12,\n" +
 	"\blast_msg\x18\x06 \x01(\v2\x11.im.v1.MsgPreviewR\alastMsg\"K\n" +
 	"\x11ListOnlineRequest\x126\n" +
-	"\tBaseParam\x18\x01 \x01(\v2\x18.helloworld.v1.BaseParamR\tBaseParam\"`\n" +
+	"\tBaseParam\x18\x01 \x01(\v2\x18.helloworld.v1.BaseParamR\tBaseParam\"x\n" +
 	"\n" +
 	"OnlineUser\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x1a\n" +
 	"\bnickname\x18\x02 \x01(\tR\bnickname\x12\x1d\n" +
 	"\n" +
-	"conn_count\x18\x03 \x01(\x05R\tconnCount\"8\n" +
+	"conn_count\x18\x03 \x01(\x05R\tconnCount\x12\x16\n" +
+	"\x06avatar\x18\x04 \x01(\tR\x06avatar\"8\n" +
 	"\x0fListOnlineReply\x12%\n" +
 	"\x04list\x18\x01 \x03(\v2\x11.im.v1.OnlineUserR\x04list\"|\n" +
 	"\x0fListConvRequest\x126\n" +

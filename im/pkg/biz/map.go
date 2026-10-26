@@ -63,10 +63,20 @@ func toAPIMsg(m *model.Message, viewerID int64) *api.Msg {
 	}
 }
 
-func toAPIConv(member *model.Member, peerNickname string, lastOrigin apicommon.Origin, lastContentType apicommon.ContentType, lastCt, lastUt int64) *api.Conversation {
+func toAPIConv(
+	member *model.Member,
+	peerNickname, peerAvatar string,
+	lastOrigin apicommon.Origin,
+	lastContentType apicommon.ContentType,
+	lastCt, lastUt int64,
+) *api.Conversation {
 	conv := &api.Conversation{
-		ConvId:    member.ConvID,
-		Peer:      &api.Peer{UserId: member.PeerUserID, Nickname: peerNickname},
+		ConvId: member.ConvID,
+		Peer: &api.Peer{
+			UserId:   member.PeerUserID,
+			Nickname: peerNickname,
+			Avatar:   peerAvatar,
+		},
 		LastSeq:   member.LastSeq,
 		LastMsgId: member.LastMsgID,
 		SortUt:    member.SortUt,

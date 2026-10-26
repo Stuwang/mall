@@ -7,6 +7,7 @@ export const OriginSystem = 2
 export interface Peer {
   user_id: number
   nickname: string
+  avatar?: string
 }
 
 export interface MsgContent {
@@ -83,6 +84,7 @@ export interface OnlineUser {
   user_id: number
   nickname: string
   conn_count: number
+  avatar?: string
 }
 
 export interface ListOnlineReply {

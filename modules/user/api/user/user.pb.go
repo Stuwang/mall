@@ -36,7 +36,9 @@ type UserInfo struct {
 	// 封禁截止时间戳；0=未封禁
 	BanUntil int64 `protobuf:"varint,8,opt,name=ban_until,json=banUntil,proto3" json:"ban_until,omitempty"`
 	// 当前是否处于封禁中
-	Banned        bool `protobuf:"varint,9,opt,name=banned,proto3" json:"banned,omitempty"`
+	Banned bool `protobuf:"varint,9,opt,name=banned,proto3" json:"banned,omitempty"`
+	// 头像可访问 URL（库内为逻辑 URI，出站已 Resolve）
+	Avatar        string `protobuf:"bytes,10,opt,name=avatar,proto3" json:"avatar,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -132,6 +134,13 @@ func (x *UserInfo) GetBanned() bool {
 		return x.Banned
 	}
 	return false
+}
+
+func (x *UserInfo) GetAvatar() string {
+	if x != nil {
+		return x.Avatar
+	}
+	return ""
 }
 
 type RegisterRequest struct {
@@ -455,11 +464,13 @@ func (x *GetUserInfoReply) GetUser() *UserInfo {
 }
 
 type UpdateUserInfoRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	BaseParam     *base.BaseParam        `protobuf:"bytes,1,opt,name=BaseParam,proto3" json:"BaseParam,omitempty"`
-	Id            int64                  `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
-	Nickname      string                 `protobuf:"bytes,3,opt,name=nickname,proto3" json:"nickname,omitempty"`
-	Sex           int32                  `protobuf:"varint,4,opt,name=sex,proto3" json:"sex,omitempty"`
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	BaseParam *base.BaseParam        `protobuf:"bytes,1,opt,name=BaseParam,proto3" json:"BaseParam,omitempty"`
+	Id        int64                  `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
+	Nickname  string                 `protobuf:"bytes,3,opt,name=nickname,proto3" json:"nickname,omitempty"`
+	Sex       int32                  `protobuf:"varint,4,opt,name=sex,proto3" json:"sex,omitempty"`
+	// 头像逻辑 URI 或 /files/ 路径；空表示不改头像
+	Avatar        string `protobuf:"bytes,5,opt,name=avatar,proto3" json:"avatar,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -520,6 +531,13 @@ func (x *UpdateUserInfoRequest) GetSex() int32 {
 		return x.Sex
 	}
 	return 0
+}
+
+func (x *UpdateUserInfoRequest) GetAvatar() string {
+	if x != nil {
+		return x.Avatar
+	}
+	return ""
 }
 
 type UpdateUserInfoReply struct {
@@ -813,7 +831,7 @@ var File_user_user_proto protoreflect.FileDescriptor
 
 const file_user_user_proto_rawDesc = "" +
 	"\n" +
-	"\x0fuser/user.proto\x12\auser.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x0fbase/base.proto\"\xd4\x01\n" +
+	"\x0fuser/user.proto\x12\auser.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x0fbase/base.proto\"\xec\x01\n" +
 	"\bUserInfo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x1a\n" +
@@ -823,7 +841,9 @@ const file_user_user_proto_rawDesc = "" +
 	"\x02ut\x18\x06 \x01(\x03R\x02ut\x12\x19\n" +
 	"\bis_admin\x18\a \x01(\bR\aisAdmin\x12\x1b\n" +
 	"\tban_until\x18\b \x01(\x03R\bbanUntil\x12\x16\n" +
-	"\x06banned\x18\t \x01(\bR\x06banned\"\x9d\x01\n" +
+	"\x06banned\x18\t \x01(\bR\x06banned\x12\x16\n" +
+	"\x06avatar\x18\n" +
+	" \x01(\tR\x06avatar\"\x9d\x01\n" +
 	"\x0fRegisterRequest\x126\n" +
 	"\tBaseParam\x18\x01 \x01(\v2\x18.helloworld.v1.BaseParamR\tBaseParam\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x1a\n" +
@@ -843,12 +863,13 @@ const file_user_user_proto_rawDesc = "" +
 	"\tBaseParam\x18\x01 \x01(\v2\x18.helloworld.v1.BaseParamR\tBaseParam\x12\x0e\n" +
 	"\x02id\x18\x02 \x01(\x03R\x02id\"9\n" +
 	"\x10GetUserInfoReply\x12%\n" +
-	"\x04user\x18\x01 \x01(\v2\x11.user.v1.UserInfoR\x04user\"\x8d\x01\n" +
+	"\x04user\x18\x01 \x01(\v2\x11.user.v1.UserInfoR\x04user\"\xa5\x01\n" +
 	"\x15UpdateUserInfoRequest\x126\n" +
 	"\tBaseParam\x18\x01 \x01(\v2\x18.helloworld.v1.BaseParamR\tBaseParam\x12\x0e\n" +
 	"\x02id\x18\x02 \x01(\x03R\x02id\x12\x1a\n" +
 	"\bnickname\x18\x03 \x01(\tR\bnickname\x12\x10\n" +
-	"\x03sex\x18\x04 \x01(\x05R\x03sex\"<\n" +
+	"\x03sex\x18\x04 \x01(\x05R\x03sex\x12\x16\n" +
+	"\x06avatar\x18\x05 \x01(\tR\x06avatar\"<\n" +
 	"\x13UpdateUserInfoReply\x12%\n" +
 	"\x04user\x18\x01 \x01(\v2\x11.user.v1.UserInfoR\x04user\"\xb3\x01\n" +
 	"\x15AdminListUsersRequest\x126\n" +

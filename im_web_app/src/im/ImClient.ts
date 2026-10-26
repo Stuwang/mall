@@ -119,11 +119,11 @@ export class ImClient {
     this.emit()
   }
 
-  openLocalChat(peerUserId: number, nickname: string): void {
+  openLocalChat(peerUserId: number, nickname: string, avatar = ''): void {
     const convId = makeConvId(this.userId, peerUserId)
     this.store.ensureLocalConv({
       conv_id: convId,
-      peer: { user_id: peerUserId, nickname },
+      peer: { user_id: peerUserId, nickname, avatar },
       last_seq: 0,
       last_msg_id: 0,
       sort_ut: Math.floor(Date.now() / 1000),
@@ -165,7 +165,12 @@ export class ImClient {
     this.emit()
   }
 
-  async sendText(peerUserId: number, text: string, peerNickname = ''): Promise<void> {
+  async sendText(
+    peerUserId: number,
+    text: string,
+    peerNickname = '',
+    peerAvatar = '',
+  ): Promise<void> {
     const trimmed = text.trim()
     if (!trimmed) {
       return
@@ -175,7 +180,11 @@ export class ImClient {
     const now = Math.floor(Date.now() / 1000)
     this.store.ensureLocalConv({
       conv_id: convId,
-      peer: { user_id: peerUserId, nickname: peerNickname || `用户${peerUserId}` },
+      peer: {
+        user_id: peerUserId,
+        nickname: peerNickname || `用户${peerUserId}`,
+        avatar: peerAvatar,
+      },
       last_seq: 0,
       last_msg_id: 0,
       sort_ut: now,

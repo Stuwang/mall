@@ -14,7 +14,9 @@ type User struct {
 	ID       int64  `json:"id" gorm:"column:id;primaryKey;autoIncrement"`
 	Nickname string `json:"nickname" gorm:"column:nickname"`
 	Sex      int32  `json:"sex" gorm:"column:sex"`
-	IsAdmin  int32  `json:"is_admin" gorm:"column:is_admin"` // 1=管理员
+	// Avatar 头像逻辑 URI（如 local_file:///key），空表示未设置
+	Avatar  string `json:"avatar" gorm:"column:avatar"`
+	IsAdmin int32  `json:"is_admin" gorm:"column:is_admin"` // 1=管理员
 	// BanUntil 封禁截止 unix 时间戳；0 表示未封禁；到期后自动视为解封
 	BanUntil int64 `json:"ban_until" gorm:"column:ban_until"`
 	Ct       int64 `json:"ct" gorm:"column:ct"`

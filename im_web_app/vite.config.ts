@@ -32,6 +32,10 @@ export default defineConfig({
         ws: true,
         changeOrigin: true,
       },
+      '/files': {
+        target: 'http://localhost:8090',
+        changeOrigin: true,
+      },
     },
   },
 })

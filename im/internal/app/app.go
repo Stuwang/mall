@@ -15,6 +15,8 @@ import (
 	"mall/im/pkg/controller"
 	imdao "mall/im/pkg/dao"
 	"mall/im/pkg/server"
+	"mall/file/mediacontroller"
+	"mall/file/mediastore"
 	"mall/kit/auth"
 	"mall/kit/codeerror"
 	"mall/kit/logger"
@@ -43,6 +45,20 @@ func Init(cfg *config.Config) {
 	auth.SetActiveChecker(checkUserActive)
 	controller.SetSystemToken(cfg.IM.SystemToken)
 	biz.SetTextMaxRunes(cfg.IM.TextMaxRunes)
+
+	if err := mediastore.Init(mediastore.Config{
+		PublicBase:     cfg.Storage.PublicBase,
+		MaxUploadBytes: cfg.Storage.MaxUploadBytes,
+		RootDir:        cfg.Storage.Local.RootDir,
+	}); err != nil {
+		logger.Fatalf("mediastore init: %v", err)
+	}
+	usercontroller.SetAvatarResolver(func(uri string) string {
+		return mediastore.Get().PathURL(uri)
+	})
+	usercontroller.SetAvatarNormalizer(func(raw string) string {
+		return mediastore.Get().Normalize(raw)
+	})
 }
 
 func loadAuthUser(userID int64) (*auth.AuthInfo, error) {
@@ -85,6 +101,8 @@ func NewHTTPServer(cfg *config.Config) *khttp.Server {
 	userCtrl := usercontroller.New()
 	userapi.RegisterUserHTTPServer(httpSrv, userCtrl)
 	userapi.RegisterAdminUserHTTPServer(httpSrv, userCtrl)
+	mediacontroller.RegisterFiles(httpSrv)
+	mediacontroller.RegisterUserUpload(httpSrv)
 	h := hub.New(cfg.IM.MaxConnsPerUser)
 	controller.SetHub(h)
 	ws.SetActiveChecker(checkUserActive)

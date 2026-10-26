@@ -21,6 +21,7 @@ func Middlewares() []middleware.Middleware {
 				api.OperationImInternalSend,
 				api.OperationImInternalUpdate,
 			),
+			auth.WithPathPrefixWhitelist("/files/"),
 		),
 	}
 }

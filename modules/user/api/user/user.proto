@@ -82,6 +82,8 @@ message UserInfo {
   int64 ban_until = 8;
   // 当前是否处于封禁中
   bool banned = 9;
+  // 头像可访问 URL（库内为逻辑 URI，出站已 Resolve）
+  string avatar = 10;
 }
 
 message RegisterRequest {
@@ -120,6 +122,8 @@ message UpdateUserInfoRequest {
   int64 id = 2;
   string nickname = 3;
   int32 sex = 4;
+  // 头像逻辑 URI 或 /files/ 路径；空表示不改头像
+  string avatar = 5;
 }
 
 message UpdateUserInfoReply {

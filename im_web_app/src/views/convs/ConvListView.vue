@@ -57,6 +57,7 @@ function unreadBadge(peerId: number): string | undefined {
           <UserAvatar
             :user-id="c.peer.user_id"
             :nickname="c.peer?.nickname"
+            :src="c.peer?.avatar"
             :size="48"
           />
           <div class="body">

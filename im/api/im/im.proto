@@ -61,6 +61,8 @@ service ImInternal {
 message Peer {
   int64 user_id = 1;
   string nickname = 2;
+  // 头像可访问路径（如 /files/...）
+  string avatar = 3;
 }
 
 message MsgContent {
@@ -112,6 +114,8 @@ message OnlineUser {
   int64 user_id = 1;
   string nickname = 2;
   int32 conn_count = 3;
+  // 头像可访问路径（如 /files/...）
+  string avatar = 4;
 }
 
 message ListOnlineReply {

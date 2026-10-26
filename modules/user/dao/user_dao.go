@@ -80,7 +80,7 @@ func (d *UserDao) List(q UserQuery) ([]usermodel.User, int64, error) {
 	return list, total, nil
 }
 
-func (d *UserDao) Update(id int64, nickname string, sex int32) (*usermodel.User, error) {
+func (d *UserDao) Update(id int64, nickname string, sex int32, avatar string) (*usermodel.User, error) {
 	u, err := d.GetByID(id)
 	if err != nil {
 		return nil, codeerror.OrSystem(err, "UserDao.Update GetByID id=%d", id)
@@ -88,8 +88,27 @@ func (d *UserDao) Update(id int64, nickname string, sex int32) (*usermodel.User,
 	u.Nickname = nickname
 	u.Sex = sex
 	u.Ut = time.Now().Unix()
-	if err := d.db.Model(u).Select("nickname", "sex", "ut").Updates(u).Error; err != nil {
+	cols := []string{"nickname", "sex", "ut"}
+	if avatar != "" {
+		u.Avatar = avatar
+		cols = append(cols, "avatar")
+	}
+	if err := d.db.Model(u).Select(cols).Updates(u).Error; err != nil {
 		return nil, codeerror.OrSystem(err, "UserDao.Update id=%d", id)
+	}
+	return u, nil
+}
+
+// UpdateAvatar 仅更新头像 URI
+func (d *UserDao) UpdateAvatar(id int64, avatar string) (*usermodel.User, error) {
+	u, err := d.GetByID(id)
+	if err != nil {
+		return nil, codeerror.OrSystem(err, "UserDao.UpdateAvatar GetByID id=%d", id)
+	}
+	u.Avatar = avatar
+	u.Ut = time.Now().Unix()
+	if err := d.db.Model(u).Select("avatar", "ut").Updates(u).Error; err != nil {
+		return nil, codeerror.OrSystem(err, "UserDao.UpdateAvatar id=%d", id)
 	}
 	return u, nil
 }

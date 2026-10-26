@@ -47,6 +47,13 @@ export class HttpClient {
     return this.unwrap(data)
   }
 
+  async postForm<TResponse>(path: string, form: FormData): Promise<TResponse> {
+    const { data } = await this.axios.post<ApiResponse<TResponse>>(path, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return this.unwrap(data)
+  }
+
   private attachAuth(config: InternalAxiosRequestConfig): InternalAxiosRequestConfig {
     const token = this.getAccessToken()
     if (token) {

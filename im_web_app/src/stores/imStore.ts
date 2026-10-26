@@ -58,13 +58,18 @@ export const useImStore = defineStore('im', () => {
     refresh()
   }
 
-  function openLocalChat(peerUserId: number, nickname: string): void {
-    imClient.openLocalChat(peerUserId, nickname)
+  function openLocalChat(peerUserId: number, nickname: string, avatar = ''): void {
+    imClient.openLocalChat(peerUserId, nickname, avatar)
     refresh()
   }
 
-  async function sendText(peerUserId: number, text: string, nickname = ''): Promise<void> {
-    await imClient.sendText(peerUserId, text, nickname)
+  async function sendText(
+    peerUserId: number,
+    text: string,
+    nickname = '',
+    avatar = '',
+  ): Promise<void> {
+    await imClient.sendText(peerUserId, text, nickname, avatar)
     refresh()
   }
 

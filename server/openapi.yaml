@@ -2539,6 +2539,9 @@ components:
                 sex:
                     type: integer
                     format: int32
+                avatar:
+                    type: string
+                    description: 头像逻辑 URI 或 /files/ 路径；空表示不改头像
         user.v1.UserInfo:
             type: object
             properties:
@@ -2567,6 +2570,9 @@ components:
                 banned:
                     type: boolean
                     description: 当前是否处于封禁中
+                avatar:
+                    type: string
+                    description: 头像可访问 URL（库内为逻辑 URI，出站已 Resolve）
             description: 用户信息
 tags:
     - name: AdminAsset

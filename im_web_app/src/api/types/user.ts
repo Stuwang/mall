@@ -10,6 +10,22 @@ export interface UserInfo {
   is_admin: boolean
   ban_until: number
   banned: boolean
+  avatar?: string
+}
+
+export interface UpdateUserInfoRequest extends WithBaseParam {
+  nickname?: string
+  sex?: number
+  avatar?: string
+}
+
+export interface UpdateUserInfoReply {
+  user: UserInfo
+}
+
+export interface MediaUploadReply {
+  uri: string
+  url: string
 }
 
 export interface RegisterRequest extends WithBaseParam {

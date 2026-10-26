@@ -15,8 +15,9 @@ import (
 )
 
 const (
-	uploadPath  = "/admin/api/v1/media/upload"
-	filesPrefix = mediastore.FilesHTTPPrefix
+	adminUploadPath = "/admin/api/v1/media/upload"
+	userUploadPath  = "/user/api/v1/media/upload"
+	filesPrefix     = mediastore.FilesHTTPPrefix
 )
 
 // UploadReply 上传成功返回
@@ -25,48 +26,85 @@ type UploadReply struct {
 	URL string `json:"url"`
 }
 
-// RegisterHTTP 注册上传与静态访问路由
+// RegisterHTTP 注册管理端上传与静态访问路由
 func RegisterHTTP(srv *khttp.Server) {
+	RegisterAdminUpload(srv)
+	RegisterFiles(srv)
+}
+
+// RegisterAdminUpload 管理端图片上传（需 admin）
+func RegisterAdminUpload(srv *khttp.Server) {
 	r := srv.Route("/")
-	r.POST(uploadPath, handleUpload)
+	r.POST(adminUploadPath, handleAdminUpload)
+}
+
+// RegisterUserUpload 登录用户图片上传（头像等）
+func RegisterUserUpload(srv *khttp.Server) {
+	r := srv.Route("/")
+	r.POST(userUploadPath, handleUserUpload)
+}
+
+// RegisterFiles 公开静态文件访问
+func RegisterFiles(srv *khttp.Server) {
 	srv.HandlePrefix(filesPrefix, stdhttp.HandlerFunc(handleFiles))
 }
 
-func handleUpload(ctx khttp.Context) error {
-	khttp.SetOperation(ctx, uploadPath)
+func handleAdminUpload(ctx khttp.Context) error {
+	khttp.SetOperation(ctx, adminUploadPath)
 	h := ctx.Middleware(func(c context.Context, _ interface{}) (interface{}, error) {
 		if _, err := auth.RequireAdmin(c); err != nil {
 			logger.Errorf("media upload RequireAdmin err=%v", err)
 			return nil, err
 		}
-		req := ctx.Request()
-		if err := req.ParseMultipartForm(mediastore.Get().MaxUploadBytes() + 1024); err != nil {
-			logger.Errorf("media upload ParseMultipartForm err=%v", err)
-			return nil, codeerror.ErrorParam
-		}
-		file, header, err := req.FormFile("file")
-		if err != nil {
-			logger.Errorf("media upload FormFile err=%v", err)
-			return nil, codeerror.ErrorParam
-		}
-		defer file.Close()
-
-		contentType := header.Header.Get("Content-Type")
-		uri, err := mediastore.Get().Save(header.Filename, contentType, file, header.Size)
-		if err != nil {
-			logger.Errorf("media upload Save orig=%s contentType=%s err=%v", header.Filename, contentType, err)
-			return nil, err
-		}
-		return &UploadReply{
-			URI: uri,
-			URL: mediastore.Get().PublicURL(uri),
-		}, nil
+		return saveUpload(ctx, false)
 	})
 	out, err := h(ctx, nil)
 	if err != nil {
 		return err
 	}
 	return ctx.Result(200, out)
+}
+
+func handleUserUpload(ctx khttp.Context) error {
+	khttp.SetOperation(ctx, userUploadPath)
+	h := ctx.Middleware(func(c context.Context, _ interface{}) (interface{}, error) {
+		_ = auth.MustFromContext(c)
+		return saveUpload(ctx, true)
+	})
+	out, err := h(ctx, nil)
+	if err != nil {
+		return err
+	}
+	return ctx.Result(200, out)
+}
+
+func saveUpload(ctx khttp.Context, pathOnly bool) (*UploadReply, error) {
+	req := ctx.Request()
+	if err := req.ParseMultipartForm(mediastore.Get().MaxUploadBytes() + 1024); err != nil {
+		logger.Errorf("media upload ParseMultipartForm err=%v", err)
+		return nil, codeerror.ErrorParam
+	}
+	file, header, err := req.FormFile("file")
+	if err != nil {
+		logger.Errorf("media upload FormFile err=%v", err)
+		return nil, codeerror.ErrorParam
+	}
+	defer file.Close()
+
+	contentType := header.Header.Get("Content-Type")
+	uri, err := mediastore.Get().Save(header.Filename, contentType, file, header.Size)
+	if err != nil {
+		logger.Errorf("media upload Save orig=%s contentType=%s err=%v", header.Filename, contentType, err)
+		return nil, err
+	}
+	url := mediastore.Get().PublicURL(uri)
+	if pathOnly {
+		url = mediastore.Get().PathURL(uri)
+	}
+	return &UploadReply{
+		URI: uri,
+		URL: url,
+	}, nil
 }
 
 func handleFiles(w stdhttp.ResponseWriter, r *stdhttp.Request) {

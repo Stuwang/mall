@@ -65,6 +65,31 @@ export const useAuthStore = defineStore('auth', () => {
     syncFromSession()
   }
 
+  async function updateProfile(payload: {
+    nickname?: string
+    sex?: number
+    avatar?: string
+  }): Promise<void> {
+    const reply = await api.updateUserInfo(payload)
+    if (!reply.user) {
+      throw new ApiError(1, '更新未返回用户信息')
+    }
+    session.updateUser(reply.user)
+    syncFromSession()
+  }
+
+  async function uploadAvatar(file: File): Promise<void> {
+    const uploaded = await api.uploadMedia(file)
+    if (!uploaded?.uri) {
+      throw new ApiError(1, '上传未返回文件地址')
+    }
+    await updateProfile({
+      nickname: user.value?.nickname || user.value?.username || '',
+      sex: user.value?.sex ?? 0,
+      avatar: uploaded.uri,
+    })
+  }
+
   function logout(): void {
     imClient.stop()
     session.clear()
@@ -91,6 +116,8 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     forceLogout,
     refreshProfile,
+    updateProfile,
+    uploadAvatar,
     syncFromSession,
     bootstrap,
   }

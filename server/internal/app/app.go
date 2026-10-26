@@ -141,6 +141,12 @@ func Init(cfg *config.Config) {
 	}); err != nil {
 		logger.Fatalf("mediastore init: %v", err)
 	}
+	usercontroller.SetAvatarResolver(func(uri string) string {
+		return mediastore.Get().PathURL(uri)
+	})
+	usercontroller.SetAvatarNormalizer(func(raw string) string {
+		return mediastore.Get().Normalize(raw)
+	})
 }
 
 // NewHTTPServer 注册全部 HTTP API 并返回 Kratos HTTP Server。
@@ -167,6 +173,7 @@ func NewHTTPServer(cfg *config.Config) *khttp.Server {
 	apimisc.RegisterMiscHTTPServer(httpSrv, miscCtrl)
 	apimisc.RegisterAdminMiscHTTPServer(httpSrv, miscCtrl)
 	mediacontroller.RegisterHTTP(httpSrv)
+	mediacontroller.RegisterUserUpload(httpSrv)
 	return httpSrv
 }
 

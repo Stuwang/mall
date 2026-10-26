@@ -23,8 +23,8 @@ async function onRefresh(): Promise<void> {
   }
 }
 
-function startChat(userId: number, nickname: string): void {
-  imStore.openLocalChat(userId, nickname || `用户${userId}`)
+function startChat(userId: number, nickname: string, avatar?: string): void {
+  imStore.openLocalChat(userId, nickname || `用户${userId}`, avatar || '')
   void router.push({ name: routeNames.chat, params: { peerId: String(userId) } })
 }
 </script>
@@ -41,9 +41,14 @@ function startChat(userId: number, nickname: string): void {
           :key="u.user_id"
           type="button"
           class="user-item"
-          @click="startChat(u.user_id, u.nickname)"
+          @click="startChat(u.user_id, u.nickname, u.avatar)"
         >
-          <UserAvatar :user-id="u.user_id" :nickname="u.nickname" :size="48" />
+          <UserAvatar
+            :user-id="u.user_id"
+            :nickname="u.nickname"
+            :src="u.avatar"
+            :size="48"
+          />
           <div class="meta">
             <div class="name">{{ u.nickname || `用户${u.user_id}` }}</div>
             <div class="muted">id {{ u.user_id }} · {{ u.conn_count }} 连接</div>

@@ -12,6 +12,7 @@ require (
 	google.golang.org/protobuf v1.36.4
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/gorm v1.31.2
+	mall/file v0.0.0
 	mall/kit v0.0.0
 	mall/user v0.0.0
 )
@@ -44,6 +45,8 @@ require (
 	modernc.org/memory v1.5.0 // indirect
 	modernc.org/sqlite v1.23.1 // indirect
 )
+
+replace mall/file => ../modules/file
 
 replace mall/kit => ../modules/kit
 

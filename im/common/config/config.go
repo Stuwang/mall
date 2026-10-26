@@ -16,6 +16,17 @@ type Config struct {
 	Logger   LoggerConfig   `yaml:"logger"`
 	Auth     AuthConfig     `yaml:"auth"`
 	IM       IMConfig       `yaml:"im"`
+	Storage  StorageConfig  `yaml:"storage"`
+}
+
+type StorageConfig struct {
+	PublicBase     string      `yaml:"public_base"`
+	MaxUploadBytes int64       `yaml:"max_upload_bytes"`
+	Local          LocalStorage `yaml:"local"`
+}
+
+type LocalStorage struct {
+	RootDir string `yaml:"root_dir"`
 }
 
 type ServerConfig struct {
@@ -87,6 +98,15 @@ func (c *Config) applyDefaults() {
 	}
 	if c.IM.TextMaxRunes <= 0 {
 		c.IM.TextMaxRunes = 2000
+	}
+	if c.Storage.PublicBase == "" {
+		c.Storage.PublicBase = "http://localhost:8090"
+	}
+	if c.Storage.MaxUploadBytes <= 0 {
+		c.Storage.MaxUploadBytes = 5 << 20
+	}
+	if c.Storage.Local.RootDir == "" {
+		c.Storage.Local.RootDir = "data/images"
 	}
 }
 

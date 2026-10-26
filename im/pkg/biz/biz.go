@@ -10,6 +10,7 @@ import (
 	"mall/im/pkg/bizerror"
 	imdao "mall/im/pkg/dao"
 	"mall/im/pkg/model"
+	"mall/file/mediastore"
 	"mall/kit/codeerror"
 	"mall/kit/logger"
 	userdao "mall/user/dao"
@@ -47,12 +48,24 @@ func requireUser(userID int64) error {
 }
 
 func nicknameOf(userID int64) string {
+	n, _ := profileOf(userID)
+	return n
+}
+
+func profileOf(userID int64) (nickname, avatar string) {
 	u, err := userdao.NewUserDao(nil).GetByID(userID)
 	if err != nil {
-		logger.Errorf("biz nicknameOf id=%d err=%v", userID, err)
+		logger.Errorf("biz profileOf id=%d err=%v", userID, err)
+		return "", ""
+	}
+	return u.Nickname, avatarURL(u.Avatar)
+}
+
+func avatarURL(uri string) string {
+	if uri == "" {
 		return ""
 	}
-	return u.Nickname
+	return mediastore.Get().PathURL(uri)
 }
 
 // Send 用户发送。双方可见，两侧预览都更新。
@@ -113,9 +126,10 @@ func Send(senderID, peerUserID int64, clientMsgID string, contentType apicommon.
 		return nil, nil, codeerror.ErrorSystem
 	}
 	lastOrigin, lastCT, lastCt, lastUt := lastMsgMeta(out.Msg, member)
+	peerNick, peerAvatar := profileOf(peerUserID)
 	reply := &api.SendReply{
 		Msg:  toAPIMsg(out.Msg, senderID),
-		Conv: toAPIConv(member, nicknameOf(peerUserID), lastOrigin, lastCT, lastCt, lastUt),
+		Conv: toAPIConv(member, peerNick, peerAvatar, lastOrigin, lastCT, lastCt, lastUt),
 	}
 	return reply, out.Pushes, nil
 }
@@ -274,10 +288,12 @@ func ListOnlineUsers(selfID int64, entries []OnlineEntry) (*api.ListOnlineReply,
 		if e.UserID == selfID || e.UserID <= 0 {
 			continue
 		}
+		nick, avatar := profileOf(e.UserID)
 		out = append(out, &api.OnlineUser{
 			UserId:    e.UserID,
-			Nickname:  nicknameOf(e.UserID),
+			Nickname:  nick,
 			ConnCount: int32(e.ConnCount),
+			Avatar:    avatar,
 		})
 	}
 	sort.Slice(out, func(i, j int) bool {
@@ -334,7 +350,8 @@ func ListConv(userID, afterSeq int64, limit int32) (*api.ListConvReply, error) {
 				lastUt = msg.Ut
 			}
 		}
-		out = append(out, toAPIConv(m, nicknameOf(m.PeerUserID), lastOrigin, lastCT, lastCt, lastUt))
+		peerNick, peerAvatar := profileOf(m.PeerUserID)
+		out = append(out, toAPIConv(m, peerNick, peerAvatar, lastOrigin, lastCT, lastCt, lastUt))
 	}
 	return &api.ListConvReply{List: out, HasMore: hasMore}, nil
 }

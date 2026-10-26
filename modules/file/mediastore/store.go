@@ -242,6 +242,24 @@ func (s *Store) PublicURL(uri string) string {
 	return s.Resolve(uri)
 }
 
+// PathURL 由逻辑 URI 得到同站相对路径 /files/key（无 host，便于前端代理）。
+func (s *Store) PathURL(raw string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return ""
+	}
+	if key, ok := parseLocalFileURI(raw); ok {
+		return FilesHTTPPrefix + key
+	}
+	if key, ok := s.stripFilesURL(raw); ok {
+		return FilesHTTPPrefix + key
+	}
+	if strings.HasPrefix(raw, "http://") || strings.HasPrefix(raw, "https://") {
+		return raw
+	}
+	return raw
+}
+
 func (s *Store) stripFilesURL(raw string) (string, bool) {
 	if strings.HasPrefix(raw, s.filesURLPrefix) {
 		return cleanKey(strings.TrimPrefix(raw, s.filesURLPrefix))

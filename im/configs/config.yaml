@@ -20,3 +20,10 @@ im:
   idle_sec: 70
   max_conns_per_user: 5
   text_max_runes: 2000
+
+# 头像存储（库内存 local_file:///key，对外 PathURL 为 /files/key）
+storage:
+  public_base: "http://localhost:8090"
+  max_upload_bytes: 5242880
+  local:
+    root_dir: "data/images"

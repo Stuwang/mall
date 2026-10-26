@@ -102,7 +102,9 @@ func (c *Controller) GetUserInfo(ctx context.Context, req *apiuser.GetUserInfoRe
 
 func (c *Controller) UpdateUserInfo(ctx context.Context, req *apiuser.UpdateUserInfoRequest) (*apiuser.UpdateUserInfoReply, error) {
 	info := auth.MustFromContext(ctx)
-	u, err := userdao.NewUserDao(nil).Update(info.UserID, strings.TrimSpace(req.Nickname), req.Sex)
+	nickname := strings.TrimSpace(req.Nickname)
+	avatar := avatarIn(req.Avatar)
+	u, err := userdao.NewUserDao(nil).Update(info.UserID, nickname, req.Sex, avatar)
 	if err != nil {
 		logger.Errorf("UpdateUserInfo Update userID=%d err=%v", info.UserID, err)
 		return nil, err
@@ -144,5 +146,6 @@ func toUserInfo(u *usermodel.User, username string) *apiuser.UserInfo {
 		IsAdmin:  u.Admin(),
 		BanUntil: u.BanUntil,
 		Banned:   u.Banned(),
+		Avatar:   avatarOut(u.Avatar),
 	}
 }

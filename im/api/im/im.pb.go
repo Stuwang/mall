@@ -120,18 +120,20 @@ func (x *MsgContent) GetText() string {
 	return ""
 }
 
-// 下行消息。seq 是同步序号，view_seq 是当前用户的视图序号。
+// 下行消息。seq 是当前用户这一侧的同步序号，更新后变成更大的新值。
+// 气泡先后看 ct、msg_id。
 type Msg struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	MsgId         int64                  `protobuf:"varint,1,opt,name=msg_id,json=msgId,proto3" json:"msg_id,omitempty"`
-	Seq           int64                  `protobuf:"varint,2,opt,name=seq,proto3" json:"seq,omitempty"`
-	ViewSeq       int64                  `protobuf:"varint,3,opt,name=view_seq,json=viewSeq,proto3" json:"view_seq,omitempty"`
+	ConvId        string                 `protobuf:"bytes,2,opt,name=conv_id,json=convId,proto3" json:"conv_id,omitempty"`
+	Seq           int64                  `protobuf:"varint,3,opt,name=seq,proto3" json:"seq,omitempty"`
 	SenderId      int64                  `protobuf:"varint,4,opt,name=sender_id,json=senderId,proto3" json:"sender_id,omitempty"`
 	Origin        common.Origin          `protobuf:"varint,5,opt,name=origin,proto3,enum=im.common.v1.Origin" json:"origin,omitempty"`
 	ClientMsgId   string                 `protobuf:"bytes,6,opt,name=client_msg_id,json=clientMsgId,proto3" json:"client_msg_id,omitempty"`
 	ContentType   common.ContentType     `protobuf:"varint,7,opt,name=content_type,json=contentType,proto3,enum=im.common.v1.ContentType" json:"content_type,omitempty"`
 	Content       *MsgContent            `protobuf:"bytes,8,opt,name=content,proto3" json:"content,omitempty"`
 	Ct            int64                  `protobuf:"varint,9,opt,name=ct,proto3" json:"ct,omitempty"`
+	Ut            int64                  `protobuf:"varint,10,opt,name=ut,proto3" json:"ut,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -173,16 +175,16 @@ func (x *Msg) GetMsgId() int64 {
 	return 0
 }
 
+func (x *Msg) GetConvId() string {
+	if x != nil {
+		return x.ConvId
+	}
+	return ""
+}
+
 func (x *Msg) GetSeq() int64 {
 	if x != nil {
 		return x.Seq
-	}
-	return 0
-}
-
-func (x *Msg) GetViewSeq() int64 {
-	if x != nil {
-		return x.ViewSeq
 	}
 	return 0
 }
@@ -229,15 +231,22 @@ func (x *Msg) GetCt() int64 {
 	return 0
 }
 
+func (x *Msg) GetUt() int64 {
+	if x != nil {
+		return x.Ut
+	}
+	return 0
+}
+
 type MsgPreview struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	MsgId         int64                  `protobuf:"varint,1,opt,name=msg_id,json=msgId,proto3" json:"msg_id,omitempty"`
-	ViewSeq       int64                  `protobuf:"varint,2,opt,name=view_seq,json=viewSeq,proto3" json:"view_seq,omitempty"`
-	SenderId      int64                  `protobuf:"varint,3,opt,name=sender_id,json=senderId,proto3" json:"sender_id,omitempty"`
-	Origin        common.Origin          `protobuf:"varint,4,opt,name=origin,proto3,enum=im.common.v1.Origin" json:"origin,omitempty"`
-	ContentType   common.ContentType     `protobuf:"varint,5,opt,name=content_type,json=contentType,proto3,enum=im.common.v1.ContentType" json:"content_type,omitempty"`
-	Preview       string                 `protobuf:"bytes,6,opt,name=preview,proto3" json:"preview,omitempty"`
-	Ct            int64                  `protobuf:"varint,7,opt,name=ct,proto3" json:"ct,omitempty"`
+	SenderId      int64                  `protobuf:"varint,2,opt,name=sender_id,json=senderId,proto3" json:"sender_id,omitempty"`
+	Origin        common.Origin          `protobuf:"varint,3,opt,name=origin,proto3,enum=im.common.v1.Origin" json:"origin,omitempty"`
+	ContentType   common.ContentType     `protobuf:"varint,4,opt,name=content_type,json=contentType,proto3,enum=im.common.v1.ContentType" json:"content_type,omitempty"`
+	Preview       string                 `protobuf:"bytes,5,opt,name=preview,proto3" json:"preview,omitempty"`
+	Ct            int64                  `protobuf:"varint,6,opt,name=ct,proto3" json:"ct,omitempty"`
+	Ut            int64                  `protobuf:"varint,7,opt,name=ut,proto3" json:"ut,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -279,13 +288,6 @@ func (x *MsgPreview) GetMsgId() int64 {
 	return 0
 }
 
-func (x *MsgPreview) GetViewSeq() int64 {
-	if x != nil {
-		return x.ViewSeq
-	}
-	return 0
-}
-
 func (x *MsgPreview) GetSenderId() int64 {
 	if x != nil {
 		return x.SenderId
@@ -321,13 +323,24 @@ func (x *MsgPreview) GetCt() int64 {
 	return 0
 }
 
+func (x *MsgPreview) GetUt() int64 {
+	if x != nil {
+		return x.Ut
+	}
+	return 0
+}
+
+// 当前用户自己的成员行。last_seq、最新消息、排序时间双方各自维护。
 type Conversation struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Peer          *Peer                  `protobuf:"bytes,1,opt,name=peer,proto3" json:"peer,omitempty"`
-	LastSeq       int64                  `protobuf:"varint,2,opt,name=last_seq,json=lastSeq,proto3" json:"last_seq,omitempty"`
-	LastSyncSeq   int64                  `protobuf:"varint,3,opt,name=last_sync_seq,json=lastSyncSeq,proto3" json:"last_sync_seq,omitempty"`
-	LastMsg       *MsgPreview            `protobuf:"bytes,4,opt,name=last_msg,json=lastMsg,proto3" json:"last_msg,omitempty"`
-	LastMsgAt     int64                  `protobuf:"varint,5,opt,name=last_msg_at,json=lastMsgAt,proto3" json:"last_msg_at,omitempty"`
+	state  protoimpl.MessageState `protogen:"open.v1"`
+	ConvId string                 `protobuf:"bytes,1,opt,name=conv_id,json=convId,proto3" json:"conv_id,omitempty"`
+	Peer   *Peer                  `protobuf:"bytes,2,opt,name=peer,proto3" json:"peer,omitempty"`
+	// 这一侧已分配过的最大同步序号，是列表和历史要追上的水位。
+	LastSeq   int64 `protobuf:"varint,3,opt,name=last_seq,json=lastSeq,proto3" json:"last_seq,omitempty"`
+	LastMsgId int64 `protobuf:"varint,4,opt,name=last_msg_id,json=lastMsgId,proto3" json:"last_msg_id,omitempty"`
+	// 当前最新消息的 ut。列表展示按它倒序。
+	SortUt        int64       `protobuf:"varint,5,opt,name=sort_ut,json=sortUt,proto3" json:"sort_ut,omitempty"`
+	LastMsg       *MsgPreview `protobuf:"bytes,6,opt,name=last_msg,json=lastMsg,proto3" json:"last_msg,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -362,6 +375,13 @@ func (*Conversation) Descriptor() ([]byte, []int) {
 	return file_im_im_proto_rawDescGZIP(), []int{4}
 }
 
+func (x *Conversation) GetConvId() string {
+	if x != nil {
+		return x.ConvId
+	}
+	return ""
+}
+
 func (x *Conversation) GetPeer() *Peer {
 	if x != nil {
 		return x.Peer
@@ -376,9 +396,16 @@ func (x *Conversation) GetLastSeq() int64 {
 	return 0
 }
 
-func (x *Conversation) GetLastSyncSeq() int64 {
+func (x *Conversation) GetLastMsgId() int64 {
 	if x != nil {
-		return x.LastSyncSeq
+		return x.LastMsgId
+	}
+	return 0
+}
+
+func (x *Conversation) GetSortUt() int64 {
+	if x != nil {
+		return x.SortUt
 	}
 	return 0
 }
@@ -390,77 +417,20 @@ func (x *Conversation) GetLastMsg() *MsgPreview {
 	return nil
 }
 
-func (x *Conversation) GetLastMsgAt() int64 {
-	if x != nil {
-		return x.LastMsgAt
-	}
-	return 0
-}
-
-type OpenConvRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	BaseParam     *base.BaseParam        `protobuf:"bytes,1,opt,name=BaseParam,proto3" json:"BaseParam,omitempty"`
-	PeerUserId    int64                  `protobuf:"varint,2,opt,name=peer_user_id,json=peerUserId,proto3" json:"peer_user_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *OpenConvRequest) Reset() {
-	*x = OpenConvRequest{}
-	mi := &file_im_im_proto_msgTypes[5]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *OpenConvRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*OpenConvRequest) ProtoMessage() {}
-
-func (x *OpenConvRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_im_im_proto_msgTypes[5]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use OpenConvRequest.ProtoReflect.Descriptor instead.
-func (*OpenConvRequest) Descriptor() ([]byte, []int) {
-	return file_im_im_proto_rawDescGZIP(), []int{5}
-}
-
-func (x *OpenConvRequest) GetBaseParam() *base.BaseParam {
-	if x != nil {
-		return x.BaseParam
-	}
-	return nil
-}
-
-func (x *OpenConvRequest) GetPeerUserId() int64 {
-	if x != nil {
-		return x.PeerUserId
-	}
-	return 0
-}
-
 type ListConvRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	BaseParam     *base.BaseParam        `protobuf:"bytes,1,opt,name=BaseParam,proto3" json:"BaseParam,omitempty"`
-	Page          int32                  `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
-	PageSize      int32                  `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	BaseParam *base.BaseParam        `protobuf:"bytes,1,opt,name=BaseParam,proto3" json:"BaseParam,omitempty"`
+	// 本地已按升序应用过的列表游标。返回 last_seq 更大的会话。
+	AfterSeq int64 `protobuf:"varint,2,opt,name=after_seq,json=afterSeq,proto3" json:"after_seq,omitempty"`
+	// 0 表示本次全部返回。正数时按 last_seq 升序截断。
+	Limit         int32 `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ListConvRequest) Reset() {
 	*x = ListConvRequest{}
-	mi := &file_im_im_proto_msgTypes[6]
+	mi := &file_im_im_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -472,7 +442,7 @@ func (x *ListConvRequest) String() string {
 func (*ListConvRequest) ProtoMessage() {}
 
 func (x *ListConvRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_im_im_proto_msgTypes[6]
+	mi := &file_im_im_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -485,7 +455,7 @@ func (x *ListConvRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListConvRequest.ProtoReflect.Descriptor instead.
 func (*ListConvRequest) Descriptor() ([]byte, []int) {
-	return file_im_im_proto_rawDescGZIP(), []int{6}
+	return file_im_im_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ListConvRequest) GetBaseParam() *base.BaseParam {
@@ -495,16 +465,16 @@ func (x *ListConvRequest) GetBaseParam() *base.BaseParam {
 	return nil
 }
 
-func (x *ListConvRequest) GetPage() int32 {
+func (x *ListConvRequest) GetAfterSeq() int64 {
 	if x != nil {
-		return x.Page
+		return x.AfterSeq
 	}
 	return 0
 }
 
-func (x *ListConvRequest) GetPageSize() int32 {
+func (x *ListConvRequest) GetLimit() int32 {
 	if x != nil {
-		return x.PageSize
+		return x.Limit
 	}
 	return 0
 }
@@ -512,14 +482,14 @@ func (x *ListConvRequest) GetPageSize() int32 {
 type ListConvReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	List          []*Conversation        `protobuf:"bytes,1,rep,name=list,proto3" json:"list,omitempty"`
-	Total         int64                  `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
+	HasMore       bool                   `protobuf:"varint,2,opt,name=has_more,json=hasMore,proto3" json:"has_more,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ListConvReply) Reset() {
 	*x = ListConvReply{}
-	mi := &file_im_im_proto_msgTypes[7]
+	mi := &file_im_im_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -531,7 +501,7 @@ func (x *ListConvReply) String() string {
 func (*ListConvReply) ProtoMessage() {}
 
 func (x *ListConvReply) ProtoReflect() protoreflect.Message {
-	mi := &file_im_im_proto_msgTypes[7]
+	mi := &file_im_im_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -544,7 +514,7 @@ func (x *ListConvReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListConvReply.ProtoReflect.Descriptor instead.
 func (*ListConvReply) Descriptor() ([]byte, []int) {
-	return file_im_im_proto_rawDescGZIP(), []int{7}
+	return file_im_im_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ListConvReply) GetList() []*Conversation {
@@ -554,29 +524,28 @@ func (x *ListConvReply) GetList() []*Conversation {
 	return nil
 }
 
-func (x *ListConvReply) GetTotal() int64 {
+func (x *ListConvReply) GetHasMore() bool {
 	if x != nil {
-		return x.Total
+		return x.HasMore
 	}
-	return 0
+	return false
 }
 
 type HistoryRequest struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
 	BaseParam  *base.BaseParam        `protobuf:"bytes,1,opt,name=BaseParam,proto3" json:"BaseParam,omitempty"`
 	PeerUserId int64                  `protobuf:"varint,2,opt,name=peer_user_id,json=peerUserId,proto3" json:"peer_user_id,omitempty"`
-	// 视图序号游标。direction=1 时 0 表示从最新往前；direction=2 时表示取 view_seq 更大的消息。
-	CursorSeq int64 `protobuf:"varint,3,opt,name=cursor_seq,json=cursorSeq,proto3" json:"cursor_seq,omitempty"`
-	// 1 向更早，2 向更新
-	Direction     int32 `protobuf:"varint,4,opt,name=direction,proto3" json:"direction,omitempty"`
-	Limit         int32 `protobuf:"varint,5,opt,name=limit,proto3" json:"limit,omitempty"`
+	// 本场已确认的历史游标。返回这一侧 seq 更大的消息，按 seq 升序。
+	AfterSeq int64 `protobuf:"varint,3,opt,name=after_seq,json=afterSeq,proto3" json:"after_seq,omitempty"`
+	// 0 用默认 50，最大 100。
+	Limit         int32 `protobuf:"varint,4,opt,name=limit,proto3" json:"limit,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *HistoryRequest) Reset() {
 	*x = HistoryRequest{}
-	mi := &file_im_im_proto_msgTypes[8]
+	mi := &file_im_im_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -588,7 +557,7 @@ func (x *HistoryRequest) String() string {
 func (*HistoryRequest) ProtoMessage() {}
 
 func (x *HistoryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_im_im_proto_msgTypes[8]
+	mi := &file_im_im_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -601,7 +570,7 @@ func (x *HistoryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HistoryRequest.ProtoReflect.Descriptor instead.
 func (*HistoryRequest) Descriptor() ([]byte, []int) {
-	return file_im_im_proto_rawDescGZIP(), []int{8}
+	return file_im_im_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *HistoryRequest) GetBaseParam() *base.BaseParam {
@@ -618,16 +587,9 @@ func (x *HistoryRequest) GetPeerUserId() int64 {
 	return 0
 }
 
-func (x *HistoryRequest) GetCursorSeq() int64 {
+func (x *HistoryRequest) GetAfterSeq() int64 {
 	if x != nil {
-		return x.CursorSeq
-	}
-	return 0
-}
-
-func (x *HistoryRequest) GetDirection() int32 {
-	if x != nil {
-		return x.Direction
+		return x.AfterSeq
 	}
 	return 0
 }
@@ -640,18 +602,18 @@ func (x *HistoryRequest) GetLimit() int32 {
 }
 
 type HistoryReply struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	List          []*Msg                 `protobuf:"bytes,1,rep,name=list,proto3" json:"list,omitempty"`
-	LastSeq       int64                  `protobuf:"varint,2,opt,name=last_seq,json=lastSeq,proto3" json:"last_seq,omitempty"`
-	LastSyncSeq   int64                  `protobuf:"varint,3,opt,name=last_sync_seq,json=lastSyncSeq,proto3" json:"last_sync_seq,omitempty"`
-	HasMore       bool                   `protobuf:"varint,4,opt,name=has_more,json=hasMore,proto3" json:"has_more,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	List  []*Msg                 `protobuf:"bytes,1,rep,name=list,proto3" json:"list,omitempty"`
+	// 这一侧成员行上的 last_seq。本页没满时，历史游标拨到这里。
+	LastSeq       int64 `protobuf:"varint,2,opt,name=last_seq,json=lastSeq,proto3" json:"last_seq,omitempty"`
+	HasMore       bool  `protobuf:"varint,3,opt,name=has_more,json=hasMore,proto3" json:"has_more,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *HistoryReply) Reset() {
 	*x = HistoryReply{}
-	mi := &file_im_im_proto_msgTypes[9]
+	mi := &file_im_im_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -663,7 +625,7 @@ func (x *HistoryReply) String() string {
 func (*HistoryReply) ProtoMessage() {}
 
 func (x *HistoryReply) ProtoReflect() protoreflect.Message {
-	mi := &file_im_im_proto_msgTypes[9]
+	mi := &file_im_im_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -676,7 +638,7 @@ func (x *HistoryReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HistoryReply.ProtoReflect.Descriptor instead.
 func (*HistoryReply) Descriptor() ([]byte, []int) {
-	return file_im_im_proto_rawDescGZIP(), []int{9}
+	return file_im_im_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *HistoryReply) GetList() []*Msg {
@@ -689,13 +651,6 @@ func (x *HistoryReply) GetList() []*Msg {
 func (x *HistoryReply) GetLastSeq() int64 {
 	if x != nil {
 		return x.LastSeq
-	}
-	return 0
-}
-
-func (x *HistoryReply) GetLastSyncSeq() int64 {
-	if x != nil {
-		return x.LastSyncSeq
 	}
 	return 0
 }
@@ -720,7 +675,7 @@ type SendRequest struct {
 
 func (x *SendRequest) Reset() {
 	*x = SendRequest{}
-	mi := &file_im_im_proto_msgTypes[10]
+	mi := &file_im_im_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -732,7 +687,7 @@ func (x *SendRequest) String() string {
 func (*SendRequest) ProtoMessage() {}
 
 func (x *SendRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_im_im_proto_msgTypes[10]
+	mi := &file_im_im_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -745,7 +700,7 @@ func (x *SendRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SendRequest.ProtoReflect.Descriptor instead.
 func (*SendRequest) Descriptor() ([]byte, []int) {
-	return file_im_im_proto_rawDescGZIP(), []int{10}
+	return file_im_im_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *SendRequest) GetBaseParam() *base.BaseParam {
@@ -783,15 +738,68 @@ func (x *SendRequest) GetText() string {
 	return ""
 }
 
+type SendReply struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Msg   *Msg                   `protobuf:"bytes,1,opt,name=msg,proto3" json:"msg,omitempty"`
+	// 发送者这一侧的会话快照。其中 last_seq 是服务端水位，历史游标以 history 响应为准。
+	Conv          *Conversation `protobuf:"bytes,2,opt,name=conv,proto3" json:"conv,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SendReply) Reset() {
+	*x = SendReply{}
+	mi := &file_im_im_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SendReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SendReply) ProtoMessage() {}
+
+func (x *SendReply) ProtoReflect() protoreflect.Message {
+	mi := &file_im_im_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SendReply.ProtoReflect.Descriptor instead.
+func (*SendReply) Descriptor() ([]byte, []int) {
+	return file_im_im_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *SendReply) GetMsg() *Msg {
+	if x != nil {
+		return x.Msg
+	}
+	return nil
+}
+
+func (x *SendReply) GetConv() *Conversation {
+	if x != nil {
+		return x.Conv
+	}
+	return nil
+}
+
 type InternalSendRequest struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
 	SenderId   int64                  `protobuf:"varint,1,opt,name=sender_id,json=senderId,proto3" json:"sender_id,omitempty"`
 	PeerUserId int64                  `protobuf:"varint,2,opt,name=peer_user_id,json=peerUserId,proto3" json:"peer_user_id,omitempty"`
 	// 1 仅对方可见，2 仅发送者可见，3 双方可见
 	Visibility common.Visibility `protobuf:"varint,3,opt,name=visibility,proto3,enum=im.common.v1.Visibility" json:"visibility,omitempty"`
-	// 是否更新名义发送者的会话列表预览
+	// 是否把这条写成名义发送者的列表最新消息
 	SenderPreview bool `protobuf:"varint,4,opt,name=sender_preview,json=senderPreview,proto3" json:"sender_preview,omitempty"`
-	// 是否更新对端的会话列表预览
+	// 是否把这条写成对端的列表最新消息
 	PeerPreview   bool               `protobuf:"varint,5,opt,name=peer_preview,json=peerPreview,proto3" json:"peer_preview,omitempty"`
 	RequestId     string             `protobuf:"bytes,6,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
 	ContentType   common.ContentType `protobuf:"varint,7,opt,name=content_type,json=contentType,proto3,enum=im.common.v1.ContentType" json:"content_type,omitempty"`
@@ -887,12 +895,13 @@ func (x *InternalSendRequest) GetText() string {
 }
 
 type InternalUpdateRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	MsgId         int64                  `protobuf:"varint,1,opt,name=msg_id,json=msgId,proto3" json:"msg_id,omitempty"`
-	ContentType   common.ContentType     `protobuf:"varint,2,opt,name=content_type,json=contentType,proto3,enum=im.common.v1.ContentType" json:"content_type,omitempty"`
-	Text          string                 `protobuf:"bytes,3,opt,name=text,proto3" json:"text,omitempty"`
-	SenderPreview bool                   `protobuf:"varint,4,opt,name=sender_preview,json=senderPreview,proto3" json:"sender_preview,omitempty"`
-	PeerPreview   bool                   `protobuf:"varint,5,opt,name=peer_preview,json=peerPreview,proto3" json:"peer_preview,omitempty"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	MsgId       int64                  `protobuf:"varint,1,opt,name=msg_id,json=msgId,proto3" json:"msg_id,omitempty"`
+	ContentType common.ContentType     `protobuf:"varint,2,opt,name=content_type,json=contentType,proto3,enum=im.common.v1.ContentType" json:"content_type,omitempty"`
+	Text        string                 `protobuf:"bytes,3,opt,name=text,proto3" json:"text,omitempty"`
+	// 为真且这条已经是该侧最新消息时，才刷新该侧预览和排序时间
+	SenderPreview bool `protobuf:"varint,4,opt,name=sender_preview,json=senderPreview,proto3" json:"sender_preview,omitempty"`
+	PeerPreview   bool `protobuf:"varint,5,opt,name=peer_preview,json=peerPreview,proto3" json:"peer_preview,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -963,14 +972,13 @@ func (x *InternalUpdateRequest) GetPeerPreview() bool {
 }
 
 type InternalSendReply struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	MsgId int64                  `protobuf:"varint,1,opt,name=msg_id,json=msgId,proto3" json:"msg_id,omitempty"`
-	// 同步序号。更新消息后这是新值。
-	Seq int64 `protobuf:"varint,2,opt,name=seq,proto3" json:"seq,omitempty"`
-	// 名义发送者的视图序号。不可见时为 0。更新消息时不变。
-	SenderViewSeq int64 `protobuf:"varint,3,opt,name=sender_view_seq,json=senderViewSeq,proto3" json:"sender_view_seq,omitempty"`
-	// 对端的视图序号。不可见时为 0。
-	PeerViewSeq   int64 `protobuf:"varint,4,opt,name=peer_view_seq,json=peerViewSeq,proto3" json:"peer_view_seq,omitempty"`
+	state  protoimpl.MessageState `protogen:"open.v1"`
+	MsgId  int64                  `protobuf:"varint,1,opt,name=msg_id,json=msgId,proto3" json:"msg_id,omitempty"`
+	ConvId string                 `protobuf:"bytes,2,opt,name=conv_id,json=convId,proto3" json:"conv_id,omitempty"`
+	// 名义发送者这一侧的同步序号。看不见时为 0。更新后是新值。
+	SenderSeq int64 `protobuf:"varint,3,opt,name=sender_seq,json=senderSeq,proto3" json:"sender_seq,omitempty"`
+	// 对端这一侧的同步序号。看不见时为 0。
+	PeerSeq       int64 `protobuf:"varint,4,opt,name=peer_seq,json=peerSeq,proto3" json:"peer_seq,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1012,23 +1020,23 @@ func (x *InternalSendReply) GetMsgId() int64 {
 	return 0
 }
 
-func (x *InternalSendReply) GetSeq() int64 {
+func (x *InternalSendReply) GetConvId() string {
 	if x != nil {
-		return x.Seq
+		return x.ConvId
+	}
+	return ""
+}
+
+func (x *InternalSendReply) GetSenderSeq() int64 {
+	if x != nil {
+		return x.SenderSeq
 	}
 	return 0
 }
 
-func (x *InternalSendReply) GetSenderViewSeq() int64 {
+func (x *InternalSendReply) GetPeerSeq() int64 {
 	if x != nil {
-		return x.SenderViewSeq
-	}
-	return 0
-}
-
-func (x *InternalSendReply) GetPeerViewSeq() int64 {
-	if x != nil {
-		return x.PeerViewSeq
+		return x.PeerSeq
 	}
 	return 0
 }
@@ -1043,64 +1051,64 @@ const file_im_im_proto_rawDesc = "" +
 	"\bnickname\x18\x02 \x01(\tR\bnickname\" \n" +
 	"\n" +
 	"MsgContent\x12\x12\n" +
-	"\x04text\x18\x01 \x01(\tR\x04text\"\xb3\x02\n" +
+	"\x04text\x18\x01 \x01(\tR\x04text\"\xc1\x02\n" +
 	"\x03Msg\x12\x15\n" +
-	"\x06msg_id\x18\x01 \x01(\x03R\x05msgId\x12\x10\n" +
-	"\x03seq\x18\x02 \x01(\x03R\x03seq\x12\x19\n" +
-	"\bview_seq\x18\x03 \x01(\x03R\aviewSeq\x12\x1b\n" +
+	"\x06msg_id\x18\x01 \x01(\x03R\x05msgId\x12\x17\n" +
+	"\aconv_id\x18\x02 \x01(\tR\x06convId\x12\x10\n" +
+	"\x03seq\x18\x03 \x01(\x03R\x03seq\x12\x1b\n" +
 	"\tsender_id\x18\x04 \x01(\x03R\bsenderId\x12,\n" +
 	"\x06origin\x18\x05 \x01(\x0e2\x14.im.common.v1.OriginR\x06origin\x12\"\n" +
 	"\rclient_msg_id\x18\x06 \x01(\tR\vclientMsgId\x12<\n" +
 	"\fcontent_type\x18\a \x01(\x0e2\x19.im.common.v1.ContentTypeR\vcontentType\x12+\n" +
 	"\acontent\x18\b \x01(\v2\x11.im.v1.MsgContentR\acontent\x12\x0e\n" +
-	"\x02ct\x18\t \x01(\x03R\x02ct\"\xf1\x01\n" +
+	"\x02ct\x18\t \x01(\x03R\x02ct\x12\x0e\n" +
+	"\x02ut\x18\n" +
+	" \x01(\x03R\x02ut\"\xe6\x01\n" +
 	"\n" +
 	"MsgPreview\x12\x15\n" +
-	"\x06msg_id\x18\x01 \x01(\x03R\x05msgId\x12\x19\n" +
-	"\bview_seq\x18\x02 \x01(\x03R\aviewSeq\x12\x1b\n" +
-	"\tsender_id\x18\x03 \x01(\x03R\bsenderId\x12,\n" +
-	"\x06origin\x18\x04 \x01(\x0e2\x14.im.common.v1.OriginR\x06origin\x12<\n" +
-	"\fcontent_type\x18\x05 \x01(\x0e2\x19.im.common.v1.ContentTypeR\vcontentType\x12\x18\n" +
-	"\apreview\x18\x06 \x01(\tR\apreview\x12\x0e\n" +
-	"\x02ct\x18\a \x01(\x03R\x02ct\"\xbc\x01\n" +
-	"\fConversation\x12\x1f\n" +
-	"\x04peer\x18\x01 \x01(\v2\v.im.v1.PeerR\x04peer\x12\x19\n" +
-	"\blast_seq\x18\x02 \x01(\x03R\alastSeq\x12\"\n" +
-	"\rlast_sync_seq\x18\x03 \x01(\x03R\vlastSyncSeq\x12,\n" +
-	"\blast_msg\x18\x04 \x01(\v2\x11.im.v1.MsgPreviewR\alastMsg\x12\x1e\n" +
-	"\vlast_msg_at\x18\x05 \x01(\x03R\tlastMsgAt\"k\n" +
-	"\x0fOpenConvRequest\x126\n" +
-	"\tBaseParam\x18\x01 \x01(\v2\x18.helloworld.v1.BaseParamR\tBaseParam\x12 \n" +
-	"\fpeer_user_id\x18\x02 \x01(\x03R\n" +
-	"peerUserId\"z\n" +
+	"\x06msg_id\x18\x01 \x01(\x03R\x05msgId\x12\x1b\n" +
+	"\tsender_id\x18\x02 \x01(\x03R\bsenderId\x12,\n" +
+	"\x06origin\x18\x03 \x01(\x0e2\x14.im.common.v1.OriginR\x06origin\x12<\n" +
+	"\fcontent_type\x18\x04 \x01(\x0e2\x19.im.common.v1.ContentTypeR\vcontentType\x12\x18\n" +
+	"\apreview\x18\x05 \x01(\tR\apreview\x12\x0e\n" +
+	"\x02ct\x18\x06 \x01(\x03R\x02ct\x12\x0e\n" +
+	"\x02ut\x18\a \x01(\x03R\x02ut\"\xca\x01\n" +
+	"\fConversation\x12\x17\n" +
+	"\aconv_id\x18\x01 \x01(\tR\x06convId\x12\x1f\n" +
+	"\x04peer\x18\x02 \x01(\v2\v.im.v1.PeerR\x04peer\x12\x19\n" +
+	"\blast_seq\x18\x03 \x01(\x03R\alastSeq\x12\x1e\n" +
+	"\vlast_msg_id\x18\x04 \x01(\x03R\tlastMsgId\x12\x17\n" +
+	"\asort_ut\x18\x05 \x01(\x03R\x06sortUt\x12,\n" +
+	"\blast_msg\x18\x06 \x01(\v2\x11.im.v1.MsgPreviewR\alastMsg\"|\n" +
 	"\x0fListConvRequest\x126\n" +
-	"\tBaseParam\x18\x01 \x01(\v2\x18.helloworld.v1.BaseParamR\tBaseParam\x12\x12\n" +
-	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x03 \x01(\x05R\bpageSize\"N\n" +
+	"\tBaseParam\x18\x01 \x01(\v2\x18.helloworld.v1.BaseParamR\tBaseParam\x12\x1b\n" +
+	"\tafter_seq\x18\x02 \x01(\x03R\bafterSeq\x12\x14\n" +
+	"\x05limit\x18\x03 \x01(\x05R\x05limit\"S\n" +
 	"\rListConvReply\x12'\n" +
-	"\x04list\x18\x01 \x03(\v2\x13.im.v1.ConversationR\x04list\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x03R\x05total\"\xbd\x01\n" +
+	"\x04list\x18\x01 \x03(\v2\x13.im.v1.ConversationR\x04list\x12\x19\n" +
+	"\bhas_more\x18\x02 \x01(\bR\ahasMore\"\x9d\x01\n" +
 	"\x0eHistoryRequest\x126\n" +
 	"\tBaseParam\x18\x01 \x01(\v2\x18.helloworld.v1.BaseParamR\tBaseParam\x12 \n" +
 	"\fpeer_user_id\x18\x02 \x01(\x03R\n" +
-	"peerUserId\x12\x1d\n" +
-	"\n" +
-	"cursor_seq\x18\x03 \x01(\x03R\tcursorSeq\x12\x1c\n" +
-	"\tdirection\x18\x04 \x01(\x05R\tdirection\x12\x14\n" +
-	"\x05limit\x18\x05 \x01(\x05R\x05limit\"\x88\x01\n" +
+	"peerUserId\x12\x1b\n" +
+	"\tafter_seq\x18\x03 \x01(\x03R\bafterSeq\x12\x14\n" +
+	"\x05limit\x18\x04 \x01(\x05R\x05limit\"d\n" +
 	"\fHistoryReply\x12\x1e\n" +
 	"\x04list\x18\x01 \x03(\v2\n" +
 	".im.v1.MsgR\x04list\x12\x19\n" +
-	"\blast_seq\x18\x02 \x01(\x03R\alastSeq\x12\"\n" +
-	"\rlast_sync_seq\x18\x03 \x01(\x03R\vlastSyncSeq\x12\x19\n" +
-	"\bhas_more\x18\x04 \x01(\bR\ahasMore\"\xdd\x01\n" +
+	"\blast_seq\x18\x02 \x01(\x03R\alastSeq\x12\x19\n" +
+	"\bhas_more\x18\x03 \x01(\bR\ahasMore\"\xdd\x01\n" +
 	"\vSendRequest\x126\n" +
 	"\tBaseParam\x18\x01 \x01(\v2\x18.helloworld.v1.BaseParamR\tBaseParam\x12 \n" +
 	"\fpeer_user_id\x18\x02 \x01(\x03R\n" +
 	"peerUserId\x12\"\n" +
 	"\rclient_msg_id\x18\x03 \x01(\tR\vclientMsgId\x12<\n" +
 	"\fcontent_type\x18\x04 \x01(\x0e2\x19.im.common.v1.ContentTypeR\vcontentType\x12\x12\n" +
-	"\x04text\x18\x05 \x01(\tR\x04text\"\xc9\x02\n" +
+	"\x04text\x18\x05 \x01(\tR\x04text\"R\n" +
+	"\tSendReply\x12\x1c\n" +
+	"\x03msg\x18\x01 \x01(\v2\n" +
+	".im.v1.MsgR\x03msg\x12'\n" +
+	"\x04conv\x18\x02 \x01(\v2\x13.im.v1.ConversationR\x04conv\"\xc9\x02\n" +
 	"\x13InternalSendRequest\x12\x1b\n" +
 	"\tsender_id\x18\x01 \x01(\x03R\bsenderId\x12 \n" +
 	"\fpeer_user_id\x18\x02 \x01(\x03R\n" +
@@ -1119,18 +1127,17 @@ const file_im_im_proto_rawDesc = "" +
 	"\fcontent_type\x18\x02 \x01(\x0e2\x19.im.common.v1.ContentTypeR\vcontentType\x12\x12\n" +
 	"\x04text\x18\x03 \x01(\tR\x04text\x12%\n" +
 	"\x0esender_preview\x18\x04 \x01(\bR\rsenderPreview\x12!\n" +
-	"\fpeer_preview\x18\x05 \x01(\bR\vpeerPreview\"\x88\x01\n" +
+	"\fpeer_preview\x18\x05 \x01(\bR\vpeerPreview\"}\n" +
 	"\x11InternalSendReply\x12\x15\n" +
-	"\x06msg_id\x18\x01 \x01(\x03R\x05msgId\x12\x10\n" +
-	"\x03seq\x18\x02 \x01(\x03R\x03seq\x12&\n" +
-	"\x0fsender_view_seq\x18\x03 \x01(\x03R\rsenderViewSeq\x12\"\n" +
-	"\rpeer_view_seq\x18\x04 \x01(\x03R\vpeerViewSeq2\xdb\x02\n" +
-	"\x02Im\x12X\n" +
-	"\bOpenConv\x12\x16.im.v1.OpenConvRequest\x1a\x13.im.v1.Conversation\"\x1f\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/im/api/v1/conv/open\x12Y\n" +
+	"\x06msg_id\x18\x01 \x01(\x03R\x05msgId\x12\x17\n" +
+	"\aconv_id\x18\x02 \x01(\tR\x06convId\x12\x1d\n" +
+	"\n" +
+	"sender_seq\x18\x03 \x01(\x03R\tsenderSeq\x12\x19\n" +
+	"\bpeer_seq\x18\x04 \x01(\x03R\apeerSeq2\x87\x02\n" +
+	"\x02Im\x12Y\n" +
 	"\bListConv\x12\x16.im.v1.ListConvRequest\x1a\x14.im.v1.ListConvReply\"\x1f\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/im/api/v1/conv/list\x12X\n" +
-	"\aHistory\x12\x15.im.v1.HistoryRequest\x1a\x13.im.v1.HistoryReply\"!\x82\xd3\xe4\x93\x02\x1b:\x01*\"\x16/im/api/v1/msg/history\x12F\n" +
-	"\x04Send\x12\x12.im.v1.SendRequest\x1a\n" +
-	".im.v1.Msg\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/im/api/v1/msg/send2\xd8\x01\n" +
+	"\aHistory\x12\x15.im.v1.HistoryRequest\x1a\x13.im.v1.HistoryReply\"!\x82\xd3\xe4\x93\x02\x1b:\x01*\"\x16/im/api/v1/msg/history\x12L\n" +
+	"\x04Send\x12\x12.im.v1.SendRequest\x1a\x10.im.v1.SendReply\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/im/api/v1/msg/send2\xd8\x01\n" +
 	"\n" +
 	"ImInternal\x12a\n" +
 	"\x04Send\x12\x1a.im.v1.InternalSendRequest\x1a\x18.im.v1.InternalSendReply\"#\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/im/internal/v1/msg/send\x12g\n" +
@@ -1155,12 +1162,12 @@ var file_im_im_proto_goTypes = []any{
 	(*Msg)(nil),                   // 2: im.v1.Msg
 	(*MsgPreview)(nil),            // 3: im.v1.MsgPreview
 	(*Conversation)(nil),          // 4: im.v1.Conversation
-	(*OpenConvRequest)(nil),       // 5: im.v1.OpenConvRequest
-	(*ListConvRequest)(nil),       // 6: im.v1.ListConvRequest
-	(*ListConvReply)(nil),         // 7: im.v1.ListConvReply
-	(*HistoryRequest)(nil),        // 8: im.v1.HistoryRequest
-	(*HistoryReply)(nil),          // 9: im.v1.HistoryReply
-	(*SendRequest)(nil),           // 10: im.v1.SendRequest
+	(*ListConvRequest)(nil),       // 5: im.v1.ListConvRequest
+	(*ListConvReply)(nil),         // 6: im.v1.ListConvReply
+	(*HistoryRequest)(nil),        // 7: im.v1.HistoryRequest
+	(*HistoryReply)(nil),          // 8: im.v1.HistoryReply
+	(*SendRequest)(nil),           // 9: im.v1.SendRequest
+	(*SendReply)(nil),             // 10: im.v1.SendReply
 	(*InternalSendRequest)(nil),   // 11: im.v1.InternalSendRequest
 	(*InternalUpdateRequest)(nil), // 12: im.v1.InternalUpdateRequest
 	(*InternalSendReply)(nil),     // 13: im.v1.InternalSendReply
@@ -1177,33 +1184,32 @@ var file_im_im_proto_depIdxs = []int32{
 	15, // 4: im.v1.MsgPreview.content_type:type_name -> im.common.v1.ContentType
 	0,  // 5: im.v1.Conversation.peer:type_name -> im.v1.Peer
 	3,  // 6: im.v1.Conversation.last_msg:type_name -> im.v1.MsgPreview
-	16, // 7: im.v1.OpenConvRequest.BaseParam:type_name -> helloworld.v1.BaseParam
-	16, // 8: im.v1.ListConvRequest.BaseParam:type_name -> helloworld.v1.BaseParam
-	4,  // 9: im.v1.ListConvReply.list:type_name -> im.v1.Conversation
-	16, // 10: im.v1.HistoryRequest.BaseParam:type_name -> helloworld.v1.BaseParam
-	2,  // 11: im.v1.HistoryReply.list:type_name -> im.v1.Msg
-	16, // 12: im.v1.SendRequest.BaseParam:type_name -> helloworld.v1.BaseParam
-	15, // 13: im.v1.SendRequest.content_type:type_name -> im.common.v1.ContentType
-	17, // 14: im.v1.InternalSendRequest.visibility:type_name -> im.common.v1.Visibility
-	15, // 15: im.v1.InternalSendRequest.content_type:type_name -> im.common.v1.ContentType
-	15, // 16: im.v1.InternalUpdateRequest.content_type:type_name -> im.common.v1.ContentType
-	5,  // 17: im.v1.Im.OpenConv:input_type -> im.v1.OpenConvRequest
-	6,  // 18: im.v1.Im.ListConv:input_type -> im.v1.ListConvRequest
-	8,  // 19: im.v1.Im.History:input_type -> im.v1.HistoryRequest
-	10, // 20: im.v1.Im.Send:input_type -> im.v1.SendRequest
+	16, // 7: im.v1.ListConvRequest.BaseParam:type_name -> helloworld.v1.BaseParam
+	4,  // 8: im.v1.ListConvReply.list:type_name -> im.v1.Conversation
+	16, // 9: im.v1.HistoryRequest.BaseParam:type_name -> helloworld.v1.BaseParam
+	2,  // 10: im.v1.HistoryReply.list:type_name -> im.v1.Msg
+	16, // 11: im.v1.SendRequest.BaseParam:type_name -> helloworld.v1.BaseParam
+	15, // 12: im.v1.SendRequest.content_type:type_name -> im.common.v1.ContentType
+	2,  // 13: im.v1.SendReply.msg:type_name -> im.v1.Msg
+	4,  // 14: im.v1.SendReply.conv:type_name -> im.v1.Conversation
+	17, // 15: im.v1.InternalSendRequest.visibility:type_name -> im.common.v1.Visibility
+	15, // 16: im.v1.InternalSendRequest.content_type:type_name -> im.common.v1.ContentType
+	15, // 17: im.v1.InternalUpdateRequest.content_type:type_name -> im.common.v1.ContentType
+	5,  // 18: im.v1.Im.ListConv:input_type -> im.v1.ListConvRequest
+	7,  // 19: im.v1.Im.History:input_type -> im.v1.HistoryRequest
+	9,  // 20: im.v1.Im.Send:input_type -> im.v1.SendRequest
 	11, // 21: im.v1.ImInternal.Send:input_type -> im.v1.InternalSendRequest
 	12, // 22: im.v1.ImInternal.Update:input_type -> im.v1.InternalUpdateRequest
-	4,  // 23: im.v1.Im.OpenConv:output_type -> im.v1.Conversation
-	7,  // 24: im.v1.Im.ListConv:output_type -> im.v1.ListConvReply
-	9,  // 25: im.v1.Im.History:output_type -> im.v1.HistoryReply
-	2,  // 26: im.v1.Im.Send:output_type -> im.v1.Msg
-	13, // 27: im.v1.ImInternal.Send:output_type -> im.v1.InternalSendReply
-	13, // 28: im.v1.ImInternal.Update:output_type -> im.v1.InternalSendReply
-	23, // [23:29] is the sub-list for method output_type
-	17, // [17:23] is the sub-list for method input_type
-	17, // [17:17] is the sub-list for extension type_name
-	17, // [17:17] is the sub-list for extension extendee
-	0,  // [0:17] is the sub-list for field type_name
+	6,  // 23: im.v1.Im.ListConv:output_type -> im.v1.ListConvReply
+	8,  // 24: im.v1.Im.History:output_type -> im.v1.HistoryReply
+	10, // 25: im.v1.Im.Send:output_type -> im.v1.SendReply
+	13, // 26: im.v1.ImInternal.Send:output_type -> im.v1.InternalSendReply
+	13, // 27: im.v1.ImInternal.Update:output_type -> im.v1.InternalSendReply
+	23, // [23:28] is the sub-list for method output_type
+	18, // [18:23] is the sub-list for method input_type
+	18, // [18:18] is the sub-list for extension type_name
+	18, // [18:18] is the sub-list for extension extendee
+	0,  // [0:18] is the sub-list for field type_name
 }
 
 func init() { file_im_im_proto_init() }

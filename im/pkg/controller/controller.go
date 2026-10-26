@@ -29,15 +29,9 @@ func NewUserController() *UserController {
 	return &UserController{}
 }
 
-func (c *UserController) OpenConv(ctx context.Context, req *api.OpenConvRequest) (*api.Conversation, error) {
-	a := auth.MustFromContext(ctx)
-	logger.Errorf("OpenConv not implemented user=%d peer=%d", a.UserID, req.GetPeerUserId())
-	return nil, biz.NotImplemented()
-}
-
 func (c *UserController) ListConv(ctx context.Context, req *api.ListConvRequest) (*api.ListConvReply, error) {
 	a := auth.MustFromContext(ctx)
-	logger.Errorf("ListConv not implemented user=%d page=%d", a.UserID, req.GetPage())
+	logger.Errorf("ListConv not implemented user=%d afterSeq=%d", a.UserID, req.GetAfterSeq())
 	return nil, biz.NotImplemented()
 }
 
@@ -47,7 +41,7 @@ func (c *UserController) History(ctx context.Context, req *api.HistoryRequest) (
 	return nil, biz.NotImplemented()
 }
 
-func (c *UserController) Send(ctx context.Context, req *api.SendRequest) (*api.Msg, error) {
+func (c *UserController) Send(ctx context.Context, req *api.SendRequest) (*api.SendReply, error) {
 	a := auth.MustFromContext(ctx)
 	logger.Errorf("Send not implemented user=%d peer=%d", a.UserID, req.GetPeerUserId())
 	return nil, biz.NotImplemented()

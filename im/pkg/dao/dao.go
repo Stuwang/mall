@@ -17,10 +17,11 @@ func defaultDB(db *gorm.DB) *gorm.DB {
 
 func AutoMigrate() error {
 	db := defaultDB(nil)
-	if err := db.AutoMigrate(&model.Member{}, &model.Message{}); err != nil {
+	if err := db.AutoMigrate(&model.UserSeq{}, &model.Member{}, &model.Message{}); err != nil {
 		return codeerror.OrSystem(err, "AutoMigrate im tables")
 	}
-	// 视图序号 0 表示不可见，多行都可以是 0，所以唯一索引排除 0。
+	// 看不见的一侧序号是 0，多行都可以是 0，所以唯一索引排除 0。
+	// 更新时这一侧序号会改成更大的新值，旧值不再占用。
 	if err := db.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS uk_msg_seq_low ON im_message(user_low, user_high, seq_low) WHERE seq_low > 0`).Error; err != nil {
 		return codeerror.OrSystem(err, "AutoMigrate uk_msg_seq_low")
 	}

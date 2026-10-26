@@ -10,13 +10,6 @@ option go_package = "mall/im/api/im;im";
 
 // 用户侧一对一聊天。身份从鉴权取，不读 BaseParam。
 service Im {
-  rpc OpenConv (OpenConvRequest) returns (Conversation) {
-    option (google.api.http) = {
-      post: "/im/api/v1/conv/open"
-      body: "*"
-    };
-  }
-
   rpc ListConv (ListConvRequest) returns (ListConvReply) {
     option (google.api.http) = {
       post: "/im/api/v1/conv/list"
@@ -31,7 +24,7 @@ service Im {
     };
   }
 
-  rpc Send (SendRequest) returns (Msg) {
+  rpc Send (SendRequest) returns (SendReply) {
     option (google.api.http) = {
       post: "/im/api/v1/msg/send"
       body: "*"
@@ -48,7 +41,7 @@ service ImInternal {
     };
   }
 
-  // 更新已有消息。同步序号 seq 会改成新值，视图序号不变。
+  // 更新已有消息。看得到这条的每一侧都会拿到新的同步序号。
   rpc Update (InternalUpdateRequest) returns (InternalSendReply) {
     option (google.api.http) = {
       post: "/im/internal/v1/msg/update"
@@ -66,68 +59,70 @@ message MsgContent {
   string text = 1;
 }
 
-// 下行消息。seq 是同步序号，view_seq 是当前用户的视图序号。
+// 下行消息。seq 是当前用户这一侧的同步序号，更新后变成更大的新值。
+// 气泡先后看 ct、msg_id。
 message Msg {
   int64 msg_id = 1;
-  int64 seq = 2;
-  int64 view_seq = 3;
+  string conv_id = 2;
+  int64 seq = 3;
   int64 sender_id = 4;
   im.common.v1.Origin origin = 5;
   string client_msg_id = 6;
   im.common.v1.ContentType content_type = 7;
   MsgContent content = 8;
   int64 ct = 9;
+  int64 ut = 10;
 }
 
 message MsgPreview {
   int64 msg_id = 1;
-  int64 view_seq = 2;
-  int64 sender_id = 3;
-  im.common.v1.Origin origin = 4;
-  im.common.v1.ContentType content_type = 5;
-  string preview = 6;
-  int64 ct = 7;
+  int64 sender_id = 2;
+  im.common.v1.Origin origin = 3;
+  im.common.v1.ContentType content_type = 4;
+  string preview = 5;
+  int64 ct = 6;
+  int64 ut = 7;
 }
 
+// 当前用户自己的成员行。last_seq、最新消息、排序时间双方各自维护。
 message Conversation {
-  Peer peer = 1;
-  int64 last_seq = 2;
-  int64 last_sync_seq = 3;
-  MsgPreview last_msg = 4;
-  int64 last_msg_at = 5;
-}
-
-message OpenConvRequest {
-  helloworld.v1.BaseParam BaseParam = 1;
-  int64 peer_user_id = 2;
+  string conv_id = 1;
+  Peer peer = 2;
+  // 这一侧已分配过的最大同步序号，是列表和历史要追上的水位。
+  int64 last_seq = 3;
+  int64 last_msg_id = 4;
+  // 当前最新消息的 ut。列表展示按它倒序。
+  int64 sort_ut = 5;
+  MsgPreview last_msg = 6;
 }
 
 message ListConvRequest {
   helloworld.v1.BaseParam BaseParam = 1;
-  int32 page = 2;
-  int32 page_size = 3;
+  // 本地已按升序应用过的列表游标。返回 last_seq 更大的会话。
+  int64 after_seq = 2;
+  // 0 表示本次全部返回。正数时按 last_seq 升序截断。
+  int32 limit = 3;
 }
 
 message ListConvReply {
   repeated Conversation list = 1;
-  int64 total = 2;
+  bool has_more = 2;
 }
 
 message HistoryRequest {
   helloworld.v1.BaseParam BaseParam = 1;
   int64 peer_user_id = 2;
-  // 视图序号游标。direction=1 时 0 表示从最新往前；direction=2 时表示取 view_seq 更大的消息。
-  int64 cursor_seq = 3;
-  // 1 向更早，2 向更新
-  int32 direction = 4;
-  int32 limit = 5;
+  // 本场已确认的历史游标。返回这一侧 seq 更大的消息，按 seq 升序。
+  int64 after_seq = 3;
+  // 0 用默认 50，最大 100。
+  int32 limit = 4;
 }
 
 message HistoryReply {
   repeated Msg list = 1;
+  // 这一侧成员行上的 last_seq。本页没满时，历史游标拨到这里。
   int64 last_seq = 2;
-  int64 last_sync_seq = 3;
-  bool has_more = 4;
+  bool has_more = 3;
 }
 
 message SendRequest {
@@ -138,14 +133,20 @@ message SendRequest {
   string text = 5;
 }
 
+message SendReply {
+  Msg msg = 1;
+  // 发送者这一侧的会话快照。其中 last_seq 是服务端水位，历史游标以 history 响应为准。
+  Conversation conv = 2;
+}
+
 message InternalSendRequest {
   int64 sender_id = 1;
   int64 peer_user_id = 2;
   // 1 仅对方可见，2 仅发送者可见，3 双方可见
   im.common.v1.Visibility visibility = 3;
-  // 是否更新名义发送者的会话列表预览
+  // 是否把这条写成名义发送者的列表最新消息
   bool sender_preview = 4;
-  // 是否更新对端的会话列表预览
+  // 是否把这条写成对端的列表最新消息
   bool peer_preview = 5;
   string request_id = 6;
   im.common.v1.ContentType content_type = 7;
@@ -156,16 +157,16 @@ message InternalUpdateRequest {
   int64 msg_id = 1;
   im.common.v1.ContentType content_type = 2;
   string text = 3;
+  // 为真且这条已经是该侧最新消息时，才刷新该侧预览和排序时间
   bool sender_preview = 4;
   bool peer_preview = 5;
 }
 
 message InternalSendReply {
   int64 msg_id = 1;
-  // 同步序号。更新消息后这是新值。
-  int64 seq = 2;
-  // 名义发送者的视图序号。不可见时为 0。更新消息时不变。
-  int64 sender_view_seq = 3;
-  // 对端的视图序号。不可见时为 0。
-  int64 peer_view_seq = 4;
+  string conv_id = 2;
+  // 名义发送者这一侧的同步序号。看不见时为 0。更新后是新值。
+  int64 sender_seq = 3;
+  // 对端这一侧的同步序号。看不见时为 0。
+  int64 peer_seq = 4;
 }

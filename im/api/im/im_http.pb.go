@@ -21,44 +21,19 @@ const _ = http.SupportPackageIsVersion1
 
 const OperationImHistory = "/im.v1.Im/History"
 const OperationImListConv = "/im.v1.Im/ListConv"
-const OperationImOpenConv = "/im.v1.Im/OpenConv"
 const OperationImSend = "/im.v1.Im/Send"
 
 type ImHTTPServer interface {
 	History(context.Context, *HistoryRequest) (*HistoryReply, error)
 	ListConv(context.Context, *ListConvRequest) (*ListConvReply, error)
-	OpenConv(context.Context, *OpenConvRequest) (*Conversation, error)
-	Send(context.Context, *SendRequest) (*Msg, error)
+	Send(context.Context, *SendRequest) (*SendReply, error)
 }
 
 func RegisterImHTTPServer(s *http.Server, srv ImHTTPServer) {
 	r := s.Route("/")
-	r.POST("/im/api/v1/conv/open", _Im_OpenConv0_HTTP_Handler(srv))
 	r.POST("/im/api/v1/conv/list", _Im_ListConv0_HTTP_Handler(srv))
 	r.POST("/im/api/v1/msg/history", _Im_History0_HTTP_Handler(srv))
 	r.POST("/im/api/v1/msg/send", _Im_Send0_HTTP_Handler(srv))
-}
-
-func _Im_OpenConv0_HTTP_Handler(srv ImHTTPServer) func(ctx http.Context) error {
-	return func(ctx http.Context) error {
-		var in OpenConvRequest
-		if err := ctx.Bind(&in); err != nil {
-			return err
-		}
-		if err := ctx.BindQuery(&in); err != nil {
-			return err
-		}
-		http.SetOperation(ctx, OperationImOpenConv)
-		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.OpenConv(ctx, req.(*OpenConvRequest))
-		})
-		out, err := h(ctx, &in)
-		if err != nil {
-			return err
-		}
-		reply := out.(*Conversation)
-		return ctx.Result(200, reply)
-	}
 }
 
 func _Im_ListConv0_HTTP_Handler(srv ImHTTPServer) func(ctx http.Context) error {
@@ -122,7 +97,7 @@ func _Im_Send0_HTTP_Handler(srv ImHTTPServer) func(ctx http.Context) error {
 		if err != nil {
 			return err
 		}
-		reply := out.(*Msg)
+		reply := out.(*SendReply)
 		return ctx.Result(200, reply)
 	}
 }
@@ -130,8 +105,7 @@ func _Im_Send0_HTTP_Handler(srv ImHTTPServer) func(ctx http.Context) error {
 type ImHTTPClient interface {
 	History(ctx context.Context, req *HistoryRequest, opts ...http.CallOption) (rsp *HistoryReply, err error)
 	ListConv(ctx context.Context, req *ListConvRequest, opts ...http.CallOption) (rsp *ListConvReply, err error)
-	OpenConv(ctx context.Context, req *OpenConvRequest, opts ...http.CallOption) (rsp *Conversation, err error)
-	Send(ctx context.Context, req *SendRequest, opts ...http.CallOption) (rsp *Msg, err error)
+	Send(ctx context.Context, req *SendRequest, opts ...http.CallOption) (rsp *SendReply, err error)
 }
 
 type ImHTTPClientImpl struct {
@@ -168,21 +142,8 @@ func (c *ImHTTPClientImpl) ListConv(ctx context.Context, in *ListConvRequest, op
 	return &out, nil
 }
 
-func (c *ImHTTPClientImpl) OpenConv(ctx context.Context, in *OpenConvRequest, opts ...http.CallOption) (*Conversation, error) {
-	var out Conversation
-	pattern := "/im/api/v1/conv/open"
-	path := binding.EncodeURL(pattern, in, false)
-	opts = append(opts, http.Operation(OperationImOpenConv))
-	opts = append(opts, http.PathTemplate(pattern))
-	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return &out, nil
-}
-
-func (c *ImHTTPClientImpl) Send(ctx context.Context, in *SendRequest, opts ...http.CallOption) (*Msg, error) {
-	var out Msg
+func (c *ImHTTPClientImpl) Send(ctx context.Context, in *SendRequest, opts ...http.CallOption) (*SendReply, error) {
+	var out SendReply
 	pattern := "/im/api/v1/msg/send"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationImSend))
@@ -199,7 +160,7 @@ const OperationImInternalUpdate = "/im.v1.ImInternal/Update"
 
 type ImInternalHTTPServer interface {
 	Send(context.Context, *InternalSendRequest) (*InternalSendReply, error)
-	// Update 更新已有消息。同步序号 seq 会改成新值，视图序号不变。
+	// Update 更新已有消息。看得到这条的每一侧都会拿到新的同步序号。
 	Update(context.Context, *InternalUpdateRequest) (*InternalSendReply, error)
 }
 
@@ -255,7 +216,7 @@ func _ImInternal_Update0_HTTP_Handler(srv ImInternalHTTPServer) func(ctx http.Co
 
 type ImInternalHTTPClient interface {
 	Send(ctx context.Context, req *InternalSendRequest, opts ...http.CallOption) (rsp *InternalSendReply, err error)
-	// Update 更新已有消息。同步序号 seq 会改成新值，视图序号不变。
+	// Update 更新已有消息。看得到这条的每一侧都会拿到新的同步序号。
 	Update(ctx context.Context, req *InternalUpdateRequest, opts ...http.CallOption) (rsp *InternalSendReply, err error)
 }
 
@@ -280,7 +241,7 @@ func (c *ImInternalHTTPClientImpl) Send(ctx context.Context, in *InternalSendReq
 	return &out, nil
 }
 
-// Update 更新已有消息。同步序号 seq 会改成新值，视图序号不变。
+// Update 更新已有消息。看得到这条的每一侧都会拿到新的同步序号。
 func (c *ImInternalHTTPClientImpl) Update(ctx context.Context, in *InternalUpdateRequest, opts ...http.CallOption) (*InternalSendReply, error) {
 	var out InternalSendReply
 	pattern := "/im/internal/v1/msg/update"

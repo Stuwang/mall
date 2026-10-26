@@ -19,7 +19,6 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Im_OpenConv_FullMethodName = "/im.v1.Im/OpenConv"
 	Im_ListConv_FullMethodName = "/im.v1.Im/ListConv"
 	Im_History_FullMethodName  = "/im.v1.Im/History"
 	Im_Send_FullMethodName     = "/im.v1.Im/Send"
@@ -31,10 +30,9 @@ const (
 //
 // 用户侧一对一聊天。身份从鉴权取，不读 BaseParam。
 type ImClient interface {
-	OpenConv(ctx context.Context, in *OpenConvRequest, opts ...grpc.CallOption) (*Conversation, error)
 	ListConv(ctx context.Context, in *ListConvRequest, opts ...grpc.CallOption) (*ListConvReply, error)
 	History(ctx context.Context, in *HistoryRequest, opts ...grpc.CallOption) (*HistoryReply, error)
-	Send(ctx context.Context, in *SendRequest, opts ...grpc.CallOption) (*Msg, error)
+	Send(ctx context.Context, in *SendRequest, opts ...grpc.CallOption) (*SendReply, error)
 }
 
 type imClient struct {
@@ -43,16 +41,6 @@ type imClient struct {
 
 func NewImClient(cc grpc.ClientConnInterface) ImClient {
 	return &imClient{cc}
-}
-
-func (c *imClient) OpenConv(ctx context.Context, in *OpenConvRequest, opts ...grpc.CallOption) (*Conversation, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Conversation)
-	err := c.cc.Invoke(ctx, Im_OpenConv_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *imClient) ListConv(ctx context.Context, in *ListConvRequest, opts ...grpc.CallOption) (*ListConvReply, error) {
@@ -75,9 +63,9 @@ func (c *imClient) History(ctx context.Context, in *HistoryRequest, opts ...grpc
 	return out, nil
 }
 
-func (c *imClient) Send(ctx context.Context, in *SendRequest, opts ...grpc.CallOption) (*Msg, error) {
+func (c *imClient) Send(ctx context.Context, in *SendRequest, opts ...grpc.CallOption) (*SendReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Msg)
+	out := new(SendReply)
 	err := c.cc.Invoke(ctx, Im_Send_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -91,10 +79,9 @@ func (c *imClient) Send(ctx context.Context, in *SendRequest, opts ...grpc.CallO
 //
 // 用户侧一对一聊天。身份从鉴权取，不读 BaseParam。
 type ImServer interface {
-	OpenConv(context.Context, *OpenConvRequest) (*Conversation, error)
 	ListConv(context.Context, *ListConvRequest) (*ListConvReply, error)
 	History(context.Context, *HistoryRequest) (*HistoryReply, error)
-	Send(context.Context, *SendRequest) (*Msg, error)
+	Send(context.Context, *SendRequest) (*SendReply, error)
 }
 
 // UnimplementedImServer should be embedded to have
@@ -104,16 +91,13 @@ type ImServer interface {
 // pointer dereference when methods are called.
 type UnimplementedImServer struct{}
 
-func (UnimplementedImServer) OpenConv(context.Context, *OpenConvRequest) (*Conversation, error) {
-	return nil, status.Error(codes.Unimplemented, "method OpenConv not implemented")
-}
 func (UnimplementedImServer) ListConv(context.Context, *ListConvRequest) (*ListConvReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListConv not implemented")
 }
 func (UnimplementedImServer) History(context.Context, *HistoryRequest) (*HistoryReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method History not implemented")
 }
-func (UnimplementedImServer) Send(context.Context, *SendRequest) (*Msg, error) {
+func (UnimplementedImServer) Send(context.Context, *SendRequest) (*SendReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method Send not implemented")
 }
 func (UnimplementedImServer) testEmbeddedByValue() {}
@@ -134,24 +118,6 @@ func RegisterImServer(s grpc.ServiceRegistrar, srv ImServer) {
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&Im_ServiceDesc, srv)
-}
-
-func _Im_OpenConv_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(OpenConvRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ImServer).OpenConv(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Im_OpenConv_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ImServer).OpenConv(ctx, req.(*OpenConvRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _Im_ListConv_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -216,10 +182,6 @@ var Im_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*ImServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "OpenConv",
-			Handler:    _Im_OpenConv_Handler,
-		},
-		{
 			MethodName: "ListConv",
 			Handler:    _Im_ListConv_Handler,
 		},
@@ -248,7 +210,7 @@ const (
 // 内部代发。不使用用户 JWT，校验 X-Im-System-Token。
 type ImInternalClient interface {
 	Send(ctx context.Context, in *InternalSendRequest, opts ...grpc.CallOption) (*InternalSendReply, error)
-	// 更新已有消息。同步序号 seq 会改成新值，视图序号不变。
+	// 更新已有消息。看得到这条的每一侧都会拿到新的同步序号。
 	Update(ctx context.Context, in *InternalUpdateRequest, opts ...grpc.CallOption) (*InternalSendReply, error)
 }
 
@@ -287,7 +249,7 @@ func (c *imInternalClient) Update(ctx context.Context, in *InternalUpdateRequest
 // 内部代发。不使用用户 JWT，校验 X-Im-System-Token。
 type ImInternalServer interface {
 	Send(context.Context, *InternalSendRequest) (*InternalSendReply, error)
-	// 更新已有消息。同步序号 seq 会改成新值，视图序号不变。
+	// 更新已有消息。看得到这条的每一侧都会拿到新的同步序号。
 	Update(context.Context, *InternalUpdateRequest) (*InternalSendReply, error)
 }
 

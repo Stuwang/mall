@@ -2,19 +2,30 @@ package model
 
 import apicommon "mall/im/api/common"
 
-// Member 一个用户在一场私聊中的视图。不建 im_conversation。
+// UserSeq 一个用户的同步序号计数。该用户所有会话共用，只对看得到的变更加一。
+type UserSeq struct {
+	UserID int64 `gorm:"column:user_id;primaryKey"`
+	Seq    int64 `gorm:"column:seq"`
+	Ut     int64 `gorm:"column:ut"`
+}
+
+func (UserSeq) TableName() string {
+	return "im_user_seq"
+}
+
+// Member 一个用户在一场私聊中的视图。没有可见消息时不建行。
 type Member struct {
 	ID           int64  `gorm:"column:id;primaryKey;autoIncrement"`
-	UserID       int64  `gorm:"column:user_id;uniqueIndex:uk_user_peer;index:idx_user_last_msg,priority:1"`
+	UserID       int64  `gorm:"column:user_id;uniqueIndex:uk_user_peer;index:idx_user_seq,priority:1;index:idx_user_sort,priority:1"`
 	PeerUserID   int64  `gorm:"column:peer_user_id;uniqueIndex:uk_user_peer"`
 	UserLow      int64  `gorm:"column:user_low"`
 	UserHigh     int64  `gorm:"column:user_high"`
-	LastSeq      int64  `gorm:"column:last_seq"`
-	LastSyncSeq  int64  `gorm:"column:last_sync_seq"`
+	ConvID       string `gorm:"column:conv_id;size:64"`
+	LastSeq      int64  `gorm:"column:last_seq;index:idx_user_seq,priority:2"`
 	LastMsgID    int64  `gorm:"column:last_msg_id"`
 	LastSenderID int64  `gorm:"column:last_sender_id"`
 	LastPreview  string `gorm:"column:last_preview"`
-	LastMsgAt    int64  `gorm:"column:last_msg_at;index:idx_user_last_msg,priority:2"`
+	SortUt       int64  `gorm:"column:sort_ut;index:idx_user_sort,priority:2"`
 	Ct           int64  `gorm:"column:ct"`
 	Ut           int64  `gorm:"column:ut"`
 }
@@ -23,16 +34,16 @@ func (Member) TableName() string {
 	return "im_conversation_member"
 }
 
-// Message 一条消息。Seq 是同步序号，更新正文时改成更大的新值。
-// SeqLow、SeqHigh 是两侧视图序号，创建时写入，之后不改。0 表示该侧不可见。
+// Message 一条消息。SeqLow、SeqHigh 是两侧各自的同步序号。
+// 看不见则为 0。更新正文时，看得到的那一侧改成更大的新序号。
 type Message struct {
 	ID             int64                 `gorm:"column:id;primaryKey;autoIncrement"`
-	UserLow        int64                 `gorm:"column:user_low;uniqueIndex:uk_pair_seq,priority:1"`
-	UserHigh       int64                 `gorm:"column:user_high;uniqueIndex:uk_pair_seq,priority:2"`
+	UserLow        int64                 `gorm:"column:user_low"`
+	UserHigh       int64                 `gorm:"column:user_high"`
+	ConvID         string                `gorm:"column:conv_id;size:64"`
 	SenderID       int64                 `gorm:"column:sender_id;uniqueIndex:uk_idem,priority:2"`
 	Origin         apicommon.Origin      `gorm:"column:origin;uniqueIndex:uk_idem,priority:1"`
 	Visibility     apicommon.Visibility  `gorm:"column:visibility"`
-	Seq            int64                 `gorm:"column:seq;uniqueIndex:uk_pair_seq,priority:3"`
 	SeqLow         int64                 `gorm:"column:seq_low"`
 	SeqHigh        int64                 `gorm:"column:seq_high"`
 	IdempotencyKey string                `gorm:"column:idempotency_key;size:64;uniqueIndex:uk_idem,priority:3"`

@@ -13,6 +13,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    UserAvatar: typeof import('./src/components/UserAvatar.vue')['default']
     VanBadge: typeof import('vant/es')['Badge']
     VanButton: typeof import('vant/es')['Button']
     VanCell: typeof import('vant/es')['Cell']

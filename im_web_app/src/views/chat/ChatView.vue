@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import UserAvatar from '@/components/UserAvatar.vue'
 import { useAuthStore } from '@/stores/authStore'
 import { useImLive, useImStore } from '@/stores/imStore'
 import { formatTime } from '@/utils/conv'
@@ -17,7 +18,7 @@ const draft = ref('')
 const sending = ref(false)
 const listRef = ref<HTMLElement | null>(null)
 
-const title = computed(() => {
+const peerNickname = computed(() => {
   const conv = imStore.convs.find((c) => c.peer?.user_id === peerId.value)
   if (conv?.peer?.nickname) {
     return conv.peer.nickname
@@ -25,6 +26,12 @@ const title = computed(() => {
   const online = imStore.online.find((u) => u.user_id === peerId.value)
   return online?.nickname || `用户${peerId.value}`
 })
+
+const selfNickname = computed(
+  () => authStore.user?.nickname || authStore.user?.username || '我',
+)
+
+const selfId = computed(() => authStore.user?.id ?? 0)
 
 const messages = computed(() => imStore.messagesOf(peerId.value))
 
@@ -64,7 +71,7 @@ async function onSend(): Promise<void> {
   }
   sending.value = true
   try {
-    await imStore.sendText(peerId.value, text, title.value)
+    await imStore.sendText(peerId.value, text, peerNickname.value)
     draft.value = ''
     await scrollBottom()
   } catch (error) {
@@ -75,13 +82,20 @@ async function onSend(): Promise<void> {
 }
 
 function isMine(senderId: number): boolean {
-  return senderId === authStore.user?.id
+  return senderId === selfId.value
+}
+
+function senderName(senderId: number): string {
+  if (isMine(senderId)) {
+    return selfNickname.value
+  }
+  return peerNickname.value
 }
 </script>
 
 <template>
   <div class="page chat-page">
-    <van-nav-bar :title="title" left-arrow fixed placeholder @click-left="router.back()" />
+    <van-nav-bar :title="peerNickname" left-arrow fixed placeholder @click-left="router.back()" />
     <div ref="listRef" class="msg-list">
       <div
         v-for="(m, idx) in messages"
@@ -89,6 +103,13 @@ function isMine(senderId: number): boolean {
         class="msg-row"
         :class="{ mine: isMine(m.sender_id) }"
       >
+        <UserAvatar
+          v-if="!isMine(m.sender_id)"
+          class="avatar"
+          :user-id="m.sender_id || peerId"
+          :nickname="senderName(m.sender_id)"
+          :size="40"
+        />
         <div class="bubble" :class="{ pending: m.pending, failed: m.failed }">
           <div class="text">{{ m.content?.text }}</div>
           <div class="meta">
@@ -97,6 +118,13 @@ function isMine(senderId: number): boolean {
             <span v-else>{{ formatTime(m.ct) }}</span>
           </div>
         </div>
+        <UserAvatar
+          v-if="isMine(m.sender_id)"
+          class="avatar"
+          :user-id="selfId"
+          :nickname="selfNickname"
+          :size="40"
+        />
       </div>
     </div>
     <div class="composer">
@@ -125,27 +153,40 @@ function isMine(senderId: number): boolean {
   flex: 1;
   overflow-y: auto;
   padding: 12px 12px 8px;
+  background: linear-gradient(180deg, #eef3f8 0%, var(--im-bg) 120px);
 }
 
 .msg-row {
   display: flex;
-  margin-bottom: 10px;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 14px;
 }
 
 .msg-row.mine {
+  flex-direction: row;
   justify-content: flex-end;
 }
 
+.avatar {
+  margin-top: 2px;
+}
+
 .bubble {
-  max-width: 75%;
-  padding: 8px 12px;
+  max-width: calc(100% - 96px);
+  padding: 10px 12px;
   border-radius: 12px;
   background: var(--im-bubble-peer);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
+.msg-row:not(.mine) .bubble {
+  border-top-left-radius: 4px;
+}
+
 .msg-row.mine .bubble {
   background: var(--im-bubble-me);
+  border-top-right-radius: 4px;
 }
 
 .bubble.pending {

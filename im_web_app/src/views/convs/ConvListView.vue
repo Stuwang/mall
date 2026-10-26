@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import UserAvatar from '@/components/UserAvatar.vue'
 import { routeNames } from '@/router/routes'
 import { useImLive, useImStore } from '@/stores/imStore'
 import { formatTime } from '@/utils/conv'
@@ -45,24 +46,33 @@ function unreadBadge(peerId: number): string | undefined {
     </van-nav-bar>
     <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
       <van-empty v-if="imStore.convs.length === 0" description="暂无会话，去「在线」找人聊" />
-      <van-cell-group v-else inset>
-        <van-cell
+      <div v-else class="conv-list">
+        <button
           v-for="c in imStore.convs"
           :key="c.conv_id"
-          is-link
-          :title="c.peer?.nickname || `用户${c.peer?.user_id}`"
-          :label="c.last_msg?.preview || (c.local_only ? '草稿会话' : '')"
-          :value="formatTime(c.sort_ut)"
+          type="button"
+          class="conv-item"
           @click="openChat(c.peer.user_id)"
         >
-          <template #title>
-            <div class="title-row">
-              <span>{{ c.peer?.nickname || `用户${c.peer?.user_id}` }}</span>
+          <UserAvatar
+            :user-id="c.peer.user_id"
+            :nickname="c.peer?.nickname"
+            :size="48"
+          />
+          <div class="body">
+            <div class="top">
+              <span class="name">{{ c.peer?.nickname || `用户${c.peer?.user_id}` }}</span>
+              <span class="time muted">{{ formatTime(c.sort_ut) }}</span>
+            </div>
+            <div class="bottom">
+              <span class="preview muted">
+                {{ c.last_msg?.preview || (c.local_only ? '草稿会话' : '') }}
+              </span>
               <van-badge v-if="unreadBadge(c.peer.user_id)" :content="unreadBadge(c.peer.user_id)" />
             </div>
-          </template>
-        </van-cell>
-      </van-cell-group>
+          </div>
+        </button>
+      </div>
     </van-pull-refresh>
   </div>
 </template>
@@ -81,9 +91,61 @@ function unreadBadge(peerId: number): string | undefined {
   background: #07c160;
 }
 
-.title-row {
+.conv-list {
+  padding: 8px 12px 16px;
+}
+
+.conv-item {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  margin: 0 0 8px;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.conv-item:active {
+  background: #f2f3f5;
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+
+.top,
+.bottom {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
+}
+
+.name {
+  font-size: 16px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preview {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.time {
+  flex-shrink: 0;
 }
 </style>

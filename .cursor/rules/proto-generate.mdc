@@ -14,6 +14,8 @@ alwaysApply: true
 go run build.go proto
 ```
 
+这条命令会把固定版本的 `protoc` 和插件下载到仓库 `bin/`，并用这些文件生成。不要改用本机 PATH 里的 protoc。
+
 3. 生成后按需改业务代码：controller 实现新 RPC、注册 HTTP Server、白名单等。
 4. 用 `go run build.go build server` 或 `go run build.go build im` 确认能编译。
 

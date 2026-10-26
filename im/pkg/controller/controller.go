@@ -7,6 +7,7 @@ import (
 	"github.com/go-kratos/kratos/v2/transport"
 
 	api "mall/im/api/im"
+	"mall/im/internal/hub"
 	"mall/im/pkg/biz"
 	"mall/im/pkg/bizerror"
 	"mall/kit/auth"
@@ -15,14 +16,22 @@ import (
 
 const headerSystemToken = "X-Im-System-Token"
 
-var systemToken string
+var (
+	systemToken string
+	onlineHub   *hub.Hub
+)
 
 // SetSystemToken 由进程启动时写入内部代发令牌。
 func SetSystemToken(token string) {
 	systemToken = token
 }
 
-// UserController 用户侧 HTTP。业务事务尚未实现。
+// SetHub 由进程启动时注入同一份在线连接表，用于提交成功后推送。
+func SetHub(h *hub.Hub) {
+	onlineHub = h
+}
+
+// UserController 用户侧 HTTP。
 type UserController struct{}
 
 func NewUserController() *UserController {
@@ -31,23 +40,36 @@ func NewUserController() *UserController {
 
 func (c *UserController) ListConv(ctx context.Context, req *api.ListConvRequest) (*api.ListConvReply, error) {
 	a := auth.MustFromContext(ctx)
-	logger.Errorf("ListConv not implemented user=%d afterSeq=%d", a.UserID, req.GetAfterSeq())
-	return nil, biz.NotImplemented()
+	reply, err := biz.ListConv(a.UserID, req.GetAfterSeq(), req.GetLimit())
+	if err != nil {
+		logger.Errorf("ListConv user=%d afterSeq=%d err=%v", a.UserID, req.GetAfterSeq(), err)
+		return nil, err
+	}
+	return reply, nil
 }
 
 func (c *UserController) History(ctx context.Context, req *api.HistoryRequest) (*api.HistoryReply, error) {
 	a := auth.MustFromContext(ctx)
-	logger.Errorf("History not implemented user=%d peer=%d", a.UserID, req.GetPeerUserId())
-	return nil, biz.NotImplemented()
+	reply, err := biz.History(a.UserID, req.GetPeerUserId(), req.GetAfterSeq(), req.GetLimit())
+	if err != nil {
+		logger.Errorf("History user=%d peer=%d afterSeq=%d err=%v", a.UserID, req.GetPeerUserId(), req.GetAfterSeq(), err)
+		return nil, err
+	}
+	return reply, nil
 }
 
 func (c *UserController) Send(ctx context.Context, req *api.SendRequest) (*api.SendReply, error) {
 	a := auth.MustFromContext(ctx)
-	logger.Errorf("Send not implemented user=%d peer=%d", a.UserID, req.GetPeerUserId())
-	return nil, biz.NotImplemented()
+	reply, pushes, err := biz.Send(a.UserID, req.GetPeerUserId(), req.GetClientMsgId(), req.GetContentType(), req.GetText())
+	if err != nil {
+		logger.Errorf("Send user=%d peer=%d err=%v", a.UserID, req.GetPeerUserId(), err)
+		return nil, err
+	}
+	pushAll(pushes)
+	return reply, nil
 }
 
-// InternalController 内部代发。序号分配和预览开关尚未实现。
+// InternalController 内部代发。
 type InternalController struct{}
 
 func NewInternalController() *InternalController {
@@ -58,18 +80,37 @@ func (c *InternalController) Send(ctx context.Context, req *api.InternalSendRequ
 	if err := requireSystemToken(ctx); err != nil {
 		return nil, err
 	}
-	logger.Errorf("internal Send not implemented sender=%d peer=%d visibility=%d senderPreview=%v peerPreview=%v",
-		req.GetSenderId(), req.GetPeerUserId(), req.GetVisibility(), req.GetSenderPreview(), req.GetPeerPreview())
-	return nil, biz.NotImplemented()
+	reply, pushes, err := biz.InternalSend(req)
+	if err != nil {
+		logger.Errorf("internal Send sender=%d peer=%d err=%v", req.GetSenderId(), req.GetPeerUserId(), err)
+		return nil, err
+	}
+	pushAll(pushes)
+	return reply, nil
 }
 
 func (c *InternalController) Update(ctx context.Context, req *api.InternalUpdateRequest) (*api.InternalSendReply, error) {
 	if err := requireSystemToken(ctx); err != nil {
 		return nil, err
 	}
-	logger.Errorf("internal Update not implemented msgID=%d senderPreview=%v peerPreview=%v",
-		req.GetMsgId(), req.GetSenderPreview(), req.GetPeerPreview())
-	return nil, biz.NotImplemented()
+	reply, pushes, err := biz.InternalUpdate(req)
+	if err != nil {
+		logger.Errorf("internal Update msgID=%d err=%v", req.GetMsgId(), err)
+		return nil, err
+	}
+	pushAll(pushes)
+	return reply, nil
+}
+
+func pushAll(pushes []biz.PushItem) {
+	if onlineHub == nil {
+		return
+	}
+	for _, p := range pushes {
+		if err := onlineHub.PushMsg(p.UserID, p.Msg); err != nil {
+			logger.Errorf("push msg user=%d msgID=%d err=%v", p.UserID, p.Msg.GetMsgId(), err)
+		}
+	}
 }
 
 func requireSystemToken(ctx context.Context) error {

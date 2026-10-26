@@ -30,11 +30,3 @@ func AutoMigrate() error {
 	}
 	return nil
 }
-
-func NewMemberDao(db *gorm.DB) *MemberDao {
-	return &MemberDao{db: defaultDB(db)}
-}
-
-func NewMessageDao(db *gorm.DB) *MessageDao {
-	return &MessageDao{db: defaultDB(db)}
-}

@@ -11,6 +11,7 @@ import (
 	"mall/im/common/database"
 	"mall/im/internal/hub"
 	"mall/im/internal/ws"
+	"mall/im/pkg/biz"
 	"mall/im/pkg/controller"
 	imdao "mall/im/pkg/dao"
 	"mall/im/pkg/server"
@@ -41,6 +42,7 @@ func Init(cfg *config.Config) {
 	auth.SetUserLoader(loadAuthUser)
 	auth.SetActiveChecker(checkUserActive)
 	controller.SetSystemToken(cfg.IM.SystemToken)
+	biz.SetTextMaxRunes(cfg.IM.TextMaxRunes)
 }
 
 func loadAuthUser(userID int64) (*auth.AuthInfo, error) {
@@ -83,9 +85,17 @@ func NewHTTPServer(cfg *config.Config) *khttp.Server {
 	userCtrl := usercontroller.New()
 	userapi.RegisterUserHTTPServer(httpSrv, userCtrl)
 	userapi.RegisterAdminUserHTTPServer(httpSrv, userCtrl)
+	h := hub.New(cfg.IM.MaxConnsPerUser)
+	controller.SetHub(h)
+	ws.SetActiveChecker(checkUserActive)
 	api.RegisterImHTTPServer(httpSrv, controller.NewUserController())
 	api.RegisterImInternalHTTPServer(httpSrv, controller.NewInternalController())
-	ws.Register(httpSrv, hub.New())
+	ws.Register(httpSrv, h, ws.Config{
+		IsTest:          cfg.IsTest(),
+		HeartbeatSec:    cfg.IM.HeartbeatSec,
+		IdleSec:         cfg.IM.IdleSec,
+		MaxConnsPerUser: cfg.IM.MaxConnsPerUser,
+	})
 	return httpSrv
 }
 

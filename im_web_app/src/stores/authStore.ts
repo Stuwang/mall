@@ -1,0 +1,97 @@
+import { defineStore } from 'pinia'
+import { computed, ref } from 'vue'
+import { ApiError } from '@/api/errors/ApiError'
+import type { UserInfo } from '@/api/types'
+import { appContext } from '@/app/AppContext'
+import { imClient } from '@/im/ImClient'
+
+export const useAuthStore = defineStore('auth', () => {
+  const session = appContext.session
+  const api = appContext.api.auth
+
+  const accessToken = ref<string | null>(session.getAccessToken())
+  const user = ref<UserInfo | null>(session.getUser())
+
+  const isLoggedIn = computed(() => Boolean(accessToken.value))
+  const displayName = computed(
+    () => user.value?.nickname || user.value?.username || '用户',
+  )
+
+  function syncFromSession(): void {
+    accessToken.value = session.getAccessToken()
+    user.value = session.getUser()
+  }
+
+  function startIm(): void {
+    const u = session.getUser()
+    const token = session.getAccessToken()
+    if (u && token) {
+      imClient.start(u.id, token)
+    }
+  }
+
+  async function login(username: string, password: string): Promise<void> {
+    const reply = await api.login({ username, password })
+    if (!reply.access_token) {
+      throw new ApiError(1, '登录未返回 access_token')
+    }
+    if (!reply.user) {
+      throw new ApiError(1, '登录未返回用户信息')
+    }
+    session.applyLogin(reply.access_token, reply.user)
+    syncFromSession()
+    startIm()
+  }
+
+  async function register(
+    username: string,
+    password: string,
+    nickname?: string,
+  ): Promise<void> {
+    await api.register({ username, password, nickname })
+    await login(username, password)
+  }
+
+  async function refreshProfile(): Promise<void> {
+    if (!session.isLoggedIn()) {
+      return
+    }
+    const reply = await api.getUserInfo({})
+    if (!reply.user) {
+      logout()
+      throw new ApiError(1, '用户信息为空')
+    }
+    session.updateUser(reply.user)
+    syncFromSession()
+  }
+
+  function logout(): void {
+    imClient.stop()
+    session.clear()
+    syncFromSession()
+  }
+
+  function forceLogout(): void {
+    logout()
+  }
+
+  function bootstrap(): void {
+    if (session.isLoggedIn()) {
+      startIm()
+    }
+  }
+
+  return {
+    accessToken,
+    user,
+    isLoggedIn,
+    displayName,
+    login,
+    register,
+    logout,
+    forceLogout,
+    refreshProfile,
+    syncFromSession,
+    bootstrap,
+  }
+})

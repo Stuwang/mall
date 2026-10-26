@@ -1,0 +1,15 @@
+{
+  "recommendations": [
+    "Vue.volar",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "EditorConfig.EditorConfig",
+    "formulahendry.auto-rename-tag",
+    "usernamehw.errorlens",
+    "christian-kohler.npm-intellisense"
+  ],
+  "unwantedRecommendations": [
+    "octref.vetur",
+    "Vue.vscode-typescript-vue-plugin"
+  ]
+}

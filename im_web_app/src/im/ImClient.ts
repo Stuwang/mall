@@ -1,0 +1,308 @@
+import { appContext } from '@/app/AppContext'
+import type { Conversation, Msg, OnlineUser } from '@/api/types'
+import { ContentTypeText } from '@/api/types'
+import { makeConvId, newClientMsgId } from '@/utils/conv'
+import { LocalStore } from './LocalStore'
+import type { LocalConv, LocalMsg } from './types'
+import { WsClient } from './WsClient'
+
+type ChangeHandler = () => void
+
+/**
+ * IM 客户端：本地游标 + HTTP 兜底同步 + WS 推送先展示。
+ * 推送/发送响应不推进游标，只由 list/history 成功响应推进。
+ */
+export class ImClient {
+  private readonly store = new LocalStore()
+  private readonly ws = new WsClient()
+  private userId = 0
+  private syncing = false
+  private syncTimer: number | null = null
+  private listeners = new Set<ChangeHandler>()
+  private online: OnlineUser[] = []
+  private wsConnected = false
+
+  constructor() {
+    this.ws.setHandlers(
+      (msg) => {
+        void this.onPush(msg)
+      },
+      (ok) => {
+        this.wsConnected = ok
+        this.emit()
+        if (ok) {
+          void this.syncAll()
+        }
+      },
+    )
+  }
+
+  subscribe(fn: ChangeHandler): () => void {
+    this.listeners.add(fn)
+    return () => this.listeners.delete(fn)
+  }
+
+  isWsConnected(): boolean {
+    return this.wsConnected
+  }
+
+  getOnline(): OnlineUser[] {
+    return this.online
+  }
+
+  listConvs(): LocalConv[] {
+    return this.store.listConvs()
+  }
+
+  getMessages(peerUserId: number): LocalMsg[] {
+    const convId = makeConvId(this.userId, peerUserId)
+    return this.store.getMessages(convId)
+  }
+
+  getConv(peerUserId: number): LocalConv | undefined {
+    return this.store.getConv(makeConvId(this.userId, peerUserId))
+  }
+
+  start(userId: number, token: string): void {
+    this.stop()
+    this.userId = userId
+    this.store.bindUser(userId)
+    this.ws.connect(token)
+    this.syncTimer = window.setInterval(() => void this.syncAll(), 30000)
+    void this.syncAll()
+    void this.refreshOnline()
+    this.emit()
+  }
+
+  stop(): void {
+    this.ws.disconnect()
+    if (this.syncTimer != null) {
+      window.clearInterval(this.syncTimer)
+      this.syncTimer = null
+    }
+    this.store.unbind()
+    this.userId = 0
+    this.online = []
+    this.emit()
+  }
+
+  async refreshOnline(): Promise<void> {
+    const reply = await appContext.api.im.listOnline()
+    this.online = reply.list || []
+    this.emit()
+  }
+
+  openLocalChat(peerUserId: number, nickname: string): void {
+    const convId = makeConvId(this.userId, peerUserId)
+    this.store.ensureLocalConv({
+      conv_id: convId,
+      peer: { user_id: peerUserId, nickname },
+      last_seq: 0,
+      last_msg_id: 0,
+      sort_ut: Math.floor(Date.now() / 1000),
+      history_cursor: 0,
+      local_only: true,
+    })
+    this.emit()
+  }
+
+  async syncAll(): Promise<void> {
+    if (this.userId <= 0 || this.syncing) {
+      return
+    }
+    this.syncing = true
+    try {
+      await this.syncConvList()
+      const convs = this.store.listConvs()
+      for (const c of convs) {
+        if (c.peer?.user_id) {
+          await this.syncHistory(c.peer.user_id)
+        }
+      }
+    } finally {
+      this.syncing = false
+      this.emit()
+    }
+  }
+
+  async syncPeer(peerUserId: number): Promise<void> {
+    await this.syncConvList()
+    await this.syncHistory(peerUserId)
+    this.emit()
+  }
+
+  async sendText(peerUserId: number, text: string, peerNickname = ''): Promise<void> {
+    const trimmed = text.trim()
+    if (!trimmed) {
+      return
+    }
+    const convId = makeConvId(this.userId, peerUserId)
+    const clientMsgId = newClientMsgId()
+    const now = Math.floor(Date.now() / 1000)
+    this.store.ensureLocalConv({
+      conv_id: convId,
+      peer: { user_id: peerUserId, nickname: peerNickname || `用户${peerUserId}` },
+      last_seq: 0,
+      last_msg_id: 0,
+      sort_ut: now,
+      history_cursor: 0,
+      local_only: true,
+    })
+    const pending: LocalMsg = {
+      msg_id: 0,
+      conv_id: convId,
+      seq: 0,
+      sender_id: this.userId,
+      origin: 1,
+      client_msg_id: clientMsgId,
+      content_type: ContentTypeText,
+      content: { text: trimmed },
+      ct: now,
+      ut: now,
+      pending: true,
+    }
+    this.store.upsertMessage(convId, pending)
+    this.emit()
+
+    try {
+      const reply = await appContext.api.im.send({
+        peer_user_id: peerUserId,
+        client_msg_id: clientMsgId,
+        content_type: ContentTypeText,
+        text: trimmed,
+      })
+      this.applyServerMsg(reply.msg)
+      this.applyServerConv(reply.conv, false)
+      // 不推进 history_cursor；随后拉 history 确认
+      void this.syncPeer(peerUserId)
+    } catch (err) {
+      this.store.markFailed(convId, clientMsgId)
+      this.emit()
+      throw err
+    }
+  }
+
+  private async onPush(msg: Msg): Promise<void> {
+    this.applyServerMsg(msg)
+    this.emit()
+    const peerId = this.peerFromMsg(msg)
+    if (peerId > 0) {
+      await this.syncPeer(peerId)
+    } else {
+      await this.syncConvList()
+      this.emit()
+    }
+  }
+
+  private peerFromMsg(msg: Msg): number {
+    if (!msg.conv_id) {
+      return 0
+    }
+    const [a, b] = msg.conv_id.split('_').map((x) => Number(x))
+    if (!a || !b) {
+      return 0
+    }
+    return a === this.userId ? b : a
+  }
+
+  private applyServerMsg(msg: Msg): void {
+    if (!msg?.conv_id) {
+      return
+    }
+    this.store.upsertMessage(msg.conv_id, { ...msg, pending: false, failed: false })
+  }
+
+  private applyServerConv(conv: Conversation, advanceHistoryCursor: boolean): void {
+    if (!conv?.conv_id) {
+      return
+    }
+    const prev = this.store.getConv(conv.conv_id)
+    const next: LocalConv = {
+      ...conv,
+      history_cursor: advanceHistoryCursor
+        ? (prev?.history_cursor ?? 0)
+        : (prev?.history_cursor ?? 0),
+      local_only: false,
+    }
+    // 保留已有 history_cursor；服务端 last_seq 只作水位
+    if (prev) {
+      next.history_cursor = prev.history_cursor
+    }
+    this.store.upsertConv(next)
+  }
+
+  private async syncConvList(): Promise<void> {
+    let cursor = this.store.getListCursor()
+    for (;;) {
+      const reply = await appContext.api.im.listConv({ after_seq: cursor, limit: 100 })
+      const list = reply.list || []
+      for (const c of list) {
+        this.applyServerConv(c, false)
+      }
+      if (!list.length) {
+        break
+      }
+      const maxSeq = Math.max(...list.map((c) => c.last_seq))
+      if (reply.has_more) {
+        cursor = list[list.length - 1].last_seq
+        this.store.setListCursor(cursor)
+        continue
+      }
+      this.store.setListCursor(maxSeq)
+      break
+    }
+  }
+
+  private async syncHistory(peerUserId: number): Promise<void> {
+    const convId = makeConvId(this.userId, peerUserId)
+    let cursor = this.store.getConv(convId)?.history_cursor ?? 0
+    for (;;) {
+      const reply = await appContext.api.im.history({
+        peer_user_id: peerUserId,
+        after_seq: cursor,
+        limit: 50,
+      })
+      const list = reply.list || []
+      for (const m of list) {
+        this.applyServerMsg(m)
+      }
+      const existing = this.store.getConv(convId)
+      if (!existing && list.length === 0 && reply.last_seq === 0) {
+        return
+      }
+      if (existing) {
+        // 水位更新到成员行 last_seq（会话快照可能尚不完整）
+        this.store.upsertConv({
+          ...existing,
+          last_seq: Math.max(existing.last_seq, reply.last_seq),
+        })
+      }
+      if (list.length >= 50 || reply.has_more) {
+        cursor = list[list.length - 1].seq
+        this.store.upsertConv({
+          ...(this.store.getConv(convId) as LocalConv),
+          history_cursor: cursor,
+        })
+        continue
+      }
+      // 本页未满：游标拨到 last_seq
+      const finalConv = this.store.getConv(convId)
+      if (finalConv) {
+        this.store.upsertConv({
+          ...finalConv,
+          history_cursor: reply.last_seq,
+          last_seq: Math.max(finalConv.last_seq, reply.last_seq),
+        })
+      }
+      break
+    }
+  }
+
+  private emit(): void {
+    for (const fn of this.listeners) {
+      fn()
+    }
+  }
+}
+
+export const imClient = new ImClient()

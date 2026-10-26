@@ -30,6 +30,14 @@ service Im {
       body: "*"
     };
   }
+
+  // 当前在线用户（不含自己），用于发起聊天。
+  rpc ListOnline (ListOnlineRequest) returns (ListOnlineReply) {
+    option (google.api.http) = {
+      post: "/im/api/v1/user/online"
+      body: "*"
+    };
+  }
 }
 
 // 内部代发。不使用用户 JWT，校验 X-Im-System-Token。
@@ -94,6 +102,20 @@ message Conversation {
   // 当前最新消息的 ut。列表展示按它倒序。
   int64 sort_ut = 5;
   MsgPreview last_msg = 6;
+}
+
+message ListOnlineRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+}
+
+message OnlineUser {
+  int64 user_id = 1;
+  string nickname = 2;
+  int32 conn_count = 3;
+}
+
+message ListOnlineReply {
+  repeated OnlineUser list = 1;
 }
 
 message ListConvRequest {

@@ -267,6 +267,34 @@ func InternalUpdate(req *api.InternalUpdateRequest) (*api.InternalSendReply, []P
 	}, out.Pushes, nil
 }
 
+// ListOnlineUsers 组装在线用户资料。entries 由 Hub 提供。
+func ListOnlineUsers(selfID int64, entries []OnlineEntry) (*api.ListOnlineReply, error) {
+	out := make([]*api.OnlineUser, 0, len(entries))
+	for _, e := range entries {
+		if e.UserID == selfID || e.UserID <= 0 {
+			continue
+		}
+		out = append(out, &api.OnlineUser{
+			UserId:    e.UserID,
+			Nickname:  nicknameOf(e.UserID),
+			ConnCount: int32(e.ConnCount),
+		})
+	}
+	sort.Slice(out, func(i, j int) bool {
+		if out[i].Nickname == out[j].Nickname {
+			return out[i].UserId < out[j].UserId
+		}
+		return out[i].Nickname < out[j].Nickname
+	})
+	return &api.ListOnlineReply{List: out}, nil
+}
+
+// OnlineEntry 与 hub 解耦的在线条目。
+type OnlineEntry struct {
+	UserID    int64
+	ConnCount int
+}
+
 // ListConv 按 after_seq 增量返回会话。
 func ListConv(userID, afterSeq int64, limit int32) (*api.ListConvReply, error) {
 	if afterSeq < 0 {

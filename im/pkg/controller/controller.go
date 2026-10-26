@@ -38,6 +38,25 @@ func NewUserController() *UserController {
 	return &UserController{}
 }
 
+func (c *UserController) ListOnline(ctx context.Context, req *api.ListOnlineRequest) (*api.ListOnlineReply, error) {
+	a := auth.MustFromContext(ctx)
+	if onlineHub == nil {
+		logger.Errorf("ListOnline hub nil user=%d", a.UserID)
+		return &api.ListOnlineReply{List: []*api.OnlineUser{}}, nil
+	}
+	raw := onlineHub.ListOnline(a.UserID)
+	entries := make([]biz.OnlineEntry, 0, len(raw))
+	for _, e := range raw {
+		entries = append(entries, biz.OnlineEntry{UserID: e.UserID, ConnCount: e.ConnCount})
+	}
+	reply, err := biz.ListOnlineUsers(a.UserID, entries)
+	if err != nil {
+		logger.Errorf("ListOnline user=%d err=%v", a.UserID, err)
+		return nil, err
+	}
+	return reply, nil
+}
+
 func (c *UserController) ListConv(ctx context.Context, req *api.ListConvRequest) (*api.ListConvReply, error) {
 	a := auth.MustFromContext(ctx)
 	reply, err := biz.ListConv(a.UserID, req.GetAfterSeq(), req.GetLimit())

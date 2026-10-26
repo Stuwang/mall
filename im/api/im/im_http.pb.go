@@ -21,11 +21,14 @@ const _ = http.SupportPackageIsVersion1
 
 const OperationImHistory = "/im.v1.Im/History"
 const OperationImListConv = "/im.v1.Im/ListConv"
+const OperationImListOnline = "/im.v1.Im/ListOnline"
 const OperationImSend = "/im.v1.Im/Send"
 
 type ImHTTPServer interface {
 	History(context.Context, *HistoryRequest) (*HistoryReply, error)
 	ListConv(context.Context, *ListConvRequest) (*ListConvReply, error)
+	// ListOnline 当前在线用户（不含自己），用于发起聊天。
+	ListOnline(context.Context, *ListOnlineRequest) (*ListOnlineReply, error)
 	Send(context.Context, *SendRequest) (*SendReply, error)
 }
 
@@ -34,6 +37,7 @@ func RegisterImHTTPServer(s *http.Server, srv ImHTTPServer) {
 	r.POST("/im/api/v1/conv/list", _Im_ListConv0_HTTP_Handler(srv))
 	r.POST("/im/api/v1/msg/history", _Im_History0_HTTP_Handler(srv))
 	r.POST("/im/api/v1/msg/send", _Im_Send0_HTTP_Handler(srv))
+	r.POST("/im/api/v1/user/online", _Im_ListOnline0_HTTP_Handler(srv))
 }
 
 func _Im_ListConv0_HTTP_Handler(srv ImHTTPServer) func(ctx http.Context) error {
@@ -102,9 +106,33 @@ func _Im_Send0_HTTP_Handler(srv ImHTTPServer) func(ctx http.Context) error {
 	}
 }
 
+func _Im_ListOnline0_HTTP_Handler(srv ImHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in ListOnlineRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationImListOnline)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.ListOnline(ctx, req.(*ListOnlineRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*ListOnlineReply)
+		return ctx.Result(200, reply)
+	}
+}
+
 type ImHTTPClient interface {
 	History(ctx context.Context, req *HistoryRequest, opts ...http.CallOption) (rsp *HistoryReply, err error)
 	ListConv(ctx context.Context, req *ListConvRequest, opts ...http.CallOption) (rsp *ListConvReply, err error)
+	// ListOnline 当前在线用户（不含自己），用于发起聊天。
+	ListOnline(ctx context.Context, req *ListOnlineRequest, opts ...http.CallOption) (rsp *ListOnlineReply, err error)
 	Send(ctx context.Context, req *SendRequest, opts ...http.CallOption) (rsp *SendReply, err error)
 }
 
@@ -134,6 +162,20 @@ func (c *ImHTTPClientImpl) ListConv(ctx context.Context, in *ListConvRequest, op
 	pattern := "/im/api/v1/conv/list"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationImListConv))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// ListOnline 当前在线用户（不含自己），用于发起聊天。
+func (c *ImHTTPClientImpl) ListOnline(ctx context.Context, in *ListOnlineRequest, opts ...http.CallOption) (*ListOnlineReply, error) {
+	var out ListOnlineReply
+	pattern := "/im/api/v1/user/online"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationImListOnline))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
 	if err != nil {

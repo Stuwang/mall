@@ -19,9 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Im_ListConv_FullMethodName = "/im.v1.Im/ListConv"
-	Im_History_FullMethodName  = "/im.v1.Im/History"
-	Im_Send_FullMethodName     = "/im.v1.Im/Send"
+	Im_ListConv_FullMethodName   = "/im.v1.Im/ListConv"
+	Im_History_FullMethodName    = "/im.v1.Im/History"
+	Im_Send_FullMethodName       = "/im.v1.Im/Send"
+	Im_ListOnline_FullMethodName = "/im.v1.Im/ListOnline"
 )
 
 // ImClient is the client API for Im service.
@@ -33,6 +34,8 @@ type ImClient interface {
 	ListConv(ctx context.Context, in *ListConvRequest, opts ...grpc.CallOption) (*ListConvReply, error)
 	History(ctx context.Context, in *HistoryRequest, opts ...grpc.CallOption) (*HistoryReply, error)
 	Send(ctx context.Context, in *SendRequest, opts ...grpc.CallOption) (*SendReply, error)
+	// 当前在线用户（不含自己），用于发起聊天。
+	ListOnline(ctx context.Context, in *ListOnlineRequest, opts ...grpc.CallOption) (*ListOnlineReply, error)
 }
 
 type imClient struct {
@@ -73,6 +76,16 @@ func (c *imClient) Send(ctx context.Context, in *SendRequest, opts ...grpc.CallO
 	return out, nil
 }
 
+func (c *imClient) ListOnline(ctx context.Context, in *ListOnlineRequest, opts ...grpc.CallOption) (*ListOnlineReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListOnlineReply)
+	err := c.cc.Invoke(ctx, Im_ListOnline_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ImServer is the server API for Im service.
 // All implementations should embed UnimplementedImServer
 // for forward compatibility.
@@ -82,6 +95,8 @@ type ImServer interface {
 	ListConv(context.Context, *ListConvRequest) (*ListConvReply, error)
 	History(context.Context, *HistoryRequest) (*HistoryReply, error)
 	Send(context.Context, *SendRequest) (*SendReply, error)
+	// 当前在线用户（不含自己），用于发起聊天。
+	ListOnline(context.Context, *ListOnlineRequest) (*ListOnlineReply, error)
 }
 
 // UnimplementedImServer should be embedded to have
@@ -99,6 +114,9 @@ func (UnimplementedImServer) History(context.Context, *HistoryRequest) (*History
 }
 func (UnimplementedImServer) Send(context.Context, *SendRequest) (*SendReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method Send not implemented")
+}
+func (UnimplementedImServer) ListOnline(context.Context, *ListOnlineRequest) (*ListOnlineReply, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListOnline not implemented")
 }
 func (UnimplementedImServer) testEmbeddedByValue() {}
 
@@ -174,6 +192,24 @@ func _Im_Send_Handler(srv interface{}, ctx context.Context, dec func(interface{}
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Im_ListOnline_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListOnlineRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ImServer).ListOnline(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Im_ListOnline_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ImServer).ListOnline(ctx, req.(*ListOnlineRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Im_ServiceDesc is the grpc.ServiceDesc for Im service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -192,6 +228,10 @@ var Im_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Send",
 			Handler:    _Im_Send_Handler,
+		},
+		{
+			MethodName: "ListOnline",
+			Handler:    _Im_ListOnline_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

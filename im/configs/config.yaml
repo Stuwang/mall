@@ -1,5 +1,5 @@
-# 环境：test 使用 UserId Header 鉴权；其它环境使用 JWT
-env: test
+# 环境：test 使用 UserId Header 鉴权；其它环境使用 JWT（web 客户端走 JWT）
+env: dev
 
 server:
   http_addr: ":8090"

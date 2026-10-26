@@ -220,6 +220,26 @@ func (h *Hub) ConnCount(userID int64) int {
 	return len(h.users[userID])
 }
 
+// OnlineEntry 一个在线用户及其连接数。
+type OnlineEntry struct {
+	UserID    int64
+	ConnCount int
+}
+
+// ListOnline 返回当前在线用户。excludeUserID > 0 时排除该用户。
+func (h *Hub) ListOnline(excludeUserID int64) []OnlineEntry {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	out := make([]OnlineEntry, 0, len(h.users))
+	for uid, bucket := range h.users {
+		if uid == excludeUserID || len(bucket) == 0 {
+			continue
+		}
+		out = append(out, OnlineEntry{UserID: uid, ConnCount: len(bucket)})
+	}
+	return out
+}
+
 // PushMsg 向该用户所有在线连接推 msg.push。经各连接的发送队列，不并发写同一条 socket。
 func (h *Hub) PushMsg(userID int64, msg *api.Msg) error {
 	frame := Frame{Cmd: "msg.push", Data: msg}

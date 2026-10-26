@@ -23,7 +23,7 @@ router.beforeEach((to) => {
     (to.name === routeNames.login || to.name === routeNames.register) &&
     auth.isLoggedIn
   ) {
-    return { name: routeNames.convs }
+    return { name: routeNames.online }
   }
 
   return true

@@ -11,6 +11,7 @@ type ChangeHandler = () => void
 /**
  * IM 客户端：本地游标 + HTTP 兜底同步 + WS 推送先展示。
  * 推送/发送响应不推进游标，只由 list/history 成功响应推进。
+ * 未读用本机 read_seq，不写服务端。
  */
 export class ImClient {
   private readonly store = new LocalStore()
@@ -21,6 +22,8 @@ export class ImClient {
   private listeners = new Set<ChangeHandler>()
   private online: OnlineUser[] = []
   private wsConnected = false
+  /** 当前前台打开的对端；0 表示不在聊天页 */
+  private activePeerId = 0
 
   constructor() {
     this.ws.setHandlers(
@@ -63,6 +66,29 @@ export class ImClient {
     return this.store.getConv(makeConvId(this.userId, peerUserId))
   }
 
+  unreadOf(peerUserId: number): number {
+    if (this.userId <= 0) {
+      return 0
+    }
+    return this.store.unreadCount(makeConvId(this.userId, peerUserId), this.userId)
+  }
+
+  totalUnread(): number {
+    if (this.userId <= 0) {
+      return 0
+    }
+    return this.store.totalUnread(this.userId)
+  }
+
+  /** 进入 / 离开聊天页时调用。peerUserId=0 表示离开。 */
+  setActivePeer(peerUserId: number): void {
+    this.activePeerId = peerUserId > 0 ? peerUserId : 0
+    if (this.activePeerId > 0) {
+      this.markPeerRead(this.activePeerId)
+    }
+    this.emit()
+  }
+
   start(userId: number, token: string): void {
     this.stop()
     this.userId = userId
@@ -82,6 +108,7 @@ export class ImClient {
     }
     this.store.unbind()
     this.userId = 0
+    this.activePeerId = 0
     this.online = []
     this.emit()
   }
@@ -101,6 +128,7 @@ export class ImClient {
       last_msg_id: 0,
       sort_ut: Math.floor(Date.now() / 1000),
       history_cursor: 0,
+      read_seq: 0,
       local_only: true,
     })
     this.emit()
@@ -121,6 +149,9 @@ export class ImClient {
       }
     } finally {
       this.syncing = false
+      if (this.activePeerId > 0) {
+        this.markPeerRead(this.activePeerId)
+      }
       this.emit()
     }
   }
@@ -128,6 +159,9 @@ export class ImClient {
   async syncPeer(peerUserId: number): Promise<void> {
     await this.syncConvList()
     await this.syncHistory(peerUserId)
+    if (this.activePeerId === peerUserId) {
+      this.markPeerRead(peerUserId)
+    }
     this.emit()
   }
 
@@ -146,6 +180,7 @@ export class ImClient {
       last_msg_id: 0,
       sort_ut: now,
       history_cursor: 0,
+      read_seq: 0,
       local_only: true,
     })
     const pending: LocalMsg = {
@@ -172,8 +207,7 @@ export class ImClient {
         text: trimmed,
       })
       this.applyServerMsg(reply.msg)
-      this.applyServerConv(reply.conv, false)
-      // 不推进 history_cursor；随后拉 history 确认
+      this.applyServerConv(reply.conv)
       void this.syncPeer(peerUserId)
     } catch (err) {
       this.store.markFailed(convId, clientMsgId)
@@ -182,10 +216,18 @@ export class ImClient {
     }
   }
 
+  private markPeerRead(peerUserId: number): void {
+    const convId = makeConvId(this.userId, peerUserId)
+    this.store.markRead(convId)
+  }
+
   private async onPush(msg: Msg): Promise<void> {
     this.applyServerMsg(msg)
-    this.emit()
     const peerId = this.peerFromMsg(msg)
+    if (peerId > 0 && this.activePeerId === peerId) {
+      this.markPeerRead(peerId)
+    }
+    this.emit()
     if (peerId > 0) {
       await this.syncPeer(peerId)
     } else {
@@ -212,21 +254,16 @@ export class ImClient {
     this.store.upsertMessage(msg.conv_id, { ...msg, pending: false, failed: false })
   }
 
-  private applyServerConv(conv: Conversation, advanceHistoryCursor: boolean): void {
+  private applyServerConv(conv: Conversation): void {
     if (!conv?.conv_id) {
       return
     }
     const prev = this.store.getConv(conv.conv_id)
     const next: LocalConv = {
       ...conv,
-      history_cursor: advanceHistoryCursor
-        ? (prev?.history_cursor ?? 0)
-        : (prev?.history_cursor ?? 0),
+      history_cursor: prev?.history_cursor ?? 0,
+      read_seq: prev?.read_seq ?? 0,
       local_only: false,
-    }
-    // 保留已有 history_cursor；服务端 last_seq 只作水位
-    if (prev) {
-      next.history_cursor = prev.history_cursor
     }
     this.store.upsertConv(next)
   }
@@ -237,7 +274,7 @@ export class ImClient {
       const reply = await appContext.api.im.listConv({ after_seq: cursor, limit: 100 })
       const list = reply.list || []
       for (const c of list) {
-        this.applyServerConv(c, false)
+        this.applyServerConv(c)
       }
       if (!list.length) {
         break
@@ -271,27 +308,29 @@ export class ImClient {
         return
       }
       if (existing) {
-        // 水位更新到成员行 last_seq（会话快照可能尚不完整）
         this.store.upsertConv({
           ...existing,
           last_seq: Math.max(existing.last_seq, reply.last_seq),
+          read_seq: existing.read_seq,
         })
       }
       if (list.length >= 50 || reply.has_more) {
         cursor = list[list.length - 1].seq
+        const cur = this.store.getConv(convId) as LocalConv
         this.store.upsertConv({
-          ...(this.store.getConv(convId) as LocalConv),
+          ...cur,
           history_cursor: cursor,
+          read_seq: cur.read_seq,
         })
         continue
       }
-      // 本页未满：游标拨到 last_seq
       const finalConv = this.store.getConv(convId)
       if (finalConv) {
         this.store.upsertConv({
           ...finalConv,
           history_cursor: reply.last_seq,
           last_seq: Math.max(finalConv.last_seq, reply.last_seq),
+          read_seq: finalConv.read_seq,
         })
       }
       break

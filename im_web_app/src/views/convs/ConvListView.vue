@@ -26,6 +26,14 @@ async function onRefresh(): Promise<void> {
 function openChat(peerId: number): void {
   void router.push({ name: routeNames.chat, params: { peerId: String(peerId) } })
 }
+
+function unreadBadge(peerId: number): string | undefined {
+  const n = imStore.unreadOf(peerId)
+  if (n <= 0) {
+    return undefined
+  }
+  return n > 99 ? '99+' : String(n)
+}
 </script>
 
 <template>
@@ -46,7 +54,14 @@ function openChat(peerId: number): void {
           :label="c.last_msg?.preview || (c.local_only ? '草稿会话' : '')"
           :value="formatTime(c.sort_ut)"
           @click="openChat(c.peer.user_id)"
-        />
+        >
+          <template #title>
+            <div class="title-row">
+              <span>{{ c.peer?.nickname || `用户${c.peer?.user_id}` }}</span>
+              <van-badge v-if="unreadBadge(c.peer.user_id)" :content="unreadBadge(c.peer.user_id)" />
+            </div>
+          </template>
+        </van-cell>
       </van-cell-group>
     </van-pull-refresh>
   </div>
@@ -64,5 +79,11 @@ function openChat(peerId: number): void {
 
 .ws-dot.on {
   background: #07c160;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 </style>

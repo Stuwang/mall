@@ -51,6 +51,8 @@ export class LocalStore {
       ...prev,
       ...conv,
       history_cursor: conv.history_cursor ?? prev?.history_cursor ?? 0,
+      // 服务端快照不得冲掉本机已读水位
+      read_seq: conv.read_seq ?? prev?.read_seq ?? 0,
     }
     this.persist()
   }
@@ -59,7 +61,12 @@ export class LocalStore {
     if (this.state.convs[conv.conv_id]) {
       return
     }
-    this.state.convs[conv.conv_id] = { ...conv, history_cursor: 0, local_only: true }
+    this.state.convs[conv.conv_id] = {
+      ...conv,
+      history_cursor: conv.history_cursor ?? 0,
+      read_seq: conv.read_seq ?? 0,
+      local_only: true,
+    }
     this.persist()
   }
 
@@ -103,6 +110,56 @@ export class LocalStore {
     }
   }
 
+  /** 未读：seq > read_seq 且非自己发送、已有服务端 msg_id */
+  unreadCount(convId: string, selfId: number): number {
+    const conv = this.state.convs[convId]
+    const readSeq = conv?.read_seq ?? 0
+    const list = this.state.messages[convId] ?? []
+    let n = 0
+    for (const m of list) {
+      if (m.msg_id <= 0 || m.pending || m.failed) {
+        continue
+      }
+      if (m.sender_id === selfId) {
+        continue
+      }
+      if (m.seq > readSeq) {
+        n += 1
+      }
+    }
+    return n
+  }
+
+  totalUnread(selfId: number): number {
+    let sum = 0
+    for (const id of Object.keys(this.state.convs)) {
+      sum += this.unreadCount(id, selfId)
+    }
+    return sum
+  }
+
+  /**
+   * 推进已读水位：max(当前 read_seq, 本地消息最大 seq, 会话 last_seq)
+   */
+  markRead(convId: string): void {
+    const conv = this.state.convs[convId]
+    if (!conv) {
+      return
+    }
+    let maxMsgSeq = 0
+    for (const m of this.state.messages[convId] ?? []) {
+      if (m.msg_id > 0 && m.seq > maxMsgSeq) {
+        maxMsgSeq = m.seq
+      }
+    }
+    const next = Math.max(conv.read_seq || 0, maxMsgSeq, conv.last_seq || 0)
+    if (next === conv.read_seq) {
+      return
+    }
+    this.state.convs[convId] = { ...conv, read_seq: next }
+    this.persist()
+  }
+
   private load(): ImLocalState {
     if (this.userId <= 0) {
       return emptyState()
@@ -113,9 +170,17 @@ export class LocalStore {
     }
     try {
       const parsed = JSON.parse(raw) as ImLocalState
+      const convs: Record<string, LocalConv> = {}
+      for (const [id, c] of Object.entries(parsed.convs || {})) {
+        convs[id] = {
+          ...c,
+          history_cursor: c.history_cursor ?? 0,
+          read_seq: c.read_seq ?? 0,
+        }
+      }
       return {
         list_cursor: parsed.list_cursor || 0,
-        convs: parsed.convs || {},
+        convs,
         messages: parsed.messages || {},
       }
     } catch {

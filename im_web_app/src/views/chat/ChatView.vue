@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 import { useImLive, useImStore } from '@/stores/imStore'
@@ -37,7 +37,17 @@ async function scrollBottom(): Promise<void> {
 }
 
 onMounted(() => {
+  imStore.setActivePeer(peerId.value)
   void imStore.syncPeer(peerId.value).then(() => scrollBottom())
+})
+
+onUnmounted(() => {
+  imStore.setActivePeer(0)
+})
+
+watch(peerId, (id) => {
+  imStore.setActivePeer(id)
+  void imStore.syncPeer(id).then(() => scrollBottom())
 })
 
 watch(

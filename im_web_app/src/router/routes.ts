@@ -1,8 +1,8 @@
 import type { RouteRecordRaw } from 'vue-router'
 
 export const routeNames = {
-  convs: 'convs',
   online: 'online',
+  convs: 'convs',
   mine: 'mine',
   login: 'login',
   register: 'register',
@@ -16,15 +16,15 @@ export const routes: RouteRecordRaw[] = [
     children: [
       {
         path: '',
-        name: routeNames.convs,
-        component: () => import('@/views/convs/ConvListView.vue'),
-        meta: { title: '消息', tab: true, requireAuth: true },
-      },
-      {
-        path: 'online',
         name: routeNames.online,
         component: () => import('@/views/online/OnlineView.vue'),
         meta: { title: '在线', tab: true, requireAuth: true },
+      },
+      {
+        path: 'convs',
+        name: routeNames.convs,
+        component: () => import('@/views/convs/ConvListView.vue'),
+        meta: { title: '消息', tab: true, requireAuth: true },
       },
       {
         path: 'mine',

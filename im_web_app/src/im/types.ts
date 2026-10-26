@@ -9,6 +9,8 @@ export interface LocalMsg extends Msg {
 export interface LocalConv extends Conversation {
   /** 本场历史游标（已确认的前缀） */
   history_cursor: number
+  /** 本机已读水位；与 history_cursor 分开 */
+  read_seq: number
   /** 仅本地草稿会话（还没服务端消息） */
   local_only?: boolean
 }

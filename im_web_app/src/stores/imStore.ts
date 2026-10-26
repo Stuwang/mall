@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import type { OnlineUser } from '@/api/types'
 import { imClient } from '@/im/ImClient'
 import type { LocalConv, LocalMsg } from '@/im/types'
@@ -8,12 +8,14 @@ export const useImStore = defineStore('im', () => {
   const convs = ref<LocalConv[]>([])
   const online = ref<OnlineUser[]>([])
   const wsConnected = ref(false)
+  const totalUnread = ref(0)
   const tick = ref(0)
 
   function refresh(): void {
     convs.value = imClient.listConvs()
     online.value = imClient.getOnline()
     wsConnected.value = imClient.isWsConnected()
+    totalUnread.value = imClient.totalUnread()
     tick.value += 1
   }
 
@@ -25,6 +27,20 @@ export const useImStore = defineStore('im', () => {
   function messagesOf(peerUserId: number): LocalMsg[] {
     void tick.value
     return imClient.getMessages(peerUserId)
+  }
+
+  function unreadOf(peerUserId: number): number {
+    void tick.value
+    return imClient.unreadOf(peerUserId)
+  }
+
+  const unreadBadge = computed(() =>
+    totalUnread.value > 0 ? String(totalUnread.value > 99 ? '99+' : totalUnread.value) : '',
+  )
+
+  function setActivePeer(peerUserId: number): void {
+    imClient.setActivePeer(peerUserId)
+    refresh()
   }
 
   async function refreshOnline(): Promise<void> {
@@ -56,10 +72,14 @@ export const useImStore = defineStore('im', () => {
     convs,
     online,
     wsConnected,
+    totalUnread,
+    unreadBadge,
     tick,
     refresh,
     bind,
     messagesOf,
+    unreadOf,
+    setActivePeer,
     refreshOnline,
     syncAll,
     syncPeer,

@@ -28,7 +28,7 @@ async function onSubmit(): Promise<void> {
       form.nickname.trim() || undefined,
     )
     notifySuccess('注册成功')
-    await router.replace({ name: routeNames.convs })
+    await router.replace({ name: routeNames.online })
   } catch (error) {
     notifyError(error, '注册失败')
   } finally {

@@ -18,7 +18,11 @@ const peerId = computed(() => Number(route.params.peerId))
 const draft = ref('')
 const sending = ref(false)
 const listRef = ref<HTMLElement | null>(null)
+const listInnerRef = ref<HTMLElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
+/** 用户是否贴在底部；图片加载撑高后据此继续贴底 */
+const stickToBottom = ref(true)
+let listResizeObserver: ResizeObserver | null = null
 
 const peerNickname = computed(() => {
   const conv = imStore.convs.find((c) => c.peer?.user_id === peerId.value)
@@ -47,20 +51,65 @@ const selfId = computed(() => authStore.user?.id ?? 0)
 
 const messages = computed(() => imStore.messagesOf(peerId.value))
 
-async function scrollBottom(): Promise<void> {
-  await nextTick()
+function isNearBottom(threshold = 80): boolean {
   const el = listRef.value
-  if (el) {
-    el.scrollTop = el.scrollHeight
+  if (!el) {
+    return true
   }
+  return el.scrollHeight - el.scrollTop - el.clientHeight <= threshold
+}
+
+function applyScrollBottom(): void {
+  const el = listRef.value
+  if (!el) {
+    return
+  }
+  el.scrollTop = el.scrollHeight
+  stickToBottom.value = true
+}
+
+async function scrollBottom(): Promise<void> {
+  stickToBottom.value = true
+  await nextTick()
+  applyScrollBottom()
+  // 再等一帧，避免布局未完成
+  requestAnimationFrame(() => applyScrollBottom())
+}
+
+function onListScroll(): void {
+  stickToBottom.value = isNearBottom()
+}
+
+function onImageLoad(): void {
+  if (stickToBottom.value || isNearBottom()) {
+    applyScrollBottom()
+  }
+}
+
+function bindListResize(): void {
+  listResizeObserver?.disconnect()
+  listResizeObserver = null
+  const inner = listInnerRef.value
+  if (!inner || typeof ResizeObserver === 'undefined') {
+    return
+  }
+  listResizeObserver = new ResizeObserver(() => {
+    if (stickToBottom.value) {
+      applyScrollBottom()
+    }
+  })
+  listResizeObserver.observe(inner)
 }
 
 onMounted(() => {
   imStore.setActivePeer(peerId.value)
+  bindListResize()
   void imStore.syncPeer(peerId.value).then(() => scrollBottom())
 })
 
 onUnmounted(() => {
+  listResizeObserver?.disconnect()
+  listResizeObserver = null
   imStore.setActivePeer(0)
 })
 
@@ -75,6 +124,10 @@ watch(
     void scrollBottom()
   },
 )
+
+watch(listInnerRef, () => {
+  bindListResize()
+})
 
 async function onSend(): Promise<void> {
   const text = draft.value
@@ -145,44 +198,47 @@ function isText(m: { content_type?: number }): boolean {
 <template>
   <div class="page chat-page">
     <van-nav-bar :title="peerNickname" left-arrow fixed placeholder @click-left="router.back()" />
-    <div ref="listRef" class="msg-list">
-      <div
-        v-for="(m, idx) in messages"
-        :key="m.msg_id || m.client_msg_id || idx"
-        class="msg-row"
-        :class="{ mine: isMine(m.sender_id) }"
-      >
-        <UserAvatar
-          v-if="!isMine(m.sender_id)"
-          class="avatar"
-          :user-id="m.sender_id || peerId"
-          :nickname="senderName(m.sender_id)"
-          :src="peerAvatar"
-          :size="40"
-        />
-        <div class="bubble" :class="{ pending: m.pending, failed: m.failed, image: isImage(m) }">
-          <img
-            v-if="isImage(m) && m.content?.image_url"
-            class="msg-image"
-            :src="m.content.image_url"
-            alt="图片"
+    <div ref="listRef" class="msg-list" @scroll.passive="onListScroll">
+      <div ref="listInnerRef" class="msg-list-inner">
+        <div
+          v-for="(m, idx) in messages"
+          :key="m.msg_id || m.client_msg_id || idx"
+          class="msg-row"
+          :class="{ mine: isMine(m.sender_id) }"
+        >
+          <UserAvatar
+            v-if="!isMine(m.sender_id)"
+            class="avatar"
+            :user-id="m.sender_id || peerId"
+            :nickname="senderName(m.sender_id)"
+            :src="peerAvatar"
+            :size="40"
           />
-          <div v-else-if="isText(m)" class="text">{{ m.content?.text }}</div>
-          <div v-else class="text muted">[不支持的消息]</div>
-          <div class="meta">
-            <span v-if="m.pending">发送中</span>
-            <span v-else-if="m.failed">失败</span>
-            <span v-else>{{ formatTime(m.ct) }}</span>
+          <div class="bubble" :class="{ pending: m.pending, failed: m.failed, image: isImage(m) }">
+            <img
+              v-if="isImage(m) && m.content?.image_url"
+              class="msg-image"
+              :src="m.content.image_url"
+              alt="图片"
+              @load="onImageLoad"
+            />
+            <div v-else-if="isText(m)" class="text">{{ m.content?.text }}</div>
+            <div v-else class="text muted">[不支持的消息]</div>
+            <div class="meta">
+              <span v-if="m.pending">发送中</span>
+              <span v-else-if="m.failed">失败</span>
+              <span v-else>{{ formatTime(m.ct) }}</span>
+            </div>
           </div>
+          <UserAvatar
+            v-if="isMine(m.sender_id)"
+            class="avatar"
+            :user-id="selfId"
+            :nickname="selfNickname"
+            :src="selfAvatar"
+            :size="40"
+          />
         </div>
-        <UserAvatar
-          v-if="isMine(m.sender_id)"
-          class="avatar"
-          :user-id="selfId"
-          :nickname="selfNickname"
-          :src="selfAvatar"
-          :size="40"
-        />
       </div>
     </div>
     <div class="composer">

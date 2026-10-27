@@ -5,6 +5,7 @@ import type {
   LoginReply,
   LoginRequest,
   MediaUploadReply,
+  RefreshTokenReply,
   RegisterReply,
   RegisterRequest,
   UpdateUserInfoReply,
@@ -24,6 +25,10 @@ export class AuthApiService {
 
   login(request: LoginRequest): Promise<LoginReply> {
     return this.http.post<LoginReply>('/user/api/v1/login', request)
+  }
+
+  refreshToken(): Promise<RefreshTokenReply> {
+    return this.http.post<RefreshTokenReply>('/user/api/v1/token/refresh', {})
   }
 
   getUserInfo(request: GetUserInfoRequest = {}): Promise<GetUserInfoReply> {

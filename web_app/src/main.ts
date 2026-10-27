@@ -30,4 +30,6 @@ appContext.api.http.setUnauthorizedHandler(() => {
   }
 })
 
+authStore.bootstrap()
+
 app.mount('#app')

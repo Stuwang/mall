@@ -16,7 +16,6 @@ app.use(pinia)
 app.use(router)
 
 const authStore = useAuthStore()
-authStore.bootstrap()
 
 appContext.api.http.setUnauthorizedHandler(() => {
   authStore.forceLogout()
@@ -27,5 +26,7 @@ appContext.api.http.setUnauthorizedHandler(() => {
     })
   }
 })
+
+authStore.bootstrap()
 
 app.mount('#app')

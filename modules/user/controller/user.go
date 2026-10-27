@@ -79,6 +79,32 @@ func (c *Controller) Login(ctx context.Context, req *apiuser.LoginRequest) (*api
 	}, nil
 }
 
+// RefreshToken 用当前仍有效的登录态换发新 token。身份以库中的用户和管理员标记为准。
+func (c *Controller) RefreshToken(ctx context.Context, _ *apiuser.RefreshTokenRequest) (*apiuser.RefreshTokenReply, error) {
+	info := auth.MustFromContext(ctx)
+	u, err := userdao.NewUserDao(nil).GetByID(info.UserID)
+	if err != nil {
+		logger.Errorf("RefreshToken GetByID userID=%d err=%v", info.UserID, err)
+		return nil, err
+	}
+	if u.Banned() {
+		logger.Errorf("RefreshToken user banned userID=%d banUntil=%d", u.ID, u.BanUntil)
+		return nil, codeerror.ErrorUserBanned
+	}
+	login, err := userdao.NewLoginDao(nil).GetPasswordByUserID(u.ID)
+	if err != nil {
+		logger.Errorf("RefreshToken GetPasswordByUserID userID=%d err=%v", u.ID, err)
+		return nil, err
+	}
+	token, err := auth.GenerateToken(u.ID, login.Identifier, u.Admin())
+	if err != nil {
+		return nil, codeerror.OrSystem(err, "RefreshToken GenerateToken userID=%d", u.ID)
+	}
+	return &apiuser.RefreshTokenReply{
+		AccessToken: token,
+	}, nil
+}
+
 func (c *Controller) GetUserInfo(ctx context.Context, req *apiuser.GetUserInfoRequest) (*apiuser.GetUserInfoReply, error) {
 	info := auth.MustFromContext(ctx)
 	uid := req.Id

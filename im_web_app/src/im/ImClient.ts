@@ -89,6 +89,11 @@ export class ImClient {
     this.emit()
   }
 
+  /** 续签后更新重连所用 token，不打断当前连接。 */
+  replaceToken(accessToken: string): void {
+    this.ws.replaceToken(accessToken)
+  }
+
   start(userId: number, token: string): void {
     this.stop()
     this.userId = userId

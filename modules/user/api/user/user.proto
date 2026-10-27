@@ -25,6 +25,14 @@ service User {
     };
   }
 
+  // 续签：凭当前仍有效的 access token 换发新 token，过期时间从当前时刻重算
+  rpc RefreshToken (RefreshTokenRequest) returns (RefreshTokenReply) {
+    option (google.api.http) = {
+      post: "/user/api/v1/token/refresh"
+      body: "*"
+    };
+  }
+
   // 用户信息查询
   rpc GetUserInfo (GetUserInfoRequest) returns (GetUserInfoReply) {
     option (google.api.http) = {
@@ -106,6 +114,14 @@ message LoginRequest {
 message LoginReply {
   UserInfo user = 1;
   string access_token = 2;
+}
+
+message RefreshTokenRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+}
+
+message RefreshTokenReply {
+  string access_token = 1;
 }
 
 message GetUserInfoRequest {

@@ -1342,6 +1342,32 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/google.rpc.Status'
+    /user/api/v1/token/refresh:
+        post:
+            tags:
+                - User
+            summary: RefreshToken
+            description: 续签：凭当前仍有效的 access token 换发新 token，过期时间从当前时刻重算
+            operationId: User_RefreshToken
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/user.v1.RefreshTokenRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user.v1.RefreshTokenReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
     /user/api/v1/update:
         post:
             tags:
@@ -2505,6 +2531,16 @@ components:
                     type: string
                 password:
                     type: string
+        user.v1.RefreshTokenReply:
+            type: object
+            properties:
+                accessToken:
+                    type: string
+        user.v1.RefreshTokenRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
         user.v1.RegisterReply:
             type: object
             properties:

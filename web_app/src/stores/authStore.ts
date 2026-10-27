@@ -4,15 +4,20 @@ import { ApiError } from '@/api/errors/ApiError'
 import type { UserInfo } from '@/api/types'
 import { appContext } from '@/app/AppContext'
 
+const TOKEN_REFRESH_INTERVAL_MS = 60 * 60 * 1000
+
 /**
  * Pinia 适配层：对外暴露响应式登录态，内部委托 AuthSession + AuthApiService
  */
+
 export const useAuthStore = defineStore('auth', () => {
   const session = appContext.session
   const api = appContext.api.auth
 
   const accessToken = ref<string | null>(session.getAccessToken())
   const user = ref<UserInfo | null>(session.getUser())
+  let refreshTimer: number | null = null
+  let refreshing = false
 
   const isLoggedIn = computed(() => Boolean(accessToken.value))
   const displayName = computed(
@@ -34,6 +39,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
     session.applyLogin(reply.access_token, reply.user)
     syncFromSession()
+    startTokenRefresh(false)
   }
 
   async function register(
@@ -60,6 +66,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   function logout(): void {
+    stopTokenRefresh()
     session.clear()
     syncFromSession()
   }
@@ -67,6 +74,57 @@ export const useAuthStore = defineStore('auth', () => {
   /** 供 HttpClient 未授权回调使用 */
   function forceLogout(): void {
     logout()
+  }
+
+  function stopTokenRefresh(): void {
+    if (refreshTimer != null) {
+      window.clearInterval(refreshTimer)
+      refreshTimer = null
+    }
+  }
+
+  async function refreshAccessToken(): Promise<void> {
+    if (!session.isLoggedIn() || refreshing) {
+      return
+    }
+    refreshing = true
+    try {
+      const reply = await api.refreshToken()
+      if (!session.isLoggedIn()) {
+        return
+      }
+      if (!reply.access_token) {
+        return
+      }
+      session.replaceAccessToken(reply.access_token)
+      syncFromSession()
+    } catch (err) {
+      if (err instanceof ApiError && (err.isUnauthorized || err.isForbidden || err.isBanned)) {
+        return
+      }
+    } finally {
+      refreshing = false
+    }
+  }
+
+  /** immediate：恢复本地登录态时立刻续一次，避免打开页面时 token 已临近过期。 */
+  function startTokenRefresh(immediate: boolean): void {
+    stopTokenRefresh()
+    if (!session.isLoggedIn()) {
+      return
+    }
+    refreshTimer = window.setInterval(() => {
+      void refreshAccessToken()
+    }, TOKEN_REFRESH_INTERVAL_MS)
+    if (immediate) {
+      void refreshAccessToken()
+    }
+  }
+
+  function bootstrap(): void {
+    if (session.isLoggedIn()) {
+      startTokenRefresh(true)
+    }
   }
 
   return {
@@ -80,5 +138,6 @@ export const useAuthStore = defineStore('auth', () => {
     forceLogout,
     refreshProfile,
     syncFromSession,
+    bootstrap,
   }
 })

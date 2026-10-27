@@ -37,6 +37,11 @@ export class AuthSession {
     this.persist()
   }
 
+  replaceAccessToken(accessToken: string): void {
+    this.accessToken = accessToken
+    this.persist()
+  }
+
   updateUser(user: UserInfo): void {
     this.user = user
     this.persist()

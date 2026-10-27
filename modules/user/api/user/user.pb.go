@@ -367,6 +367,94 @@ func (x *LoginReply) GetAccessToken() string {
 	return ""
 }
 
+type RefreshTokenRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BaseParam     *base.BaseParam        `protobuf:"bytes,1,opt,name=BaseParam,proto3" json:"BaseParam,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RefreshTokenRequest) Reset() {
+	*x = RefreshTokenRequest{}
+	mi := &file_user_user_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RefreshTokenRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RefreshTokenRequest) ProtoMessage() {}
+
+func (x *RefreshTokenRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_user_user_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RefreshTokenRequest.ProtoReflect.Descriptor instead.
+func (*RefreshTokenRequest) Descriptor() ([]byte, []int) {
+	return file_user_user_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *RefreshTokenRequest) GetBaseParam() *base.BaseParam {
+	if x != nil {
+		return x.BaseParam
+	}
+	return nil
+}
+
+type RefreshTokenReply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AccessToken   string                 `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RefreshTokenReply) Reset() {
+	*x = RefreshTokenReply{}
+	mi := &file_user_user_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RefreshTokenReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RefreshTokenReply) ProtoMessage() {}
+
+func (x *RefreshTokenReply) ProtoReflect() protoreflect.Message {
+	mi := &file_user_user_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RefreshTokenReply.ProtoReflect.Descriptor instead.
+func (*RefreshTokenReply) Descriptor() ([]byte, []int) {
+	return file_user_user_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *RefreshTokenReply) GetAccessToken() string {
+	if x != nil {
+		return x.AccessToken
+	}
+	return ""
+}
+
 type GetUserInfoRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	BaseParam     *base.BaseParam        `protobuf:"bytes,1,opt,name=BaseParam,proto3" json:"BaseParam,omitempty"`
@@ -377,7 +465,7 @@ type GetUserInfoRequest struct {
 
 func (x *GetUserInfoRequest) Reset() {
 	*x = GetUserInfoRequest{}
-	mi := &file_user_user_proto_msgTypes[5]
+	mi := &file_user_user_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -389,7 +477,7 @@ func (x *GetUserInfoRequest) String() string {
 func (*GetUserInfoRequest) ProtoMessage() {}
 
 func (x *GetUserInfoRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[5]
+	mi := &file_user_user_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -402,7 +490,7 @@ func (x *GetUserInfoRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetUserInfoRequest.ProtoReflect.Descriptor instead.
 func (*GetUserInfoRequest) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{5}
+	return file_user_user_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *GetUserInfoRequest) GetBaseParam() *base.BaseParam {
@@ -428,7 +516,7 @@ type GetUserInfoReply struct {
 
 func (x *GetUserInfoReply) Reset() {
 	*x = GetUserInfoReply{}
-	mi := &file_user_user_proto_msgTypes[6]
+	mi := &file_user_user_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -440,7 +528,7 @@ func (x *GetUserInfoReply) String() string {
 func (*GetUserInfoReply) ProtoMessage() {}
 
 func (x *GetUserInfoReply) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[6]
+	mi := &file_user_user_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -453,7 +541,7 @@ func (x *GetUserInfoReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetUserInfoReply.ProtoReflect.Descriptor instead.
 func (*GetUserInfoReply) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{6}
+	return file_user_user_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *GetUserInfoReply) GetUser() *UserInfo {
@@ -477,7 +565,7 @@ type UpdateUserInfoRequest struct {
 
 func (x *UpdateUserInfoRequest) Reset() {
 	*x = UpdateUserInfoRequest{}
-	mi := &file_user_user_proto_msgTypes[7]
+	mi := &file_user_user_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -489,7 +577,7 @@ func (x *UpdateUserInfoRequest) String() string {
 func (*UpdateUserInfoRequest) ProtoMessage() {}
 
 func (x *UpdateUserInfoRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[7]
+	mi := &file_user_user_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -502,7 +590,7 @@ func (x *UpdateUserInfoRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateUserInfoRequest.ProtoReflect.Descriptor instead.
 func (*UpdateUserInfoRequest) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{7}
+	return file_user_user_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *UpdateUserInfoRequest) GetBaseParam() *base.BaseParam {
@@ -549,7 +637,7 @@ type UpdateUserInfoReply struct {
 
 func (x *UpdateUserInfoReply) Reset() {
 	*x = UpdateUserInfoReply{}
-	mi := &file_user_user_proto_msgTypes[8]
+	mi := &file_user_user_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -561,7 +649,7 @@ func (x *UpdateUserInfoReply) String() string {
 func (*UpdateUserInfoReply) ProtoMessage() {}
 
 func (x *UpdateUserInfoReply) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[8]
+	mi := &file_user_user_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -574,7 +662,7 @@ func (x *UpdateUserInfoReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateUserInfoReply.ProtoReflect.Descriptor instead.
 func (*UpdateUserInfoReply) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{8}
+	return file_user_user_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *UpdateUserInfoReply) GetUser() *UserInfo {
@@ -599,7 +687,7 @@ type AdminListUsersRequest struct {
 
 func (x *AdminListUsersRequest) Reset() {
 	*x = AdminListUsersRequest{}
-	mi := &file_user_user_proto_msgTypes[9]
+	mi := &file_user_user_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -611,7 +699,7 @@ func (x *AdminListUsersRequest) String() string {
 func (*AdminListUsersRequest) ProtoMessage() {}
 
 func (x *AdminListUsersRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[9]
+	mi := &file_user_user_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -624,7 +712,7 @@ func (x *AdminListUsersRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminListUsersRequest.ProtoReflect.Descriptor instead.
 func (*AdminListUsersRequest) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{9}
+	return file_user_user_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *AdminListUsersRequest) GetBaseParam() *base.BaseParam {
@@ -672,7 +760,7 @@ type AdminListUsersReply struct {
 
 func (x *AdminListUsersReply) Reset() {
 	*x = AdminListUsersReply{}
-	mi := &file_user_user_proto_msgTypes[10]
+	mi := &file_user_user_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -684,7 +772,7 @@ func (x *AdminListUsersReply) String() string {
 func (*AdminListUsersReply) ProtoMessage() {}
 
 func (x *AdminListUsersReply) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[10]
+	mi := &file_user_user_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -697,7 +785,7 @@ func (x *AdminListUsersReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminListUsersReply.ProtoReflect.Descriptor instead.
 func (*AdminListUsersReply) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{10}
+	return file_user_user_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *AdminListUsersReply) GetList() []*UserInfo {
@@ -724,7 +812,7 @@ type AdminGetUserRequest struct {
 
 func (x *AdminGetUserRequest) Reset() {
 	*x = AdminGetUserRequest{}
-	mi := &file_user_user_proto_msgTypes[11]
+	mi := &file_user_user_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -736,7 +824,7 @@ func (x *AdminGetUserRequest) String() string {
 func (*AdminGetUserRequest) ProtoMessage() {}
 
 func (x *AdminGetUserRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[11]
+	mi := &file_user_user_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -749,7 +837,7 @@ func (x *AdminGetUserRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminGetUserRequest.ProtoReflect.Descriptor instead.
 func (*AdminGetUserRequest) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{11}
+	return file_user_user_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *AdminGetUserRequest) GetBaseParam() *base.BaseParam {
@@ -778,7 +866,7 @@ type AdminBanUserRequest struct {
 
 func (x *AdminBanUserRequest) Reset() {
 	*x = AdminBanUserRequest{}
-	mi := &file_user_user_proto_msgTypes[12]
+	mi := &file_user_user_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -790,7 +878,7 @@ func (x *AdminBanUserRequest) String() string {
 func (*AdminBanUserRequest) ProtoMessage() {}
 
 func (x *AdminBanUserRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_user_user_proto_msgTypes[12]
+	mi := &file_user_user_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -803,7 +891,7 @@ func (x *AdminBanUserRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminBanUserRequest.ProtoReflect.Descriptor instead.
 func (*AdminBanUserRequest) Descriptor() ([]byte, []int) {
-	return file_user_user_proto_rawDescGZIP(), []int{12}
+	return file_user_user_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *AdminBanUserRequest) GetBaseParam() *base.BaseParam {
@@ -858,7 +946,11 @@ const file_user_user_proto_rawDesc = "" +
 	"\n" +
 	"LoginReply\x12%\n" +
 	"\x04user\x18\x01 \x01(\v2\x11.user.v1.UserInfoR\x04user\x12!\n" +
-	"\faccess_token\x18\x02 \x01(\tR\vaccessToken\"\\\n" +
+	"\faccess_token\x18\x02 \x01(\tR\vaccessToken\"M\n" +
+	"\x13RefreshTokenRequest\x126\n" +
+	"\tBaseParam\x18\x01 \x01(\v2\x18.helloworld.v1.BaseParamR\tBaseParam\"6\n" +
+	"\x11RefreshTokenReply\x12!\n" +
+	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\"\\\n" +
 	"\x12GetUserInfoRequest\x126\n" +
 	"\tBaseParam\x18\x01 \x01(\v2\x18.helloworld.v1.BaseParamR\tBaseParam\x12\x0e\n" +
 	"\x02id\x18\x02 \x01(\x03R\x02id\"9\n" +
@@ -887,10 +979,11 @@ const file_user_user_proto_rawDesc = "" +
 	"\x13AdminBanUserRequest\x126\n" +
 	"\tBaseParam\x18\x01 \x01(\v2\x18.helloworld.v1.BaseParamR\tBaseParam\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\x03R\x06userId\x12\x1b\n" +
-	"\tban_until\x18\x03 \x01(\x03R\bbanUntil2\x8f\x03\n" +
+	"\tban_until\x18\x03 \x01(\x03R\bbanUntil2\x80\x04\n" +
 	"\x04User\x12^\n" +
 	"\bRegister\x12\x18.user.v1.RegisterRequest\x1a\x16.user.v1.RegisterReply\" \x82\xd3\xe4\x93\x02\x1a:\x01*\"\x15/user/api/v1/register\x12R\n" +
-	"\x05Login\x12\x15.user.v1.LoginRequest\x1a\x13.user.v1.LoginReply\"\x1d\x82\xd3\xe4\x93\x02\x17:\x01*\"\x12/user/api/v1/login\x12c\n" +
+	"\x05Login\x12\x15.user.v1.LoginRequest\x1a\x13.user.v1.LoginReply\"\x1d\x82\xd3\xe4\x93\x02\x17:\x01*\"\x12/user/api/v1/login\x12o\n" +
+	"\fRefreshToken\x12\x1c.user.v1.RefreshTokenRequest\x1a\x1a.user.v1.RefreshTokenReply\"%\x82\xd3\xe4\x93\x02\x1f:\x01*\"\x1a/user/api/v1/token/refresh\x12c\n" +
 	"\vGetUserInfo\x12\x1b.user.v1.GetUserInfoRequest\x1a\x19.user.v1.GetUserInfoReply\"\x1c\x82\xd3\xe4\x93\x02\x16:\x01*\"\x11/user/api/v1/info\x12n\n" +
 	"\x0eUpdateUserInfo\x12\x1e.user.v1.UpdateUserInfoRequest\x1a\x1c.user.v1.UpdateUserInfoReply\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/user/api/v1/update2\xda\x02\n" +
 	"\tAdminUser\x12r\n" +
@@ -910,55 +1003,60 @@ func file_user_user_proto_rawDescGZIP() []byte {
 	return file_user_user_proto_rawDescData
 }
 
-var file_user_user_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
+var file_user_user_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_user_user_proto_goTypes = []any{
 	(*UserInfo)(nil),              // 0: user.v1.UserInfo
 	(*RegisterRequest)(nil),       // 1: user.v1.RegisterRequest
 	(*RegisterReply)(nil),         // 2: user.v1.RegisterReply
 	(*LoginRequest)(nil),          // 3: user.v1.LoginRequest
 	(*LoginReply)(nil),            // 4: user.v1.LoginReply
-	(*GetUserInfoRequest)(nil),    // 5: user.v1.GetUserInfoRequest
-	(*GetUserInfoReply)(nil),      // 6: user.v1.GetUserInfoReply
-	(*UpdateUserInfoRequest)(nil), // 7: user.v1.UpdateUserInfoRequest
-	(*UpdateUserInfoReply)(nil),   // 8: user.v1.UpdateUserInfoReply
-	(*AdminListUsersRequest)(nil), // 9: user.v1.AdminListUsersRequest
-	(*AdminListUsersReply)(nil),   // 10: user.v1.AdminListUsersReply
-	(*AdminGetUserRequest)(nil),   // 11: user.v1.AdminGetUserRequest
-	(*AdminBanUserRequest)(nil),   // 12: user.v1.AdminBanUserRequest
-	(*base.BaseParam)(nil),        // 13: helloworld.v1.BaseParam
+	(*RefreshTokenRequest)(nil),   // 5: user.v1.RefreshTokenRequest
+	(*RefreshTokenReply)(nil),     // 6: user.v1.RefreshTokenReply
+	(*GetUserInfoRequest)(nil),    // 7: user.v1.GetUserInfoRequest
+	(*GetUserInfoReply)(nil),      // 8: user.v1.GetUserInfoReply
+	(*UpdateUserInfoRequest)(nil), // 9: user.v1.UpdateUserInfoRequest
+	(*UpdateUserInfoReply)(nil),   // 10: user.v1.UpdateUserInfoReply
+	(*AdminListUsersRequest)(nil), // 11: user.v1.AdminListUsersRequest
+	(*AdminListUsersReply)(nil),   // 12: user.v1.AdminListUsersReply
+	(*AdminGetUserRequest)(nil),   // 13: user.v1.AdminGetUserRequest
+	(*AdminBanUserRequest)(nil),   // 14: user.v1.AdminBanUserRequest
+	(*base.BaseParam)(nil),        // 15: helloworld.v1.BaseParam
 }
 var file_user_user_proto_depIdxs = []int32{
-	13, // 0: user.v1.RegisterRequest.BaseParam:type_name -> helloworld.v1.BaseParam
+	15, // 0: user.v1.RegisterRequest.BaseParam:type_name -> helloworld.v1.BaseParam
 	0,  // 1: user.v1.RegisterReply.user:type_name -> user.v1.UserInfo
-	13, // 2: user.v1.LoginRequest.BaseParam:type_name -> helloworld.v1.BaseParam
+	15, // 2: user.v1.LoginRequest.BaseParam:type_name -> helloworld.v1.BaseParam
 	0,  // 3: user.v1.LoginReply.user:type_name -> user.v1.UserInfo
-	13, // 4: user.v1.GetUserInfoRequest.BaseParam:type_name -> helloworld.v1.BaseParam
-	0,  // 5: user.v1.GetUserInfoReply.user:type_name -> user.v1.UserInfo
-	13, // 6: user.v1.UpdateUserInfoRequest.BaseParam:type_name -> helloworld.v1.BaseParam
-	0,  // 7: user.v1.UpdateUserInfoReply.user:type_name -> user.v1.UserInfo
-	13, // 8: user.v1.AdminListUsersRequest.BaseParam:type_name -> helloworld.v1.BaseParam
-	0,  // 9: user.v1.AdminListUsersReply.list:type_name -> user.v1.UserInfo
-	13, // 10: user.v1.AdminGetUserRequest.BaseParam:type_name -> helloworld.v1.BaseParam
-	13, // 11: user.v1.AdminBanUserRequest.BaseParam:type_name -> helloworld.v1.BaseParam
-	1,  // 12: user.v1.User.Register:input_type -> user.v1.RegisterRequest
-	3,  // 13: user.v1.User.Login:input_type -> user.v1.LoginRequest
-	5,  // 14: user.v1.User.GetUserInfo:input_type -> user.v1.GetUserInfoRequest
-	7,  // 15: user.v1.User.UpdateUserInfo:input_type -> user.v1.UpdateUserInfoRequest
-	9,  // 16: user.v1.AdminUser.AdminListUsers:input_type -> user.v1.AdminListUsersRequest
-	11, // 17: user.v1.AdminUser.AdminGetUser:input_type -> user.v1.AdminGetUserRequest
-	12, // 18: user.v1.AdminUser.AdminBanUser:input_type -> user.v1.AdminBanUserRequest
-	2,  // 19: user.v1.User.Register:output_type -> user.v1.RegisterReply
-	4,  // 20: user.v1.User.Login:output_type -> user.v1.LoginReply
-	6,  // 21: user.v1.User.GetUserInfo:output_type -> user.v1.GetUserInfoReply
-	8,  // 22: user.v1.User.UpdateUserInfo:output_type -> user.v1.UpdateUserInfoReply
-	10, // 23: user.v1.AdminUser.AdminListUsers:output_type -> user.v1.AdminListUsersReply
-	6,  // 24: user.v1.AdminUser.AdminGetUser:output_type -> user.v1.GetUserInfoReply
-	6,  // 25: user.v1.AdminUser.AdminBanUser:output_type -> user.v1.GetUserInfoReply
-	19, // [19:26] is the sub-list for method output_type
-	12, // [12:19] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	15, // 4: user.v1.RefreshTokenRequest.BaseParam:type_name -> helloworld.v1.BaseParam
+	15, // 5: user.v1.GetUserInfoRequest.BaseParam:type_name -> helloworld.v1.BaseParam
+	0,  // 6: user.v1.GetUserInfoReply.user:type_name -> user.v1.UserInfo
+	15, // 7: user.v1.UpdateUserInfoRequest.BaseParam:type_name -> helloworld.v1.BaseParam
+	0,  // 8: user.v1.UpdateUserInfoReply.user:type_name -> user.v1.UserInfo
+	15, // 9: user.v1.AdminListUsersRequest.BaseParam:type_name -> helloworld.v1.BaseParam
+	0,  // 10: user.v1.AdminListUsersReply.list:type_name -> user.v1.UserInfo
+	15, // 11: user.v1.AdminGetUserRequest.BaseParam:type_name -> helloworld.v1.BaseParam
+	15, // 12: user.v1.AdminBanUserRequest.BaseParam:type_name -> helloworld.v1.BaseParam
+	1,  // 13: user.v1.User.Register:input_type -> user.v1.RegisterRequest
+	3,  // 14: user.v1.User.Login:input_type -> user.v1.LoginRequest
+	5,  // 15: user.v1.User.RefreshToken:input_type -> user.v1.RefreshTokenRequest
+	7,  // 16: user.v1.User.GetUserInfo:input_type -> user.v1.GetUserInfoRequest
+	9,  // 17: user.v1.User.UpdateUserInfo:input_type -> user.v1.UpdateUserInfoRequest
+	11, // 18: user.v1.AdminUser.AdminListUsers:input_type -> user.v1.AdminListUsersRequest
+	13, // 19: user.v1.AdminUser.AdminGetUser:input_type -> user.v1.AdminGetUserRequest
+	14, // 20: user.v1.AdminUser.AdminBanUser:input_type -> user.v1.AdminBanUserRequest
+	2,  // 21: user.v1.User.Register:output_type -> user.v1.RegisterReply
+	4,  // 22: user.v1.User.Login:output_type -> user.v1.LoginReply
+	6,  // 23: user.v1.User.RefreshToken:output_type -> user.v1.RefreshTokenReply
+	8,  // 24: user.v1.User.GetUserInfo:output_type -> user.v1.GetUserInfoReply
+	10, // 25: user.v1.User.UpdateUserInfo:output_type -> user.v1.UpdateUserInfoReply
+	12, // 26: user.v1.AdminUser.AdminListUsers:output_type -> user.v1.AdminListUsersReply
+	8,  // 27: user.v1.AdminUser.AdminGetUser:output_type -> user.v1.GetUserInfoReply
+	8,  // 28: user.v1.AdminUser.AdminBanUser:output_type -> user.v1.GetUserInfoReply
+	21, // [21:29] is the sub-list for method output_type
+	13, // [13:21] is the sub-list for method input_type
+	13, // [13:13] is the sub-list for extension type_name
+	13, // [13:13] is the sub-list for extension extendee
+	0,  // [0:13] is the sub-list for field type_name
 }
 
 func init() { file_user_user_proto_init() }
@@ -972,7 +1070,7 @@ func file_user_user_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_user_user_proto_rawDesc), len(file_user_user_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   13,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   2,
 		},

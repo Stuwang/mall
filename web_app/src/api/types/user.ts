@@ -35,6 +35,10 @@ export interface LoginReply {
   access_token: string
 }
 
+export interface RefreshTokenReply {
+  access_token: string
+}
+
 export interface GetUserInfoRequest extends WithBaseParam {
   id?: number
 }

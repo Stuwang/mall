@@ -30,6 +30,11 @@ export class WsClient {
     this.open()
   }
 
+  /** 下次重连使用新 token。当前连接继续用旧 token，直到断开。 */
+  replaceToken(accessToken: string): void {
+    this.token = accessToken
+  }
+
   disconnect(): void {
     this.closedByUser = true
     this.clearTimers()

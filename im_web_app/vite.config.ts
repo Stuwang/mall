@@ -17,6 +17,10 @@ export default defineConfig({
     },
   },
   server: {
+    // 监听所有网卡，局域网用 http://192.168.96.132:5175 打开；localhost 仍可用。
+    host: true,
+    // 默认 CORS 只放行 localhost。用 IP 打开时，浏览器拉 ES module 会带上该 Origin。
+    cors: true,
     port: 5175,
     proxy: {
       '/user/api': {

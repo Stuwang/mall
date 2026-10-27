@@ -74,6 +74,15 @@ async function onAvatarSelected(ev: Event): Promise<void> {
   }
 }
 
+function openProfile(): void {
+  const id = authStore.user?.id
+  if (!id) {
+    notifyError(null, '未登录')
+    return
+  }
+  void router.push({ name: routeNames.profile, params: { userId: String(id) } })
+}
+
 function logout(): void {
   authStore.logout()
   notifySuccess('已退出')
@@ -103,6 +112,7 @@ function logout(): void {
       />
     </div>
     <van-cell-group inset>
+      <van-cell title="主页" is-link @click="openProfile" />
       <van-cell title="昵称" is-link :value="authStore.displayName" @click="openNickname" />
       <van-cell title="用户 ID" :value="String(authStore.user?.id ?? '')" />
       <van-cell title="账号" :value="authStore.user?.username || '-'" />

@@ -196,6 +196,7 @@ func generateImProto(serverDir, binDir string) error {
 		"--go-grpc_out=require_unimplemented_servers=false,paths=source_relative:"+imOut,
 		"common/common.proto",
 		"im/im.proto",
+		"profile/profile.proto",
 	)
 }
 

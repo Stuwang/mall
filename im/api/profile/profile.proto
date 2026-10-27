@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+package im.v1;
+
+import "base/base.proto";
+import "google/api/annotations.proto";
+
+option go_package = "mall/im/api/profile;profile";
+
+// 主页与相册。身份从鉴权取，不读 BaseParam。
+service Profile {
+  rpc GetProfile (GetProfileRequest) returns (GetProfileReply) {
+    option (google.api.http) = {
+      post: "/im/api/v1/profile/get"
+      body: "*"
+    };
+  }
+
+  rpc ListAlbum (ListAlbumRequest) returns (ListAlbumReply) {
+    option (google.api.http) = {
+      post: "/im/api/v1/album/list"
+      body: "*"
+    };
+  }
+
+  rpc AddAlbumPhoto (AddAlbumPhotoRequest) returns (AddAlbumPhotoReply) {
+    option (google.api.http) = {
+      post: "/im/api/v1/album/add"
+      body: "*"
+    };
+  }
+
+  rpc DeleteAlbumPhoto (DeleteAlbumPhotoRequest) returns (DeleteAlbumPhotoReply) {
+    option (google.api.http) = {
+      post: "/im/api/v1/album/delete"
+      body: "*"
+    };
+  }
+}
+
+message AlbumPhoto {
+  int64 id = 1;
+  // 可访问路径（如 /files/...）
+  string image_url = 2;
+  string caption = 3;
+  int64 ct = 4;
+}
+
+message GetProfileRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  // <= 0 表示自己
+  int64 user_id = 2;
+}
+
+message GetProfileReply {
+  int64 user_id = 1;
+  string nickname = 2;
+  // 头像可访问路径（如 /files/...）
+  string avatar = 3;
+  int64 photo_count = 4;
+}
+
+message ListAlbumRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  // <= 0 表示自己
+  int64 user_id = 2;
+  // 0 从最新开始；正数时返回更小的 id
+  int64 before_id = 3;
+  // 0 默认 30，最大 50
+  int32 limit = 4;
+}
+
+message ListAlbumReply {
+  repeated AlbumPhoto list = 1;
+  bool has_more = 2;
+}
+
+message AddAlbumPhotoRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  // 逻辑 URI 或 /files/ 路径
+  string image_uri = 2;
+  string caption = 3;
+}
+
+message AddAlbumPhotoReply {
+  AlbumPhoto photo = 1;
+}
+
+message DeleteAlbumPhotoRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 photo_id = 2;
+}
+
+message DeleteAlbumPhotoReply {}

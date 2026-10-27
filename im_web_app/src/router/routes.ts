@@ -7,6 +7,8 @@ export const routeNames = {
   login: 'login',
   register: 'register',
   chat: 'chat',
+  profile: 'profile',
+  album: 'album',
 } as const
 
 export const routes: RouteRecordRaw[] = [
@@ -51,6 +53,18 @@ export const routes: RouteRecordRaw[] = [
     name: routeNames.chat,
     component: () => import('@/views/chat/ChatView.vue'),
     meta: { title: '聊天', requireAuth: true },
+  },
+  {
+    path: '/u/:userId',
+    name: routeNames.profile,
+    component: () => import('@/views/profile/ProfileView.vue'),
+    meta: { title: '主页', requireAuth: true },
+  },
+  {
+    path: '/u/:userId/album',
+    name: routeNames.album,
+    component: () => import('@/views/profile/AlbumView.vue'),
+    meta: { title: '相册', requireAuth: true },
   },
   {
     path: '/:pathMatch(.*)*',

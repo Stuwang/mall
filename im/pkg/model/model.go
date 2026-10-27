@@ -1,6 +1,9 @@
 package model
 
-import apicommon "mall/im/api/common"
+import (
+	apicommon "mall/im/api/common"
+	kitcommon "mall/kit/model/common"
+)
 
 // UserSeq 一个用户的同步序号计数。该用户所有会话共用，只对看得到的变更加一。
 type UserSeq struct {
@@ -55,4 +58,19 @@ type Message struct {
 
 func (Message) TableName() string {
 	return "im_message"
+}
+
+// AlbumPhoto 用户相册中的一张照片。删除只改 deleted。
+type AlbumPhoto struct {
+	ID      int64                 `gorm:"column:id;primaryKey;autoIncrement;index:idx_album_user_del_id,priority:3"`
+	UserID  int64                 `gorm:"column:user_id;index:idx_album_user_del_id,priority:1"`
+	URI     string                `gorm:"column:uri;size:512"`
+	Caption string                `gorm:"column:caption;size:320"`
+	Deleted kitcommon.DeletedFlag `gorm:"column:deleted;index:idx_album_user_del_id,priority:2"`
+	Ct      int64                 `gorm:"column:ct"`
+	Ut      int64                 `gorm:"column:ut"`
+}
+
+func (AlbumPhoto) TableName() string {
+	return "im_album_photo"
 }

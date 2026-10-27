@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ContentTypeImage, ContentTypeText } from '@/api/types'
 import ImageViewer from '@/components/ImageViewer.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
+import { routeNames } from '@/router/routes'
 import { useAuthStore } from '@/stores/authStore'
 import { useImLive, useImStore } from '@/stores/imStore'
 import { formatTime } from '@/utils/conv'
@@ -204,11 +205,25 @@ function openPreview(url: string): void {
 function isText(m: { content_type?: number }): boolean {
   return !m.content_type || m.content_type === ContentTypeText
 }
+
+function openPeerProfile(): void {
+  if (!peerId.value) {
+    return
+  }
+  void router.push({ name: routeNames.profile, params: { userId: String(peerId.value) } })
+}
 </script>
 
 <template>
   <div class="page chat-page">
-    <van-nav-bar :title="peerNickname" left-arrow fixed placeholder @click-left="router.back()" />
+    <van-nav-bar
+      :title="peerNickname"
+      left-arrow
+      fixed
+      placeholder
+      @click-left="router.back()"
+      @click-title="openPeerProfile"
+    />
     <div ref="listRef" class="msg-list" @scroll.passive="onListScroll">
       <div ref="listInnerRef" class="msg-list-inner">
         <div

@@ -17,7 +17,7 @@ func defaultDB(db *gorm.DB) *gorm.DB {
 
 func AutoMigrate() error {
 	db := defaultDB(nil)
-	if err := db.AutoMigrate(&model.UserSeq{}, &model.Member{}, &model.Message{}); err != nil {
+	if err := db.AutoMigrate(&model.UserSeq{}, &model.Member{}, &model.Message{}, &model.AlbumPhoto{}); err != nil {
 		return codeerror.OrSystem(err, "AutoMigrate im tables")
 	}
 	// 看不见的一侧序号是 0，多行都可以是 0，所以唯一索引排除 0。

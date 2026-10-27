@@ -6,7 +6,10 @@ import (
 	"github.com/go-kratos/kratos/v2"
 	khttp "github.com/go-kratos/kratos/v2/transport/http"
 
+	"mall/file/mediacontroller"
+	"mall/file/mediastore"
 	api "mall/im/api/im"
+	apiprofile "mall/im/api/profile"
 	"mall/im/common/config"
 	"mall/im/common/database"
 	"mall/im/internal/hub"
@@ -15,8 +18,6 @@ import (
 	"mall/im/pkg/controller"
 	imdao "mall/im/pkg/dao"
 	"mall/im/pkg/server"
-	"mall/file/mediacontroller"
-	"mall/file/mediastore"
 	"mall/kit/auth"
 	"mall/kit/codeerror"
 	"mall/kit/logger"
@@ -108,6 +109,7 @@ func NewHTTPServer(cfg *config.Config) *khttp.Server {
 	ws.SetActiveChecker(checkUserActive)
 	api.RegisterImHTTPServer(httpSrv, controller.NewUserController())
 	api.RegisterImInternalHTTPServer(httpSrv, controller.NewInternalController())
+	apiprofile.RegisterProfileHTTPServer(httpSrv, controller.NewProfileController())
 	ws.Register(httpSrv, h, ws.Config{
 		IsTest:          cfg.IsTest(),
 		HeartbeatSec:    cfg.IM.HeartbeatSec,

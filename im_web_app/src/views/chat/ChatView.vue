@@ -2,6 +2,7 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ContentTypeImage, ContentTypeText } from '@/api/types'
+import ImageViewer from '@/components/ImageViewer.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
 import { useAuthStore } from '@/stores/authStore'
 import { useImLive, useImStore } from '@/stores/imStore'
@@ -20,6 +21,8 @@ const sending = ref(false)
 const listRef = ref<HTMLElement | null>(null)
 const listInnerRef = ref<HTMLElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
+const previewUrl = ref('')
+const previewVisible = ref(false)
 /** 用户是否贴在底部；图片加载撑高后据此继续贴底 */
 const stickToBottom = ref(true)
 let listResizeObserver: ResizeObserver | null = null
@@ -190,6 +193,14 @@ function isImage(m: { content_type?: number }): boolean {
   return m.content_type === ContentTypeImage
 }
 
+function openPreview(url: string): void {
+  if (!url) {
+    return
+  }
+  previewUrl.value = url
+  previewVisible.value = true
+}
+
 function isText(m: { content_type?: number }): boolean {
   return !m.content_type || m.content_type === ContentTypeText
 }
@@ -221,6 +232,7 @@ function isText(m: { content_type?: number }): boolean {
               :src="m.content.image_url"
               alt="图片"
               @load="onImageLoad"
+              @click="openPreview(m.content.image_url)"
             />
             <div v-else-if="isText(m)" class="text">{{ m.content?.text }}</div>
             <div v-else class="text muted">[不支持的消息]</div>
@@ -262,6 +274,7 @@ function isText(m: { content_type?: number }): boolean {
       />
       <van-button type="primary" size="small" :loading="sending" @click="onSend">发送</van-button>
     </div>
+    <ImageViewer v-model:show="previewVisible" :src="previewUrl" />
   </div>
 </template>
 
@@ -337,6 +350,7 @@ function isText(m: { content_type?: number }): boolean {
   max-height: 280px;
   border-radius: 8px;
   object-fit: cover;
+  cursor: zoom-in;
 }
 
 .meta {

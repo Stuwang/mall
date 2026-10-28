@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import type { OnlineUser } from '@/api/types'
+import type { Msg, OnlineUser } from '@/api/types'
 import { imClient } from '@/im/ImClient'
 import type { LocalConv, LocalMsg } from '@/im/types'
 
@@ -83,6 +83,11 @@ export const useImStore = defineStore('im', () => {
     refresh()
   }
 
+  function deliverServerMsg(msg: Msg): void {
+    imClient.deliverServerMsg(msg)
+    refresh()
+  }
+
   return {
     convs,
     online,
@@ -101,6 +106,7 @@ export const useImStore = defineStore('im', () => {
     openLocalChat,
     sendText,
     sendImage,
+    deliverServerMsg,
   }
 })
 

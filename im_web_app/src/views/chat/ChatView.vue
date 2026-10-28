@@ -1,19 +1,22 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ContentTypeImage, ContentTypeText } from '@/api/types'
+import { ContentTypeGift, ContentTypeImage, ContentTypeText, type Gift } from '@/api/types'
+import { appContext } from '@/app/AppContext'
 import ImageViewer from '@/components/ImageViewer.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
 import { routeNames } from '@/router/routes'
 import { useAuthStore } from '@/stores/authStore'
 import { useImLive, useImStore } from '@/stores/imStore'
-import { formatTime } from '@/utils/conv'
-import { notifyError } from '@/utils/notify'
+import { isGiftIconUrl } from '@/utils/coin'
+import { formatTime, newClientMsgId } from '@/utils/conv'
+import { notifyError, notifyFail } from '@/utils/notify'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const imStore = useImStore()
+const api = appContext.api
 useImLive()
 
 const peerId = computed(() => Number(route.params.peerId))
@@ -24,6 +27,12 @@ const listInnerRef = ref<HTMLElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 const previewUrl = ref('')
 const previewVisible = ref(false)
+const giftOpen = ref(false)
+const gifts = ref<Gift[]>([])
+const giftsLoading = ref(false)
+const giftBalance = ref(0)
+const giftBalanceReady = ref(false)
+const sendingGift = ref(false)
 /** 用户是否贴在底部；图片加载撑高后据此继续贴底 */
 const stickToBottom = ref(true)
 let listResizeObserver: ResizeObserver | null = null
@@ -45,9 +54,7 @@ const peerAvatar = computed(() => {
   return imStore.online.find((u) => u.user_id === peerId.value)?.avatar || ''
 })
 
-const selfNickname = computed(
-  () => authStore.user?.nickname || authStore.user?.username || '我',
-)
+const selfNickname = computed(() => authStore.user?.nickname || authStore.user?.username || '我')
 
 const selfAvatar = computed(() => authStore.user?.avatar || '')
 
@@ -194,6 +201,10 @@ function isImage(m: { content_type?: number }): boolean {
   return m.content_type === ContentTypeImage
 }
 
+function isGift(m: { content_type?: number }): boolean {
+  return m.content_type === ContentTypeGift
+}
+
 function openPreview(url: string): void {
   if (!url) {
     return
@@ -211,6 +222,59 @@ function openPeerProfile(): void {
     return
   }
   void router.push({ name: routeNames.profile, params: { userId: String(peerId.value) } })
+}
+
+async function openGifts(): Promise<void> {
+  if (sending.value || sendingGift.value) {
+    return
+  }
+  giftOpen.value = true
+  giftsLoading.value = true
+  try {
+    const [giftReply, balReply] = await Promise.all([api.coin.listGifts(), api.coin.balance()])
+    gifts.value = giftReply.list || []
+    giftBalance.value = balReply.balance
+    giftBalanceReady.value = true
+  } catch (error) {
+    giftBalanceReady.value = false
+    notifyError(error, '加载礼物失败')
+  } finally {
+    giftsLoading.value = false
+  }
+}
+
+async function onSendGift(gift: Gift): Promise<void> {
+  if (sendingGift.value || giftsLoading.value) {
+    return
+  }
+  if (!peerId.value) {
+    notifyFail('无法送礼')
+    return
+  }
+  if (!giftBalanceReady.value) {
+    notifyFail('金币余额未加载')
+    return
+  }
+  if (gift.price > giftBalance.value) {
+    notifyFail('金币不足')
+    return
+  }
+  sendingGift.value = true
+  try {
+    const reply = await api.coin.sendGift({
+      peer_user_id: peerId.value,
+      gift_id: gift.id,
+      client_msg_id: newClientMsgId(),
+    })
+    giftBalance.value = reply.balance
+    imStore.deliverServerMsg(reply.msg)
+    giftOpen.value = false
+    await scrollBottom()
+  } catch (error) {
+    notifyError(error, '送礼失败')
+  } finally {
+    sendingGift.value = false
+  }
 }
 </script>
 
@@ -240,7 +304,10 @@ function openPeerProfile(): void {
             :src="peerAvatar"
             :size="40"
           />
-          <div class="bubble" :class="{ pending: m.pending, failed: m.failed, image: isImage(m) }">
+          <div
+            class="bubble"
+            :class="{ pending: m.pending, failed: m.failed, image: isImage(m), gift: isGift(m) }"
+          >
             <img
               v-if="isImage(m) && m.content?.image_url"
               class="msg-image"
@@ -249,6 +316,19 @@ function openPeerProfile(): void {
               @load="onImageLoad"
               @click="openPreview(m.content.image_url)"
             />
+            <div v-else-if="isGift(m)" class="gift-msg">
+              <img
+                v-if="isGiftIconUrl(m.content?.gift?.icon)"
+                class="gift-msg-icon"
+                :src="m.content?.gift?.icon"
+                alt=""
+              />
+              <span v-else class="gift-msg-emoji">{{ m.content?.gift?.icon || '🎁' }}</span>
+              <div class="gift-msg-body">
+                <div class="gift-msg-name">{{ m.content?.gift?.name || '礼物' }}</div>
+                <div class="gift-msg-label">送出了礼物</div>
+              </div>
+            </div>
             <div v-else-if="isText(m)" class="text">{{ m.content?.text }}</div>
             <div v-else class="text muted">[不支持的消息]</div>
             <div class="meta">
@@ -272,6 +352,9 @@ function openPeerProfile(): void {
       <button type="button" class="img-btn" :disabled="sending" @click="pickImage">
         <van-icon name="photo-o" />
       </button>
+      <button type="button" class="img-btn" :disabled="sending || sendingGift" @click="openGifts">
+        <van-icon name="gift-o" />
+      </button>
       <input
         ref="fileInput"
         class="hidden-input"
@@ -290,6 +373,31 @@ function openPeerProfile(): void {
       <van-button type="primary" size="small" :loading="sending" @click="onSend">发送</van-button>
     </div>
     <ImageViewer v-model:show="previewVisible" :src="previewUrl" />
+    <van-popup v-model:show="giftOpen" position="bottom" round safe-area-inset-bottom>
+      <div class="gift-sheet">
+        <div class="gift-head">
+          <span>送礼物</span>
+          <span class="gift-balance">金币 {{ giftBalanceReady ? giftBalance : '…' }}</span>
+        </div>
+        <div v-if="giftsLoading && gifts.length === 0" class="gift-loading muted">加载中…</div>
+        <van-empty v-else-if="giftBalanceReady && gifts.length === 0" description="暂无礼物" />
+        <div v-else class="gift-grid">
+          <button
+            v-for="gift in gifts"
+            :key="gift.id"
+            type="button"
+            class="gift-cell"
+            :disabled="sendingGift || giftsLoading || !giftBalanceReady"
+            @click="onSendGift(gift)"
+          >
+            <img v-if="isGiftIconUrl(gift.icon)" class="gift-icon" :src="gift.icon" alt="" />
+            <span v-else class="gift-emoji">{{ gift.icon || '🎁' }}</span>
+            <span class="gift-name">{{ gift.name }}</span>
+            <span class="gift-price">{{ gift.price }} 金币</span>
+          </button>
+        </div>
+      </div>
+    </van-popup>
   </div>
 </template>
 
@@ -421,5 +529,108 @@ function openPeerProfile(): void {
   background: #f3f5f8;
   border-radius: 12px;
   padding: 6px 10px;
+}
+
+.gift-msg {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 148px;
+}
+
+.gift-msg-emoji {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.gift-msg-icon {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.gift-msg-name {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.gift-msg-label {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--im-text-secondary);
+}
+
+.gift-sheet {
+  padding: 16px 16px calc(16px + var(--im-safe-bottom));
+  max-height: 70vh;
+  overflow: auto;
+}
+
+.gift-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.gift-balance {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--im-accent);
+}
+
+.gift-loading {
+  padding: 28px 0;
+  text-align: center;
+}
+
+.gift-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.gift-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px 4px;
+  border: 1px solid var(--im-border);
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.gift-cell:disabled {
+  opacity: 0.55;
+}
+
+.gift-emoji {
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.gift-icon {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+.gift-name {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gift-price {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--im-accent);
 }
 </style>

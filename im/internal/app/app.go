@@ -8,6 +8,7 @@ import (
 
 	"mall/file/mediacontroller"
 	"mall/file/mediastore"
+	coinapi "mall/im/api/coin"
 	api "mall/im/api/im"
 	apipost "mall/im/api/post"
 	apiprofile "mall/im/api/profile"
@@ -47,6 +48,22 @@ func Init(cfg *config.Config) {
 	auth.SetActiveChecker(checkUserActive)
 	controller.SetSystemToken(cfg.IM.SystemToken)
 	biz.SetTextMaxRunes(cfg.IM.TextMaxRunes)
+	loadedGifts := cfg.Gifts()
+	gifts := make([]biz.GiftItem, 0, len(loadedGifts))
+	for _, g := range loadedGifts {
+		gifts = append(gifts, biz.GiftItem{
+			ID:     g.ID,
+			Name:   g.Name,
+			Icon:   g.Icon,
+			Effect: g.Effect,
+			Price:  g.Price,
+		})
+	}
+	biz.SetCoinConfig(biz.CoinConfig{
+		CoinsPerYuan:  cfg.Coin.CoinsPerYuan,
+		PayTimeoutSec: cfg.Coin.PayTimeoutSec,
+		Gifts:         gifts,
+	})
 
 	if err := mediastore.Init(mediastore.Config{
 		PublicBase:     cfg.Storage.PublicBase,
@@ -112,6 +129,7 @@ func NewHTTPServer(cfg *config.Config) *khttp.Server {
 	api.RegisterImInternalHTTPServer(httpSrv, controller.NewInternalController())
 	apiprofile.RegisterProfileHTTPServer(httpSrv, controller.NewProfileController())
 	apipost.RegisterPostHTTPServer(httpSrv, controller.NewPostController())
+	coinapi.RegisterCoinHTTPServer(httpSrv, controller.NewCoinController())
 	ws.Register(httpSrv, h, ws.Config{
 		IsTest:          cfg.IsTest(),
 		HeartbeatSec:    cfg.IM.HeartbeatSec,

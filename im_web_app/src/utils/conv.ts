@@ -20,6 +20,11 @@ export function newClientCommentId(): string {
   return `cm-${Date.now().toString(36)}-${rand}`.slice(0, 64)
 }
 
+export function newClientOrderId(): string {
+  const rand = Math.random().toString(36).slice(2, 10)
+  return `o-${Date.now().toString(36)}-${rand}`.slice(0, 64)
+}
+
 export function formatTime(sec: number): string {
   if (!sec) {
     return ''

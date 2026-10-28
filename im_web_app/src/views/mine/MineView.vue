@@ -1,14 +1,29 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
+import { onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import UserAvatar from '@/components/UserAvatar.vue'
+import { appContext } from '@/app/AppContext'
 import { routeNames } from '@/router/routes'
 import { useAuthStore } from '@/stores/authStore'
 import { useImLive } from '@/stores/imStore'
 import { notifyError } from '@/utils/notify'
 
+const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const api = appContext.api
 useImLive()
+
+const coinBalance = ref<number | null>(null)
+
+async function loadBalance(): Promise<void> {
+  try {
+    const reply = await api.coin.balance()
+    coinBalance.value = reply.balance
+  } catch (error) {
+    notifyError(error, '加载金币失败')
+  }
+}
 
 function openProfile(): void {
   const id = authStore.user?.id
@@ -18,6 +33,23 @@ function openProfile(): void {
   }
   void router.push({ name: routeNames.profile, params: { userId: String(id) } })
 }
+
+function openCoin(): void {
+  void router.push({ name: routeNames.coin })
+}
+
+onMounted(() => {
+  void loadBalance()
+})
+
+watch(
+  () => route.fullPath,
+  () => {
+    if (route.name === routeNames.mine) {
+      void loadBalance()
+    }
+  },
+)
 
 function openSettings(): void {
   void router.push({ name: routeNames.settings })
@@ -32,21 +64,27 @@ function openAbout(): void {
   <div class="page">
     <van-nav-bar title="我的" />
 
-    <button type="button" class="profile-card im-fade-up" @click="openProfile">
+    <div class="profile-card im-fade-up">
       <div class="glow" aria-hidden="true" />
-      <UserAvatar
-        :user-id="authStore.user?.id ?? 0"
-        :nickname="authStore.displayName"
-        :src="authStore.user?.avatar"
-        :size="72"
-      />
-      <div class="profile-meta">
-        <div class="name">{{ authStore.displayName }}</div>
-        <div class="sub">用户 ID {{ authStore.user?.id ?? '-' }}</div>
-        <div class="hint">查看主页 · 相册与帖子</div>
-      </div>
-      <van-icon name="arrow" class="chevron" />
-    </button>
+      <button type="button" class="profile-hit" @click="openProfile">
+        <UserAvatar
+          :user-id="authStore.user?.id ?? 0"
+          :nickname="authStore.displayName"
+          :src="authStore.user?.avatar"
+          :size="72"
+        />
+        <div class="profile-meta">
+          <div class="name">{{ authStore.displayName }}</div>
+          <div class="sub">用户 ID {{ authStore.user?.id ?? '-' }}</div>
+          <div class="hint">查看主页 · 相册与帖子</div>
+        </div>
+        <van-icon name="arrow" class="chevron" />
+      </button>
+      <button type="button" class="coin-chip" @click="openCoin">
+        <van-icon name="gold-coin-o" />
+        <span>金币 {{ coinBalance == null ? '…' : coinBalance }}</span>
+      </button>
+    </div>
 
     <van-cell-group inset class="menu im-fade-up">
       <van-cell title="设置" is-link @click="openSettings">
@@ -67,20 +105,37 @@ function openAbout(): void {
 .profile-card {
   position: relative;
   display: flex;
-  align-items: center;
-  gap: 16px;
+  flex-direction: column;
+  align-items: flex-start;
   width: calc(100% - 32px);
   margin: 18px 16px 14px;
-  padding: 20px 18px;
+  padding: 20px 18px 16px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.55);
   border-radius: 20px;
-  background:
-    linear-gradient(135deg, rgba(15, 143, 134, 0.92), rgba(10, 107, 101, 0.88) 48%, rgba(45, 90, 120, 0.9));
+  background: linear-gradient(
+    135deg,
+    rgba(15, 143, 134, 0.92),
+    rgba(10, 107, 101, 0.88) 48%,
+    rgba(45, 90, 120, 0.9)
+  );
   color: #fff;
   text-align: left;
-  cursor: pointer;
   box-shadow: 0 16px 36px rgba(15, 143, 134, 0.28);
+}
+
+.profile-hit {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
 .glow {
@@ -124,6 +179,23 @@ function openAbout(): void {
   position: relative;
   color: rgba(255, 255, 255, 0.75);
   font-size: 16px;
+}
+
+.coin-chip {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 0 0 88px;
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .menu {

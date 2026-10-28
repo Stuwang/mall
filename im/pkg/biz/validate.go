@@ -39,6 +39,9 @@ func validateContentType(ct apicommon.ContentType) error {
 	case apicommon.ContentType_CONTENT_TYPE_TEXT,
 		apicommon.ContentType_CONTENT_TYPE_IMAGE:
 		return nil
+	case apicommon.ContentType_CONTENT_TYPE_GIFT:
+		logger.Errorf("im content_type gift rejected type=%d", ct)
+		return bizerror.ErrorBadMessage
 	default:
 		logger.Errorf("im content_type unsupported type=%d", ct)
 		return bizerror.ErrorBadMessage

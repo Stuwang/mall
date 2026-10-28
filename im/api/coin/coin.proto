@@ -1,0 +1,173 @@
+syntax = "proto3";
+
+package im.coin.v1;
+
+import "base/base.proto";
+import "common/common.proto";
+import "im/im.proto";
+import "google/api/annotations.proto";
+
+option go_package = "mall/im/api/coin;coin";
+
+// 金币与礼物。身份从鉴权取，不读 BaseParam。
+service Coin {
+  rpc Balance (BalanceRequest) returns (BalanceReply) {
+    option (google.api.http) = {
+      post: "/im/api/v1/coin/balance"
+      body: "*"
+    };
+  }
+
+  // 金币流水，按 id 从新到旧。
+  rpc Ledger (LedgerRequest) returns (LedgerReply) {
+    option (google.api.http) = {
+      post: "/im/api/v1/coin/ledger"
+      body: "*"
+    };
+  }
+
+  rpc GiftList (GiftListRequest) returns (GiftListReply) {
+    option (google.api.http) = {
+      post: "/im/api/v1/gift/list"
+      body: "*"
+    };
+  }
+
+  rpc SendGift (SendGiftRequest) returns (SendGiftReply) {
+    option (google.api.http) = {
+      post: "/im/api/v1/gift/send"
+      body: "*"
+    };
+  }
+
+  rpc CreateRecharge (CreateRechargeRequest) returns (RechargeOrder) {
+    option (google.api.http) = {
+      post: "/im/api/v1/coin/recharge/create"
+      body: "*"
+    };
+  }
+
+  rpc PayRecharge (PayRechargeRequest) returns (RechargeOrder) {
+    option (google.api.http) = {
+      post: "/im/api/v1/coin/recharge/pay"
+      body: "*"
+    };
+  }
+
+  rpc MockPaySuccess (MockPaySuccessRequest) returns (RechargeOrder) {
+    option (google.api.http) = {
+      post: "/im/api/v1/coin/recharge/mock_pay_success"
+      body: "*"
+    };
+  }
+
+  rpc GetRecharge (GetRechargeRequest) returns (RechargeOrder) {
+    option (google.api.http) = {
+      post: "/im/api/v1/coin/recharge/get"
+      body: "*"
+    };
+  }
+}
+
+message BalanceRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+}
+
+message BalanceReply {
+  int64 balance = 1;
+  int64 coins_per_yuan = 2;
+}
+
+message LedgerRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  // 0 表示从最新一条开始。返回 id 更小的流水。
+  int64 before_id = 2;
+  // 0 默认 20，最大 50。
+  int32 limit = 3;
+}
+
+message LedgerItem {
+  int64 id = 1;
+  im.common.v1.CoinChangeType change_type = 2;
+  // 有符号变动：收入为正，支出为负。
+  int64 change = 3;
+  // 这笔变动之后的余额。
+  int64 balance = 4;
+  string remark = 5;
+  // 扩展 JSON 字符串。
+  string ext = 6;
+  int64 ct = 7;
+}
+
+message LedgerReply {
+  repeated LedgerItem list = 1;
+  bool has_more = 2;
+}
+
+message GiftListRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+}
+
+message Gift {
+  int64 id = 1;
+  string name = 2;
+  string icon = 3;
+  string effect = 4;
+  int64 price = 5;
+}
+
+message GiftListReply {
+  repeated Gift list = 1;
+}
+
+message SendGiftRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 peer_user_id = 2;
+  int64 gift_id = 3;
+  string client_msg_id = 4;
+}
+
+message SendGiftReply {
+  // 扣款后的余额。
+  int64 balance = 1;
+  // 发送者视角的礼物消息。
+  im.v1.Msg msg = 2;
+}
+
+message CreateRechargeRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 coins = 2;
+  // 可选幂等键。空字符串表示不幂等。
+  string client_order_id = 3;
+}
+
+message PayRechargeRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 order_id = 2;
+  im.common.v1.PayType pay_type = 3;
+}
+
+message MockPaySuccessRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 order_id = 2;
+}
+
+message GetRechargeRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 order_id = 2;
+}
+
+message RechargeOrder {
+  int64 id = 1;
+  string order_no = 2;
+  int64 coins = 3;
+  // 现金金额，单位分。
+  int64 cash_amount = 4;
+  // 下单时的汇率快照。
+  int64 coins_per_yuan = 5;
+  im.common.v1.PayType pay_type = 6;
+  im.common.v1.CoinOrderStatus status = 7;
+  int64 expire_at = 8;
+  int64 paid_at = 9;
+  int64 ct = 10;
+}

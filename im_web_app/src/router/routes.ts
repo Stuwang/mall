@@ -14,6 +14,9 @@ export const routeNames = {
   chat: 'chat',
   profile: 'profile',
   album: 'album',
+  coin: 'coin',
+  coinPay: 'coinPay',
+  coinMockPay: 'coinMockPay',
 } as const
 
 export const routes: RouteRecordRaw[] = [
@@ -88,6 +91,24 @@ export const routes: RouteRecordRaw[] = [
     name: routeNames.about,
     component: () => import('@/views/mine/AboutView.vue'),
     meta: { title: '关于', requireAuth: true },
+  },
+  {
+    path: '/coin',
+    name: routeNames.coin,
+    component: () => import('@/views/coin/CoinView.vue'),
+    meta: { title: '我的金币', requireAuth: true },
+  },
+  {
+    path: '/coin/pay/:orderId',
+    name: routeNames.coinPay,
+    component: () => import('@/views/coin/CoinPayView.vue'),
+    meta: { title: '支付', requireAuth: true },
+  },
+  {
+    path: '/coin/mock-pay/:orderId',
+    name: routeNames.coinMockPay,
+    component: () => import('@/views/coin/CoinMockPayView.vue'),
+    meta: { title: '收银台', requireAuth: true },
   },
   {
     path: '/posts/new',

@@ -65,10 +65,20 @@ message Peer {
   string avatar = 3;
 }
 
+// 礼物消息正文。仅送礼接口写入，通用 Send 不接受。
+message GiftBody {
+  int64 gift_id = 1;
+  string name = 2;
+  string icon = 3;
+  string effect = 4;
+  int64 price = 5;
+}
+
 message MsgContent {
   string text = 1;
   // 图片可访问路径（如 /files/...），仅图片消息有值
   string image_url = 2;
+  GiftBody gift = 3;
 }
 
 // 下行消息。seq 是当前用户这一侧的同步序号，更新后变成更大的新值。

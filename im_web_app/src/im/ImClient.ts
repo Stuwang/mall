@@ -1,12 +1,19 @@
 import { appContext } from '@/app/AppContext'
 import type { Conversation, Msg, OnlineUser } from '@/api/types'
-import { ContentTypeImage, ContentTypeText } from '@/api/types'
+import { ContentTypeGift, ContentTypeImage, ContentTypeText } from '@/api/types'
 import { makeConvId, newClientMsgId } from '@/utils/conv'
 import { LocalStore } from './LocalStore'
 import type { LocalConv, LocalMsg } from './types'
 import { WsClient } from './WsClient'
 
 type ChangeHandler = () => void
+
+export interface GiftEffectEvent {
+  msgId: number
+  effect: string
+}
+
+type GiftEffectHandler = (event: GiftEffectEvent) => void
 
 /**
  * IM 客户端：本地游标 + HTTP 兜底同步 + WS 推送先展示。
@@ -24,6 +31,10 @@ export class ImClient {
   private wsConnected = false
   /** 当前前台打开的对端；0 表示不在聊天页 */
   private activePeerId = 0
+  private readonly giftEffectHandlers = new Set<GiftEffectHandler>()
+  private readonly playedGiftMsgIds = new Set<number>()
+  private readonly playedGiftClientIds = new Set<string>()
+  private pendingGiftEffect: GiftEffectEvent | null = null
 
   constructor() {
     this.ws.setHandlers(
@@ -43,6 +54,19 @@ export class ImClient {
   subscribe(fn: ChangeHandler): () => void {
     this.listeners.add(fn)
     return () => this.listeners.delete(fn)
+  }
+
+  /** 订阅礼物全屏特效。历史同步不会触发。 */
+  onGiftEffect(handler: GiftEffectHandler): () => void {
+    this.giftEffectHandlers.add(handler)
+    if (this.pendingGiftEffect) {
+      const event = this.pendingGiftEffect
+      this.pendingGiftEffect = null
+      handler(event)
+    }
+    return () => {
+      this.giftEffectHandlers.delete(handler)
+    }
   }
 
   isWsConnected(): boolean {
@@ -115,6 +139,9 @@ export class ImClient {
     this.userId = 0
     this.activePeerId = 0
     this.online = []
+    this.playedGiftMsgIds.clear()
+    this.playedGiftClientIds.clear()
+    this.pendingGiftEffect = null
     this.emit()
   }
 
@@ -280,8 +307,26 @@ export class ImClient {
     this.store.markRead(convId)
   }
 
+  /**
+   * 把服务端 Msg 写入会话。送礼 HTTP 回包走这里，会播放礼物特效。
+   * 历史/列表同步只应调用 applyServerMsg，不要走这里。
+   */
+  deliverServerMsg(msg: Msg): void {
+    this.applyServerMsg(msg)
+    this.emitGiftEffect(msg)
+    const peerId = this.peerFromMsg(msg)
+    if (peerId > 0 && this.activePeerId === peerId) {
+      this.markPeerRead(peerId)
+    }
+    this.emit()
+    if (peerId > 0) {
+      void this.syncPeer(peerId)
+    }
+  }
+
   private async onPush(msg: Msg): Promise<void> {
     this.applyServerMsg(msg)
+    this.emitGiftEffect(msg)
     const peerId = this.peerFromMsg(msg)
     if (peerId > 0 && this.activePeerId === peerId) {
       this.markPeerRead(peerId)
@@ -311,6 +356,65 @@ export class ImClient {
       return
     }
     this.store.upsertMessage(msg.conv_id, { ...msg, pending: false, failed: false })
+  }
+
+  /** 仅送礼回包与 WS 推送调用。同一 msg_id 或 client_msg_id 只播放一次。 */
+  private emitGiftEffect(msg: Msg): void {
+    if (msg.content_type !== ContentTypeGift) {
+      return
+    }
+    const effect = msg.content?.gift?.effect?.trim() ?? ''
+    if (!effect || this.hasPlayedGiftEffect(msg)) {
+      return
+    }
+    this.markGiftEffectPlayed(msg)
+    this.dispatchGiftEffect({ msgId: msg.msg_id, effect })
+  }
+
+  private hasPlayedGiftEffect(msg: Msg): boolean {
+    const hasId = msg.msg_id > 0
+    const hasClient = Boolean(msg.client_msg_id)
+    if (!hasId && !hasClient) {
+      return true
+    }
+    if (hasId && this.playedGiftMsgIds.has(msg.msg_id)) {
+      return true
+    }
+    if (hasClient && this.playedGiftClientIds.has(msg.client_msg_id)) {
+      return true
+    }
+    return false
+  }
+
+  private markGiftEffectPlayed(msg: Msg): void {
+    if (msg.msg_id > 0) {
+      this.playedGiftMsgIds.add(msg.msg_id)
+      if (this.playedGiftMsgIds.size > 300) {
+        const oldest = this.playedGiftMsgIds.values().next().value
+        if (oldest !== undefined) {
+          this.playedGiftMsgIds.delete(oldest)
+        }
+      }
+    }
+    if (msg.client_msg_id) {
+      this.playedGiftClientIds.add(msg.client_msg_id)
+      if (this.playedGiftClientIds.size > 300) {
+        const oldest = this.playedGiftClientIds.values().next().value
+        if (oldest !== undefined) {
+          this.playedGiftClientIds.delete(oldest)
+        }
+      }
+    }
+  }
+
+  private dispatchGiftEffect(event: GiftEffectEvent): void {
+    if (this.giftEffectHandlers.size === 0) {
+      this.pendingGiftEffect = event
+      return
+    }
+    for (const handler of this.giftEffectHandlers) {
+      handler(event)
+    }
   }
 
   private applyServerConv(conv: Conversation): void {

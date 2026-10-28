@@ -124,3 +124,72 @@ type PostLike struct {
 func (PostLike) TableName() string {
 	return "im_post_like"
 }
+
+// UserCoin 用户金币余额。没有行表示余额为 0。
+type UserCoin struct {
+	UserID  int64 `gorm:"column:user_id;primaryKey"`
+	Balance int64 `gorm:"column:balance"`
+	Ct      int64 `gorm:"column:ct"`
+	Ut      int64 `gorm:"column:ut"`
+}
+
+func (UserCoin) TableName() string {
+	return "im_user_coin"
+}
+
+// CoinLedger 金币流水。idempotent_id 唯一，重复请求不重复入账。
+type CoinLedger struct {
+	ID           int64                    `gorm:"column:id;primaryKey;autoIncrement;index:idx_coin_ledger_user,priority:2"`
+	UserID       int64                    `gorm:"column:user_id;index:idx_coin_ledger_user,priority:1"`
+	ChangeType   apicommon.CoinChangeType `gorm:"column:change_type"`
+	Change       int64                    `gorm:"column:change"`
+	Balance      int64                    `gorm:"column:balance"`
+	IdempotentID string                   `gorm:"column:idempotent_id;size:128;uniqueIndex"`
+	Ext          string                   `gorm:"column:ext;type:text"`
+	Remark       string                   `gorm:"column:remark;size:128"`
+	Ct           int64                    `gorm:"column:ct"`
+}
+
+func (CoinLedger) TableName() string {
+	return "im_coin_ledger"
+}
+
+// CoinOrder 金币充值订单。client_order_id 为空时不参与唯一约束。
+type CoinOrder struct {
+	ID            int64                     `gorm:"column:id;primaryKey;autoIncrement"`
+	OrderNo       string                    `gorm:"column:order_no;size:64;uniqueIndex"`
+	UserID        int64                     `gorm:"column:user_id;index"`
+	ClientOrderID string                    `gorm:"column:client_order_id;size:64"`
+	Coins         int64                     `gorm:"column:coins"`
+	CashAmount    int64                     `gorm:"column:cash_amount"`
+	CoinsPerYuan  int64                     `gorm:"column:coins_per_yuan"`
+	PayType       apicommon.PayType         `gorm:"column:pay_type"`
+	Status        apicommon.CoinOrderStatus `gorm:"column:status"`
+	ExpireAt      int64                     `gorm:"column:expire_at"`
+	PaidAt        int64                     `gorm:"column:paid_at"`
+	Ct            int64                     `gorm:"column:ct"`
+	Ut            int64                     `gorm:"column:ut"`
+}
+
+func (CoinOrder) TableName() string {
+	return "im_coin_order"
+}
+
+// GiftRecord 一次送礼。同一发送者的 client_msg_id 只成功一次。
+type GiftRecord struct {
+	ID          int64  `gorm:"column:id;primaryKey;autoIncrement"`
+	SenderID    int64  `gorm:"column:sender_id;uniqueIndex:uk_gift_client,priority:1"`
+	ClientMsgID string `gorm:"column:client_msg_id;size:64;uniqueIndex:uk_gift_client,priority:2"`
+	PeerUserID  int64  `gorm:"column:peer_user_id"`
+	GiftID      int64  `gorm:"column:gift_id"`
+	GiftName    string `gorm:"column:gift_name;size:64"`
+	GiftIcon    string `gorm:"column:gift_icon;size:512"`
+	GiftEffect  string `gorm:"column:gift_effect;size:128"`
+	Price       int64  `gorm:"column:price"`
+	MsgID       int64  `gorm:"column:msg_id"`
+	Ct          int64  `gorm:"column:ct"`
+}
+
+func (GiftRecord) TableName() string {
+	return "im_gift_record"
+}

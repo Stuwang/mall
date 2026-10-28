@@ -2,6 +2,7 @@ import type { WithBaseParam } from './common'
 
 export const ContentTypeText = 1
 export const ContentTypeImage = 2
+export const ContentTypeGift = 3
 export const OriginUser = 1
 export const OriginSystem = 2
 
@@ -11,9 +12,18 @@ export interface Peer {
   avatar?: string
 }
 
+export interface MsgGift {
+  gift_id: number
+  name: string
+  icon: string
+  effect: string
+  price: number
+}
+
 export interface MsgContent {
   text?: string
   image_url?: string
+  gift?: MsgGift
 }
 
 export interface Msg {

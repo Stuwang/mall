@@ -23,6 +23,7 @@ const isSelf = computed(() => userId.value === (authStore.user?.id ?? 0))
 
 const loading = ref(true)
 const profile = ref<GetProfileReply | null>(null)
+const coinBalance = ref<number | null>(null)
 const photos = ref<AlbumPhoto[]>([])
 const posts = ref<PostItem[]>([])
 const postsHasMore = ref(false)
@@ -34,16 +35,28 @@ const displayName = computed(
 
 async function loadAll(): Promise<void> {
   loading.value = true
+  coinBalance.value = null
+  const showCoin = isSelf.value
   try {
-    const [p, album, userPosts] = await Promise.all([
+    const coinTask = showCoin
+      ? api.coin.balance().catch((error: unknown) => {
+          notifyError(error, '加载金币失败')
+          return null
+        })
+      : Promise.resolve(null)
+    const [p, album, userPosts, coin] = await Promise.all([
       api.profile.getProfile({ user_id: userId.value }),
       api.profile.listAlbum({ user_id: userId.value, before_id: 0, limit: 9 }),
       api.post.listUser({ user_id: userId.value, before_id: 0, limit: 20 }),
+      coinTask,
     ])
     profile.value = p
     photos.value = album.list || []
     posts.value = userPosts.list || []
     postsHasMore.value = Boolean(userPosts.has_more)
+    if (showCoin && coin && isSelf.value) {
+      coinBalance.value = coin.balance
+    }
   } catch (error) {
     profile.value = null
     photos.value = []
@@ -78,6 +91,10 @@ async function loadMorePosts(): Promise<void> {
 
 function openAlbum(): void {
   void router.push({ name: routeNames.album, params: { userId: String(userId.value) } })
+}
+
+function openCoin(): void {
+  void router.push({ name: routeNames.coin })
 }
 
 function startChat(): void {
@@ -140,6 +157,9 @@ watch(userId, () => {
         />
         <div class="name">{{ displayName }}</div>
         <div class="uid">用户 ID {{ profile.user_id }}</div>
+        <button v-if="isSelf" type="button" class="coin-link" @click="openCoin">
+          金币 {{ coinBalance == null ? '--' : coinBalance }}
+        </button>
         <div v-if="!isSelf" class="actions">
           <van-button round type="primary" @click="startChat">发消息</van-button>
         </div>
@@ -152,13 +172,7 @@ watch(userId, () => {
 
       <van-empty v-if="photos.length === 0" description="还没有照片" />
       <div v-else class="album-grid im-fade-up">
-        <button
-          v-for="p in photos"
-          :key="p.id"
-          type="button"
-          class="album-cell"
-          @click="openAlbum"
-        >
+        <button v-for="p in photos" :key="p.id" type="button" class="album-cell" @click="openAlbum">
           <img :src="p.image_url" alt="" />
         </button>
       </div>
@@ -225,8 +239,7 @@ watch(userId, () => {
   position: absolute;
   inset: 0 0 auto 0;
   height: 96px;
-  background:
-    linear-gradient(135deg, rgba(15, 143, 134, 0.18), rgba(232, 135, 58, 0.12));
+  background: linear-gradient(135deg, rgba(15, 143, 134, 0.18), rgba(232, 135, 58, 0.12));
   pointer-events: none;
 }
 
@@ -245,6 +258,19 @@ watch(userId, () => {
   position: relative;
   font-size: 12px;
   color: var(--im-muted);
+}
+
+.coin-link {
+  position: relative;
+  margin-top: 4px;
+  padding: 6px 14px;
+  border: none;
+  border-radius: 999px;
+  background: var(--im-primary-soft);
+  color: var(--im-primary-deep);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .actions {

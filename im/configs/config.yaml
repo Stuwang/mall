@@ -27,3 +27,8 @@ storage:
   max_upload_bytes: 100000000
   local:
     root_dir: "data/images"
+
+coin:
+  coins_per_yuan: 10
+  pay_timeout_sec: 900
+  gifts_file: gifts.json

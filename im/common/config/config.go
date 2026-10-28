@@ -1,8 +1,11 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
+	"unicode/utf8"
 
 	"gopkg.in/yaml.v3"
 )
@@ -17,6 +20,9 @@ type Config struct {
 	Auth     AuthConfig     `yaml:"auth"`
 	IM       IMConfig       `yaml:"im"`
 	Storage  StorageConfig  `yaml:"storage"`
+	Coin     CoinConfig     `yaml:"coin"`
+
+	gifts []Gift
 }
 
 type StorageConfig struct {
@@ -54,6 +60,22 @@ type IMConfig struct {
 	TextMaxRunes    int    `yaml:"text_max_runes"`
 }
 
+// CoinConfig 金币汇率、支付超时和礼物文件。
+type CoinConfig struct {
+	CoinsPerYuan  int64  `yaml:"coins_per_yuan"`
+	PayTimeoutSec int64  `yaml:"pay_timeout_sec"`
+	GiftsFile     string `yaml:"gifts_file"`
+}
+
+// Gift 礼物配置。顺序与文件中的顺序一致。
+type Gift struct {
+	ID     int64  `json:"id"`
+	Name   string `json:"name"`
+	Icon   string `json:"icon"`
+	Effect string `json:"effect"`
+	Price  int64  `json:"price"`
+}
+
 func (c *Config) IsTest() bool {
 	return c.Env == EnvTest
 }
@@ -68,10 +90,20 @@ func Load(path string) (*Config, error) {
 		return nil, fmt.Errorf("parse config %s: %w", path, err)
 	}
 	cfg.applyDefaults()
+	if err := cfg.loadGifts(path); err != nil {
+		return nil, err
+	}
 	if err := cfg.validate(); err != nil {
 		return nil, err
 	}
 	return &cfg, nil
+}
+
+// Gifts 返回已加载的礼物，顺序与配置文件一致。
+func (c *Config) Gifts() []Gift {
+	out := make([]Gift, len(c.gifts))
+	copy(out, c.gifts)
+	return out
 }
 
 func (c *Config) applyDefaults() {
@@ -108,6 +140,15 @@ func (c *Config) applyDefaults() {
 	if c.Storage.Local.RootDir == "" {
 		c.Storage.Local.RootDir = "data/images"
 	}
+	if c.Coin.CoinsPerYuan <= 0 {
+		c.Coin.CoinsPerYuan = 10
+	}
+	if c.Coin.PayTimeoutSec <= 0 {
+		c.Coin.PayTimeoutSec = 900
+	}
+	if c.Coin.GiftsFile == "" {
+		c.Coin.GiftsFile = "gifts.json"
+	}
 }
 
 func (c *Config) validate() error {
@@ -116,6 +157,61 @@ func (c *Config) validate() error {
 	}
 	if c.IM.SystemToken == "" {
 		return fmt.Errorf("im.system_token is required")
+	}
+	if c.Coin.CoinsPerYuan <= 0 {
+		return fmt.Errorf("coin.coins_per_yuan must be > 0")
+	}
+	if c.Coin.PayTimeoutSec <= 0 {
+		return fmt.Errorf("coin.pay_timeout_sec must be > 0")
+	}
+	return validateGifts(c.gifts)
+}
+
+func (c *Config) loadGifts(configPath string) error {
+	path := c.Coin.GiftsFile
+	if !filepath.IsAbs(path) {
+		path = filepath.Join(filepath.Dir(configPath), path)
+	}
+	bs, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("read gifts %s: %w", path, err)
+	}
+	var gifts []Gift
+	if err := json.Unmarshal(bs, &gifts); err != nil {
+		return fmt.Errorf("parse gifts %s: %w", path, err)
+	}
+	c.gifts = gifts
+	return nil
+}
+
+func validateGifts(gifts []Gift) error {
+	if len(gifts) == 0 {
+		return fmt.Errorf("coin.gifts requires at least one gift")
+	}
+	seen := make(map[int64]struct{}, len(gifts))
+	for i, g := range gifts {
+		if g.ID <= 0 {
+			return fmt.Errorf("coin.gifts[%d] id must be > 0", i)
+		}
+		if _, ok := seen[g.ID]; ok {
+			return fmt.Errorf("coin.gifts[%d] duplicate id %d", i, g.ID)
+		}
+		seen[g.ID] = struct{}{}
+		if g.Name == "" {
+			return fmt.Errorf("coin.gifts[%d] name is empty", i)
+		}
+		if utf8.RuneCountInString(g.Name) > 32 {
+			return fmt.Errorf("coin.gifts[%d] name too long", i)
+		}
+		if len(g.Icon) > 512 {
+			return fmt.Errorf("coin.gifts[%d] icon too long", i)
+		}
+		if len(g.Effect) > 64 {
+			return fmt.Errorf("coin.gifts[%d] effect too long", i)
+		}
+		if g.Price <= 0 {
+			return fmt.Errorf("coin.gifts[%d] price must be > 0", i)
+		}
 	}
 	return nil
 }

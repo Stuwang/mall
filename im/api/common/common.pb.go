@@ -131,6 +131,7 @@ const (
 	ContentType_CONTENT_TYPE_UNSPECIFIED ContentType = 0
 	ContentType_CONTENT_TYPE_TEXT        ContentType = 1
 	ContentType_CONTENT_TYPE_IMAGE       ContentType = 2
+	ContentType_CONTENT_TYPE_GIFT        ContentType = 3
 )
 
 // Enum value maps for ContentType.
@@ -139,11 +140,13 @@ var (
 		0: "CONTENT_TYPE_UNSPECIFIED",
 		1: "CONTENT_TYPE_TEXT",
 		2: "CONTENT_TYPE_IMAGE",
+		3: "CONTENT_TYPE_GIFT",
 	}
 	ContentType_value = map[string]int32{
 		"CONTENT_TYPE_UNSPECIFIED": 0,
 		"CONTENT_TYPE_TEXT":        1,
 		"CONTENT_TYPE_IMAGE":       2,
+		"CONTENT_TYPE_GIFT":        3,
 	}
 )
 
@@ -174,6 +177,162 @@ func (ContentType) EnumDescriptor() ([]byte, []int) {
 	return file_common_common_proto_rawDescGZIP(), []int{2}
 }
 
+// 支付渠道。微信、支付宝未接入。
+type PayType int32
+
+const (
+	PayType_PAY_TYPE_UNSPECIFIED PayType = 0
+	PayType_PAY_TYPE_WECHAT      PayType = 1
+	PayType_PAY_TYPE_ALIPAY      PayType = 2
+	PayType_PAY_TYPE_MOCK        PayType = 3
+)
+
+// Enum value maps for PayType.
+var (
+	PayType_name = map[int32]string{
+		0: "PAY_TYPE_UNSPECIFIED",
+		1: "PAY_TYPE_WECHAT",
+		2: "PAY_TYPE_ALIPAY",
+		3: "PAY_TYPE_MOCK",
+	}
+	PayType_value = map[string]int32{
+		"PAY_TYPE_UNSPECIFIED": 0,
+		"PAY_TYPE_WECHAT":      1,
+		"PAY_TYPE_ALIPAY":      2,
+		"PAY_TYPE_MOCK":        3,
+	}
+)
+
+func (x PayType) Enum() *PayType {
+	p := new(PayType)
+	*p = x
+	return p
+}
+
+func (x PayType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (PayType) Descriptor() protoreflect.EnumDescriptor {
+	return file_common_common_proto_enumTypes[3].Descriptor()
+}
+
+func (PayType) Type() protoreflect.EnumType {
+	return &file_common_common_proto_enumTypes[3]
+}
+
+func (x PayType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use PayType.Descriptor instead.
+func (PayType) EnumDescriptor() ([]byte, []int) {
+	return file_common_common_proto_rawDescGZIP(), []int{3}
+}
+
+// 金币充值订单状态。
+type CoinOrderStatus int32
+
+const (
+	CoinOrderStatus_COIN_ORDER_STATUS_UNSPECIFIED CoinOrderStatus = 0
+	CoinOrderStatus_COIN_ORDER_STATUS_PENDING_PAY CoinOrderStatus = 1
+	CoinOrderStatus_COIN_ORDER_STATUS_PAID        CoinOrderStatus = 2
+	CoinOrderStatus_COIN_ORDER_STATUS_CANCELLED   CoinOrderStatus = 3
+)
+
+// Enum value maps for CoinOrderStatus.
+var (
+	CoinOrderStatus_name = map[int32]string{
+		0: "COIN_ORDER_STATUS_UNSPECIFIED",
+		1: "COIN_ORDER_STATUS_PENDING_PAY",
+		2: "COIN_ORDER_STATUS_PAID",
+		3: "COIN_ORDER_STATUS_CANCELLED",
+	}
+	CoinOrderStatus_value = map[string]int32{
+		"COIN_ORDER_STATUS_UNSPECIFIED": 0,
+		"COIN_ORDER_STATUS_PENDING_PAY": 1,
+		"COIN_ORDER_STATUS_PAID":        2,
+		"COIN_ORDER_STATUS_CANCELLED":   3,
+	}
+)
+
+func (x CoinOrderStatus) Enum() *CoinOrderStatus {
+	p := new(CoinOrderStatus)
+	*p = x
+	return p
+}
+
+func (x CoinOrderStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (CoinOrderStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_common_common_proto_enumTypes[4].Descriptor()
+}
+
+func (CoinOrderStatus) Type() protoreflect.EnumType {
+	return &file_common_common_proto_enumTypes[4]
+}
+
+func (x CoinOrderStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use CoinOrderStatus.Descriptor instead.
+func (CoinOrderStatus) EnumDescriptor() ([]byte, []int) {
+	return file_common_common_proto_rawDescGZIP(), []int{4}
+}
+
+// 金币流水类型。
+type CoinChangeType int32
+
+const (
+	CoinChangeType_COIN_CHANGE_TYPE_UNSPECIFIED CoinChangeType = 0
+	CoinChangeType_COIN_CHANGE_TYPE_RECHARGE    CoinChangeType = 1
+	CoinChangeType_COIN_CHANGE_TYPE_GIFT_SEND   CoinChangeType = 2
+)
+
+// Enum value maps for CoinChangeType.
+var (
+	CoinChangeType_name = map[int32]string{
+		0: "COIN_CHANGE_TYPE_UNSPECIFIED",
+		1: "COIN_CHANGE_TYPE_RECHARGE",
+		2: "COIN_CHANGE_TYPE_GIFT_SEND",
+	}
+	CoinChangeType_value = map[string]int32{
+		"COIN_CHANGE_TYPE_UNSPECIFIED": 0,
+		"COIN_CHANGE_TYPE_RECHARGE":    1,
+		"COIN_CHANGE_TYPE_GIFT_SEND":   2,
+	}
+)
+
+func (x CoinChangeType) Enum() *CoinChangeType {
+	p := new(CoinChangeType)
+	*p = x
+	return p
+}
+
+func (x CoinChangeType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (CoinChangeType) Descriptor() protoreflect.EnumDescriptor {
+	return file_common_common_proto_enumTypes[5].Descriptor()
+}
+
+func (CoinChangeType) Type() protoreflect.EnumType {
+	return &file_common_common_proto_enumTypes[5]
+}
+
+func (x CoinChangeType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use CoinChangeType.Descriptor instead.
+func (CoinChangeType) EnumDescriptor() ([]byte, []int) {
+	return file_common_common_proto_rawDescGZIP(), []int{5}
+}
+
 var File_common_common_proto protoreflect.FileDescriptor
 
 const file_common_common_proto_rawDesc = "" +
@@ -188,11 +347,26 @@ const file_common_common_proto_rawDesc = "" +
 	"\x16VISIBILITY_UNSPECIFIED\x10\x00\x12\x18\n" +
 	"\x14VISIBILITY_PEER_ONLY\x10\x01\x12\x1a\n" +
 	"\x16VISIBILITY_SENDER_ONLY\x10\x02\x12\x13\n" +
-	"\x0fVISIBILITY_BOTH\x10\x03*Z\n" +
+	"\x0fVISIBILITY_BOTH\x10\x03*q\n" +
 	"\vContentType\x12\x1c\n" +
 	"\x18CONTENT_TYPE_UNSPECIFIED\x10\x00\x12\x15\n" +
 	"\x11CONTENT_TYPE_TEXT\x10\x01\x12\x16\n" +
-	"\x12CONTENT_TYPE_IMAGE\x10\x02B\x1bZ\x19mall/im/api/common;commonb\x06proto3"
+	"\x12CONTENT_TYPE_IMAGE\x10\x02\x12\x15\n" +
+	"\x11CONTENT_TYPE_GIFT\x10\x03*`\n" +
+	"\aPayType\x12\x18\n" +
+	"\x14PAY_TYPE_UNSPECIFIED\x10\x00\x12\x13\n" +
+	"\x0fPAY_TYPE_WECHAT\x10\x01\x12\x13\n" +
+	"\x0fPAY_TYPE_ALIPAY\x10\x02\x12\x11\n" +
+	"\rPAY_TYPE_MOCK\x10\x03*\x94\x01\n" +
+	"\x0fCoinOrderStatus\x12!\n" +
+	"\x1dCOIN_ORDER_STATUS_UNSPECIFIED\x10\x00\x12!\n" +
+	"\x1dCOIN_ORDER_STATUS_PENDING_PAY\x10\x01\x12\x1a\n" +
+	"\x16COIN_ORDER_STATUS_PAID\x10\x02\x12\x1f\n" +
+	"\x1bCOIN_ORDER_STATUS_CANCELLED\x10\x03*q\n" +
+	"\x0eCoinChangeType\x12 \n" +
+	"\x1cCOIN_CHANGE_TYPE_UNSPECIFIED\x10\x00\x12\x1d\n" +
+	"\x19COIN_CHANGE_TYPE_RECHARGE\x10\x01\x12\x1e\n" +
+	"\x1aCOIN_CHANGE_TYPE_GIFT_SEND\x10\x02B\x1bZ\x19mall/im/api/common;commonb\x06proto3"
 
 var (
 	file_common_common_proto_rawDescOnce sync.Once
@@ -206,11 +380,14 @@ func file_common_common_proto_rawDescGZIP() []byte {
 	return file_common_common_proto_rawDescData
 }
 
-var file_common_common_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
+var file_common_common_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
 var file_common_common_proto_goTypes = []any{
-	(Origin)(0),      // 0: im.common.v1.Origin
-	(Visibility)(0),  // 1: im.common.v1.Visibility
-	(ContentType)(0), // 2: im.common.v1.ContentType
+	(Origin)(0),          // 0: im.common.v1.Origin
+	(Visibility)(0),      // 1: im.common.v1.Visibility
+	(ContentType)(0),     // 2: im.common.v1.ContentType
+	(PayType)(0),         // 3: im.common.v1.PayType
+	(CoinOrderStatus)(0), // 4: im.common.v1.CoinOrderStatus
+	(CoinChangeType)(0),  // 5: im.common.v1.CoinChangeType
 }
 var file_common_common_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
@@ -230,7 +407,7 @@ func file_common_common_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_common_proto_rawDesc), len(file_common_common_proto_rawDesc)),
-			NumEnums:      3,
+			NumEnums:      6,
 			NumMessages:   0,
 			NumExtensions: 0,
 			NumServices:   0,

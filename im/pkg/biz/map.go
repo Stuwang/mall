@@ -2,6 +2,7 @@ package biz
 
 import (
 	"encoding/json"
+	"strconv"
 
 	apicommon "mall/im/api/common"
 	api "mall/im/api/im"
@@ -11,8 +12,13 @@ import (
 )
 
 type msgPayload struct {
-	Text     string `json:"text,omitempty"`
-	ImageURI string `json:"image_uri,omitempty"`
+	Text       string `json:"text,omitempty"`
+	ImageURI   string `json:"image_uri,omitempty"`
+	GiftID     int64  `json:"gift_id,omitempty"`
+	GiftName   string `json:"gift_name,omitempty"`
+	GiftIcon   string `json:"gift_icon,omitempty"`
+	GiftEffect string `json:"gift_effect,omitempty"`
+	GiftPrice  int64  `json:"gift_price,omitempty"`
 }
 
 const imagePreview = "[图片]"
@@ -30,6 +36,21 @@ func encodeImageContent(imageURI string) (string, error) {
 	bs, err := json.Marshal(msgPayload{ImageURI: imageURI})
 	if err != nil {
 		logger.Errorf("encodeImageContent marshal err=%v", err)
+		return "", err
+	}
+	return string(bs), nil
+}
+
+func encodeGiftContent(id int64, name, icon, effect string, price int64) (string, error) {
+	bs, err := json.Marshal(msgPayload{
+		GiftID:     id,
+		GiftName:   name,
+		GiftIcon:   icon,
+		GiftEffect: effect,
+		GiftPrice:  price,
+	})
+	if err != nil {
+		logger.Errorf("encodeGiftContent marshal err=%v", err)
 		return "", err
 	}
 	return string(bs), nil
@@ -57,6 +78,8 @@ func contentFingerprint(ct apicommon.ContentType, content string) string {
 	switch ct {
 	case apicommon.ContentType_CONTENT_TYPE_IMAGE:
 		return p.ImageURI
+	case apicommon.ContentType_CONTENT_TYPE_GIFT:
+		return strconv.FormatInt(p.GiftID, 10)
 	default:
 		return p.Text
 	}
@@ -67,6 +90,15 @@ func toAPIContent(ct apicommon.ContentType, raw string) *api.MsgContent {
 	out := &api.MsgContent{Text: p.Text}
 	if ct == apicommon.ContentType_CONTENT_TYPE_IMAGE && p.ImageURI != "" {
 		out.ImageUrl = mediastore.Get().PathURL(p.ImageURI)
+	}
+	if ct == apicommon.ContentType_CONTENT_TYPE_GIFT {
+		out.Gift = &api.GiftBody{
+			GiftId: p.GiftID,
+			Name:   p.GiftName,
+			Icon:   p.GiftIcon,
+			Effect: p.GiftEffect,
+			Price:  p.GiftPrice,
+		}
 	}
 	return out
 }

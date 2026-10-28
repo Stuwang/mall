@@ -468,6 +468,9 @@ func prepareBody(ct apicommon.ContentType, text, imageURI string) (content, fing
 			return "", "", "", codeerror.OrSystem(err, "prepareBody encodeImage")
 		}
 		return content, uri, imagePreview, nil
+	case apicommon.ContentType_CONTENT_TYPE_GIFT:
+		logger.Errorf("prepareBody gift rejected")
+		return "", "", "", bizerror.ErrorBadMessage
 	default:
 		logger.Errorf("prepareBody unsupported type=%d", ct)
 		return "", "", "", bizerror.ErrorBadMessage

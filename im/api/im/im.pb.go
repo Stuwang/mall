@@ -85,18 +85,96 @@ func (x *Peer) GetAvatar() string {
 	return ""
 }
 
+// 礼物消息正文。仅送礼接口写入，通用 Send 不接受。
+type GiftBody struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	GiftId        int64                  `protobuf:"varint,1,opt,name=gift_id,json=giftId,proto3" json:"gift_id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Icon          string                 `protobuf:"bytes,3,opt,name=icon,proto3" json:"icon,omitempty"`
+	Effect        string                 `protobuf:"bytes,4,opt,name=effect,proto3" json:"effect,omitempty"`
+	Price         int64                  `protobuf:"varint,5,opt,name=price,proto3" json:"price,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GiftBody) Reset() {
+	*x = GiftBody{}
+	mi := &file_im_im_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GiftBody) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GiftBody) ProtoMessage() {}
+
+func (x *GiftBody) ProtoReflect() protoreflect.Message {
+	mi := &file_im_im_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GiftBody.ProtoReflect.Descriptor instead.
+func (*GiftBody) Descriptor() ([]byte, []int) {
+	return file_im_im_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *GiftBody) GetGiftId() int64 {
+	if x != nil {
+		return x.GiftId
+	}
+	return 0
+}
+
+func (x *GiftBody) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *GiftBody) GetIcon() string {
+	if x != nil {
+		return x.Icon
+	}
+	return ""
+}
+
+func (x *GiftBody) GetEffect() string {
+	if x != nil {
+		return x.Effect
+	}
+	return ""
+}
+
+func (x *GiftBody) GetPrice() int64 {
+	if x != nil {
+		return x.Price
+	}
+	return 0
+}
+
 type MsgContent struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	Text  string                 `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
 	// 图片可访问路径（如 /files/...），仅图片消息有值
-	ImageUrl      string `protobuf:"bytes,2,opt,name=image_url,json=imageUrl,proto3" json:"image_url,omitempty"`
+	ImageUrl      string    `protobuf:"bytes,2,opt,name=image_url,json=imageUrl,proto3" json:"image_url,omitempty"`
+	Gift          *GiftBody `protobuf:"bytes,3,opt,name=gift,proto3" json:"gift,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *MsgContent) Reset() {
 	*x = MsgContent{}
-	mi := &file_im_im_proto_msgTypes[1]
+	mi := &file_im_im_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -108,7 +186,7 @@ func (x *MsgContent) String() string {
 func (*MsgContent) ProtoMessage() {}
 
 func (x *MsgContent) ProtoReflect() protoreflect.Message {
-	mi := &file_im_im_proto_msgTypes[1]
+	mi := &file_im_im_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -121,7 +199,7 @@ func (x *MsgContent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MsgContent.ProtoReflect.Descriptor instead.
 func (*MsgContent) Descriptor() ([]byte, []int) {
-	return file_im_im_proto_rawDescGZIP(), []int{1}
+	return file_im_im_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *MsgContent) GetText() string {
@@ -136,6 +214,13 @@ func (x *MsgContent) GetImageUrl() string {
 		return x.ImageUrl
 	}
 	return ""
+}
+
+func (x *MsgContent) GetGift() *GiftBody {
+	if x != nil {
+		return x.Gift
+	}
+	return nil
 }
 
 // 下行消息。seq 是当前用户这一侧的同步序号，更新后变成更大的新值。
@@ -158,7 +243,7 @@ type Msg struct {
 
 func (x *Msg) Reset() {
 	*x = Msg{}
-	mi := &file_im_im_proto_msgTypes[2]
+	mi := &file_im_im_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -170,7 +255,7 @@ func (x *Msg) String() string {
 func (*Msg) ProtoMessage() {}
 
 func (x *Msg) ProtoReflect() protoreflect.Message {
-	mi := &file_im_im_proto_msgTypes[2]
+	mi := &file_im_im_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -183,7 +268,7 @@ func (x *Msg) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Msg.ProtoReflect.Descriptor instead.
 func (*Msg) Descriptor() ([]byte, []int) {
-	return file_im_im_proto_rawDescGZIP(), []int{2}
+	return file_im_im_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *Msg) GetMsgId() int64 {
@@ -271,7 +356,7 @@ type MsgPreview struct {
 
 func (x *MsgPreview) Reset() {
 	*x = MsgPreview{}
-	mi := &file_im_im_proto_msgTypes[3]
+	mi := &file_im_im_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -283,7 +368,7 @@ func (x *MsgPreview) String() string {
 func (*MsgPreview) ProtoMessage() {}
 
 func (x *MsgPreview) ProtoReflect() protoreflect.Message {
-	mi := &file_im_im_proto_msgTypes[3]
+	mi := &file_im_im_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -296,7 +381,7 @@ func (x *MsgPreview) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MsgPreview.ProtoReflect.Descriptor instead.
 func (*MsgPreview) Descriptor() ([]byte, []int) {
-	return file_im_im_proto_rawDescGZIP(), []int{3}
+	return file_im_im_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *MsgPreview) GetMsgId() int64 {
@@ -365,7 +450,7 @@ type Conversation struct {
 
 func (x *Conversation) Reset() {
 	*x = Conversation{}
-	mi := &file_im_im_proto_msgTypes[4]
+	mi := &file_im_im_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -377,7 +462,7 @@ func (x *Conversation) String() string {
 func (*Conversation) ProtoMessage() {}
 
 func (x *Conversation) ProtoReflect() protoreflect.Message {
-	mi := &file_im_im_proto_msgTypes[4]
+	mi := &file_im_im_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -390,7 +475,7 @@ func (x *Conversation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Conversation.ProtoReflect.Descriptor instead.
 func (*Conversation) Descriptor() ([]byte, []int) {
-	return file_im_im_proto_rawDescGZIP(), []int{4}
+	return file_im_im_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *Conversation) GetConvId() string {
@@ -444,7 +529,7 @@ type ListOnlineRequest struct {
 
 func (x *ListOnlineRequest) Reset() {
 	*x = ListOnlineRequest{}
-	mi := &file_im_im_proto_msgTypes[5]
+	mi := &file_im_im_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -456,7 +541,7 @@ func (x *ListOnlineRequest) String() string {
 func (*ListOnlineRequest) ProtoMessage() {}
 
 func (x *ListOnlineRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_im_im_proto_msgTypes[5]
+	mi := &file_im_im_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -469,7 +554,7 @@ func (x *ListOnlineRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListOnlineRequest.ProtoReflect.Descriptor instead.
 func (*ListOnlineRequest) Descriptor() ([]byte, []int) {
-	return file_im_im_proto_rawDescGZIP(), []int{5}
+	return file_im_im_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ListOnlineRequest) GetBaseParam() *base.BaseParam {
@@ -494,7 +579,7 @@ type OnlineUser struct {
 
 func (x *OnlineUser) Reset() {
 	*x = OnlineUser{}
-	mi := &file_im_im_proto_msgTypes[6]
+	mi := &file_im_im_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -506,7 +591,7 @@ func (x *OnlineUser) String() string {
 func (*OnlineUser) ProtoMessage() {}
 
 func (x *OnlineUser) ProtoReflect() protoreflect.Message {
-	mi := &file_im_im_proto_msgTypes[6]
+	mi := &file_im_im_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -519,7 +604,7 @@ func (x *OnlineUser) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OnlineUser.ProtoReflect.Descriptor instead.
 func (*OnlineUser) Descriptor() ([]byte, []int) {
-	return file_im_im_proto_rawDescGZIP(), []int{6}
+	return file_im_im_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *OnlineUser) GetUserId() int64 {
@@ -566,7 +651,7 @@ type ListOnlineReply struct {
 
 func (x *ListOnlineReply) Reset() {
 	*x = ListOnlineReply{}
-	mi := &file_im_im_proto_msgTypes[7]
+	mi := &file_im_im_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -578,7 +663,7 @@ func (x *ListOnlineReply) String() string {
 func (*ListOnlineReply) ProtoMessage() {}
 
 func (x *ListOnlineReply) ProtoReflect() protoreflect.Message {
-	mi := &file_im_im_proto_msgTypes[7]
+	mi := &file_im_im_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -591,7 +676,7 @@ func (x *ListOnlineReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListOnlineReply.ProtoReflect.Descriptor instead.
 func (*ListOnlineReply) Descriptor() ([]byte, []int) {
-	return file_im_im_proto_rawDescGZIP(), []int{7}
+	return file_im_im_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *ListOnlineReply) GetList() []*OnlineUser {
@@ -614,7 +699,7 @@ type ListConvRequest struct {
 
 func (x *ListConvRequest) Reset() {
 	*x = ListConvRequest{}
-	mi := &file_im_im_proto_msgTypes[8]
+	mi := &file_im_im_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -626,7 +711,7 @@ func (x *ListConvRequest) String() string {
 func (*ListConvRequest) ProtoMessage() {}
 
 func (x *ListConvRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_im_im_proto_msgTypes[8]
+	mi := &file_im_im_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -639,7 +724,7 @@ func (x *ListConvRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListConvRequest.ProtoReflect.Descriptor instead.
 func (*ListConvRequest) Descriptor() ([]byte, []int) {
-	return file_im_im_proto_rawDescGZIP(), []int{8}
+	return file_im_im_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *ListConvRequest) GetBaseParam() *base.BaseParam {
@@ -673,7 +758,7 @@ type ListConvReply struct {
 
 func (x *ListConvReply) Reset() {
 	*x = ListConvReply{}
-	mi := &file_im_im_proto_msgTypes[9]
+	mi := &file_im_im_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -685,7 +770,7 @@ func (x *ListConvReply) String() string {
 func (*ListConvReply) ProtoMessage() {}
 
 func (x *ListConvReply) ProtoReflect() protoreflect.Message {
-	mi := &file_im_im_proto_msgTypes[9]
+	mi := &file_im_im_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -698,7 +783,7 @@ func (x *ListConvReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListConvReply.ProtoReflect.Descriptor instead.
 func (*ListConvReply) Descriptor() ([]byte, []int) {
-	return file_im_im_proto_rawDescGZIP(), []int{9}
+	return file_im_im_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *ListConvReply) GetList() []*Conversation {
@@ -729,7 +814,7 @@ type HistoryRequest struct {
 
 func (x *HistoryRequest) Reset() {
 	*x = HistoryRequest{}
-	mi := &file_im_im_proto_msgTypes[10]
+	mi := &file_im_im_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -741,7 +826,7 @@ func (x *HistoryRequest) String() string {
 func (*HistoryRequest) ProtoMessage() {}
 
 func (x *HistoryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_im_im_proto_msgTypes[10]
+	mi := &file_im_im_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -754,7 +839,7 @@ func (x *HistoryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HistoryRequest.ProtoReflect.Descriptor instead.
 func (*HistoryRequest) Descriptor() ([]byte, []int) {
-	return file_im_im_proto_rawDescGZIP(), []int{10}
+	return file_im_im_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *HistoryRequest) GetBaseParam() *base.BaseParam {
@@ -797,7 +882,7 @@ type HistoryReply struct {
 
 func (x *HistoryReply) Reset() {
 	*x = HistoryReply{}
-	mi := &file_im_im_proto_msgTypes[11]
+	mi := &file_im_im_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -809,7 +894,7 @@ func (x *HistoryReply) String() string {
 func (*HistoryReply) ProtoMessage() {}
 
 func (x *HistoryReply) ProtoReflect() protoreflect.Message {
-	mi := &file_im_im_proto_msgTypes[11]
+	mi := &file_im_im_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -822,7 +907,7 @@ func (x *HistoryReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HistoryReply.ProtoReflect.Descriptor instead.
 func (*HistoryReply) Descriptor() ([]byte, []int) {
-	return file_im_im_proto_rawDescGZIP(), []int{11}
+	return file_im_im_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *HistoryReply) GetList() []*Msg {
@@ -862,7 +947,7 @@ type SendRequest struct {
 
 func (x *SendRequest) Reset() {
 	*x = SendRequest{}
-	mi := &file_im_im_proto_msgTypes[12]
+	mi := &file_im_im_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -874,7 +959,7 @@ func (x *SendRequest) String() string {
 func (*SendRequest) ProtoMessage() {}
 
 func (x *SendRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_im_im_proto_msgTypes[12]
+	mi := &file_im_im_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -887,7 +972,7 @@ func (x *SendRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SendRequest.ProtoReflect.Descriptor instead.
 func (*SendRequest) Descriptor() ([]byte, []int) {
-	return file_im_im_proto_rawDescGZIP(), []int{12}
+	return file_im_im_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *SendRequest) GetBaseParam() *base.BaseParam {
@@ -943,7 +1028,7 @@ type SendReply struct {
 
 func (x *SendReply) Reset() {
 	*x = SendReply{}
-	mi := &file_im_im_proto_msgTypes[13]
+	mi := &file_im_im_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -955,7 +1040,7 @@ func (x *SendReply) String() string {
 func (*SendReply) ProtoMessage() {}
 
 func (x *SendReply) ProtoReflect() protoreflect.Message {
-	mi := &file_im_im_proto_msgTypes[13]
+	mi := &file_im_im_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -968,7 +1053,7 @@ func (x *SendReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SendReply.ProtoReflect.Descriptor instead.
 func (*SendReply) Descriptor() ([]byte, []int) {
-	return file_im_im_proto_rawDescGZIP(), []int{13}
+	return file_im_im_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *SendReply) GetMsg() *Msg {
@@ -1005,7 +1090,7 @@ type InternalSendRequest struct {
 
 func (x *InternalSendRequest) Reset() {
 	*x = InternalSendRequest{}
-	mi := &file_im_im_proto_msgTypes[14]
+	mi := &file_im_im_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1017,7 +1102,7 @@ func (x *InternalSendRequest) String() string {
 func (*InternalSendRequest) ProtoMessage() {}
 
 func (x *InternalSendRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_im_im_proto_msgTypes[14]
+	mi := &file_im_im_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1030,7 +1115,7 @@ func (x *InternalSendRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InternalSendRequest.ProtoReflect.Descriptor instead.
 func (*InternalSendRequest) Descriptor() ([]byte, []int) {
-	return file_im_im_proto_rawDescGZIP(), []int{14}
+	return file_im_im_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *InternalSendRequest) GetSenderId() int64 {
@@ -1111,7 +1196,7 @@ type InternalUpdateRequest struct {
 
 func (x *InternalUpdateRequest) Reset() {
 	*x = InternalUpdateRequest{}
-	mi := &file_im_im_proto_msgTypes[15]
+	mi := &file_im_im_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1123,7 +1208,7 @@ func (x *InternalUpdateRequest) String() string {
 func (*InternalUpdateRequest) ProtoMessage() {}
 
 func (x *InternalUpdateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_im_im_proto_msgTypes[15]
+	mi := &file_im_im_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1136,7 +1221,7 @@ func (x *InternalUpdateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InternalUpdateRequest.ProtoReflect.Descriptor instead.
 func (*InternalUpdateRequest) Descriptor() ([]byte, []int) {
-	return file_im_im_proto_rawDescGZIP(), []int{15}
+	return file_im_im_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *InternalUpdateRequest) GetMsgId() int64 {
@@ -1195,7 +1280,7 @@ type InternalSendReply struct {
 
 func (x *InternalSendReply) Reset() {
 	*x = InternalSendReply{}
-	mi := &file_im_im_proto_msgTypes[16]
+	mi := &file_im_im_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1207,7 +1292,7 @@ func (x *InternalSendReply) String() string {
 func (*InternalSendReply) ProtoMessage() {}
 
 func (x *InternalSendReply) ProtoReflect() protoreflect.Message {
-	mi := &file_im_im_proto_msgTypes[16]
+	mi := &file_im_im_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1220,7 +1305,7 @@ func (x *InternalSendReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InternalSendReply.ProtoReflect.Descriptor instead.
 func (*InternalSendReply) Descriptor() ([]byte, []int) {
-	return file_im_im_proto_rawDescGZIP(), []int{16}
+	return file_im_im_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *InternalSendReply) GetMsgId() int64 {
@@ -1259,11 +1344,18 @@ const file_im_im_proto_rawDesc = "" +
 	"\x04Peer\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x1a\n" +
 	"\bnickname\x18\x02 \x01(\tR\bnickname\x12\x16\n" +
-	"\x06avatar\x18\x03 \x01(\tR\x06avatar\"=\n" +
+	"\x06avatar\x18\x03 \x01(\tR\x06avatar\"y\n" +
+	"\bGiftBody\x12\x17\n" +
+	"\agift_id\x18\x01 \x01(\x03R\x06giftId\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
+	"\x04icon\x18\x03 \x01(\tR\x04icon\x12\x16\n" +
+	"\x06effect\x18\x04 \x01(\tR\x06effect\x12\x14\n" +
+	"\x05price\x18\x05 \x01(\x03R\x05price\"b\n" +
 	"\n" +
 	"MsgContent\x12\x12\n" +
 	"\x04text\x18\x01 \x01(\tR\x04text\x12\x1b\n" +
-	"\timage_url\x18\x02 \x01(\tR\bimageUrl\"\xc1\x02\n" +
+	"\timage_url\x18\x02 \x01(\tR\bimageUrl\x12#\n" +
+	"\x04gift\x18\x03 \x01(\v2\x0f.im.v1.GiftBodyR\x04gift\"\xc1\x02\n" +
 	"\x03Msg\x12\x15\n" +
 	"\x06msg_id\x18\x01 \x01(\x03R\x05msgId\x12\x17\n" +
 	"\aconv_id\x18\x02 \x01(\tR\x06convId\x12\x10\n" +
@@ -1385,68 +1477,70 @@ func file_im_im_proto_rawDescGZIP() []byte {
 	return file_im_im_proto_rawDescData
 }
 
-var file_im_im_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file_im_im_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_im_im_proto_goTypes = []any{
 	(*Peer)(nil),                  // 0: im.v1.Peer
-	(*MsgContent)(nil),            // 1: im.v1.MsgContent
-	(*Msg)(nil),                   // 2: im.v1.Msg
-	(*MsgPreview)(nil),            // 3: im.v1.MsgPreview
-	(*Conversation)(nil),          // 4: im.v1.Conversation
-	(*ListOnlineRequest)(nil),     // 5: im.v1.ListOnlineRequest
-	(*OnlineUser)(nil),            // 6: im.v1.OnlineUser
-	(*ListOnlineReply)(nil),       // 7: im.v1.ListOnlineReply
-	(*ListConvRequest)(nil),       // 8: im.v1.ListConvRequest
-	(*ListConvReply)(nil),         // 9: im.v1.ListConvReply
-	(*HistoryRequest)(nil),        // 10: im.v1.HistoryRequest
-	(*HistoryReply)(nil),          // 11: im.v1.HistoryReply
-	(*SendRequest)(nil),           // 12: im.v1.SendRequest
-	(*SendReply)(nil),             // 13: im.v1.SendReply
-	(*InternalSendRequest)(nil),   // 14: im.v1.InternalSendRequest
-	(*InternalUpdateRequest)(nil), // 15: im.v1.InternalUpdateRequest
-	(*InternalSendReply)(nil),     // 16: im.v1.InternalSendReply
-	(common.Origin)(0),            // 17: im.common.v1.Origin
-	(common.ContentType)(0),       // 18: im.common.v1.ContentType
-	(*base.BaseParam)(nil),        // 19: helloworld.v1.BaseParam
-	(common.Visibility)(0),        // 20: im.common.v1.Visibility
+	(*GiftBody)(nil),              // 1: im.v1.GiftBody
+	(*MsgContent)(nil),            // 2: im.v1.MsgContent
+	(*Msg)(nil),                   // 3: im.v1.Msg
+	(*MsgPreview)(nil),            // 4: im.v1.MsgPreview
+	(*Conversation)(nil),          // 5: im.v1.Conversation
+	(*ListOnlineRequest)(nil),     // 6: im.v1.ListOnlineRequest
+	(*OnlineUser)(nil),            // 7: im.v1.OnlineUser
+	(*ListOnlineReply)(nil),       // 8: im.v1.ListOnlineReply
+	(*ListConvRequest)(nil),       // 9: im.v1.ListConvRequest
+	(*ListConvReply)(nil),         // 10: im.v1.ListConvReply
+	(*HistoryRequest)(nil),        // 11: im.v1.HistoryRequest
+	(*HistoryReply)(nil),          // 12: im.v1.HistoryReply
+	(*SendRequest)(nil),           // 13: im.v1.SendRequest
+	(*SendReply)(nil),             // 14: im.v1.SendReply
+	(*InternalSendRequest)(nil),   // 15: im.v1.InternalSendRequest
+	(*InternalUpdateRequest)(nil), // 16: im.v1.InternalUpdateRequest
+	(*InternalSendReply)(nil),     // 17: im.v1.InternalSendReply
+	(common.Origin)(0),            // 18: im.common.v1.Origin
+	(common.ContentType)(0),       // 19: im.common.v1.ContentType
+	(*base.BaseParam)(nil),        // 20: helloworld.v1.BaseParam
+	(common.Visibility)(0),        // 21: im.common.v1.Visibility
 }
 var file_im_im_proto_depIdxs = []int32{
-	17, // 0: im.v1.Msg.origin:type_name -> im.common.v1.Origin
-	18, // 1: im.v1.Msg.content_type:type_name -> im.common.v1.ContentType
-	1,  // 2: im.v1.Msg.content:type_name -> im.v1.MsgContent
-	17, // 3: im.v1.MsgPreview.origin:type_name -> im.common.v1.Origin
-	18, // 4: im.v1.MsgPreview.content_type:type_name -> im.common.v1.ContentType
-	0,  // 5: im.v1.Conversation.peer:type_name -> im.v1.Peer
-	3,  // 6: im.v1.Conversation.last_msg:type_name -> im.v1.MsgPreview
-	19, // 7: im.v1.ListOnlineRequest.BaseParam:type_name -> helloworld.v1.BaseParam
-	6,  // 8: im.v1.ListOnlineReply.list:type_name -> im.v1.OnlineUser
-	19, // 9: im.v1.ListConvRequest.BaseParam:type_name -> helloworld.v1.BaseParam
-	4,  // 10: im.v1.ListConvReply.list:type_name -> im.v1.Conversation
-	19, // 11: im.v1.HistoryRequest.BaseParam:type_name -> helloworld.v1.BaseParam
-	2,  // 12: im.v1.HistoryReply.list:type_name -> im.v1.Msg
-	19, // 13: im.v1.SendRequest.BaseParam:type_name -> helloworld.v1.BaseParam
-	18, // 14: im.v1.SendRequest.content_type:type_name -> im.common.v1.ContentType
-	2,  // 15: im.v1.SendReply.msg:type_name -> im.v1.Msg
-	4,  // 16: im.v1.SendReply.conv:type_name -> im.v1.Conversation
-	20, // 17: im.v1.InternalSendRequest.visibility:type_name -> im.common.v1.Visibility
-	18, // 18: im.v1.InternalSendRequest.content_type:type_name -> im.common.v1.ContentType
-	18, // 19: im.v1.InternalUpdateRequest.content_type:type_name -> im.common.v1.ContentType
-	8,  // 20: im.v1.Im.ListConv:input_type -> im.v1.ListConvRequest
-	10, // 21: im.v1.Im.History:input_type -> im.v1.HistoryRequest
-	12, // 22: im.v1.Im.Send:input_type -> im.v1.SendRequest
-	5,  // 23: im.v1.Im.ListOnline:input_type -> im.v1.ListOnlineRequest
-	14, // 24: im.v1.ImInternal.Send:input_type -> im.v1.InternalSendRequest
-	15, // 25: im.v1.ImInternal.Update:input_type -> im.v1.InternalUpdateRequest
-	9,  // 26: im.v1.Im.ListConv:output_type -> im.v1.ListConvReply
-	11, // 27: im.v1.Im.History:output_type -> im.v1.HistoryReply
-	13, // 28: im.v1.Im.Send:output_type -> im.v1.SendReply
-	7,  // 29: im.v1.Im.ListOnline:output_type -> im.v1.ListOnlineReply
-	16, // 30: im.v1.ImInternal.Send:output_type -> im.v1.InternalSendReply
-	16, // 31: im.v1.ImInternal.Update:output_type -> im.v1.InternalSendReply
-	26, // [26:32] is the sub-list for method output_type
-	20, // [20:26] is the sub-list for method input_type
-	20, // [20:20] is the sub-list for extension type_name
-	20, // [20:20] is the sub-list for extension extendee
-	0,  // [0:20] is the sub-list for field type_name
+	1,  // 0: im.v1.MsgContent.gift:type_name -> im.v1.GiftBody
+	18, // 1: im.v1.Msg.origin:type_name -> im.common.v1.Origin
+	19, // 2: im.v1.Msg.content_type:type_name -> im.common.v1.ContentType
+	2,  // 3: im.v1.Msg.content:type_name -> im.v1.MsgContent
+	18, // 4: im.v1.MsgPreview.origin:type_name -> im.common.v1.Origin
+	19, // 5: im.v1.MsgPreview.content_type:type_name -> im.common.v1.ContentType
+	0,  // 6: im.v1.Conversation.peer:type_name -> im.v1.Peer
+	4,  // 7: im.v1.Conversation.last_msg:type_name -> im.v1.MsgPreview
+	20, // 8: im.v1.ListOnlineRequest.BaseParam:type_name -> helloworld.v1.BaseParam
+	7,  // 9: im.v1.ListOnlineReply.list:type_name -> im.v1.OnlineUser
+	20, // 10: im.v1.ListConvRequest.BaseParam:type_name -> helloworld.v1.BaseParam
+	5,  // 11: im.v1.ListConvReply.list:type_name -> im.v1.Conversation
+	20, // 12: im.v1.HistoryRequest.BaseParam:type_name -> helloworld.v1.BaseParam
+	3,  // 13: im.v1.HistoryReply.list:type_name -> im.v1.Msg
+	20, // 14: im.v1.SendRequest.BaseParam:type_name -> helloworld.v1.BaseParam
+	19, // 15: im.v1.SendRequest.content_type:type_name -> im.common.v1.ContentType
+	3,  // 16: im.v1.SendReply.msg:type_name -> im.v1.Msg
+	5,  // 17: im.v1.SendReply.conv:type_name -> im.v1.Conversation
+	21, // 18: im.v1.InternalSendRequest.visibility:type_name -> im.common.v1.Visibility
+	19, // 19: im.v1.InternalSendRequest.content_type:type_name -> im.common.v1.ContentType
+	19, // 20: im.v1.InternalUpdateRequest.content_type:type_name -> im.common.v1.ContentType
+	9,  // 21: im.v1.Im.ListConv:input_type -> im.v1.ListConvRequest
+	11, // 22: im.v1.Im.History:input_type -> im.v1.HistoryRequest
+	13, // 23: im.v1.Im.Send:input_type -> im.v1.SendRequest
+	6,  // 24: im.v1.Im.ListOnline:input_type -> im.v1.ListOnlineRequest
+	15, // 25: im.v1.ImInternal.Send:input_type -> im.v1.InternalSendRequest
+	16, // 26: im.v1.ImInternal.Update:input_type -> im.v1.InternalUpdateRequest
+	10, // 27: im.v1.Im.ListConv:output_type -> im.v1.ListConvReply
+	12, // 28: im.v1.Im.History:output_type -> im.v1.HistoryReply
+	14, // 29: im.v1.Im.Send:output_type -> im.v1.SendReply
+	8,  // 30: im.v1.Im.ListOnline:output_type -> im.v1.ListOnlineReply
+	17, // 31: im.v1.ImInternal.Send:output_type -> im.v1.InternalSendReply
+	17, // 32: im.v1.ImInternal.Update:output_type -> im.v1.InternalSendReply
+	27, // [27:33] is the sub-list for method output_type
+	21, // [21:27] is the sub-list for method input_type
+	21, // [21:21] is the sub-list for extension type_name
+	21, // [21:21] is the sub-list for extension extendee
+	0,  // [0:21] is the sub-list for field type_name
 }
 
 func init() { file_im_im_proto_init() }
@@ -1460,7 +1554,7 @@ func file_im_im_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_im_im_proto_rawDesc), len(file_im_im_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   17,
+			NumMessages:   18,
 			NumExtensions: 0,
 			NumServices:   2,
 		},

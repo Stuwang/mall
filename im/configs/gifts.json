@@ -1,0 +1,6 @@
+[
+  {"id": 1, "name": "玫瑰", "icon": "🌹", "effect": "", "price": 1},
+  {"id": 2, "name": "啤酒", "icon": "🍺", "effect": "cheers", "price": 10},
+  {"id": 3, "name": "跑车", "icon": "🏎️", "effect": "car", "price": 99},
+  {"id": 4, "name": "城堡", "icon": "🏰", "effect": "castle", "price": 520}
+]

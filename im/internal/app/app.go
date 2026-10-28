@@ -9,6 +9,7 @@ import (
 	"mall/file/mediacontroller"
 	"mall/file/mediastore"
 	api "mall/im/api/im"
+	apipost "mall/im/api/post"
 	apiprofile "mall/im/api/profile"
 	"mall/im/common/config"
 	"mall/im/common/database"
@@ -110,6 +111,7 @@ func NewHTTPServer(cfg *config.Config) *khttp.Server {
 	api.RegisterImHTTPServer(httpSrv, controller.NewUserController())
 	api.RegisterImInternalHTTPServer(httpSrv, controller.NewInternalController())
 	apiprofile.RegisterProfileHTTPServer(httpSrv, controller.NewProfileController())
+	apipost.RegisterPostHTTPServer(httpSrv, controller.NewPostController())
 	ws.Register(httpSrv, h, ws.Config{
 		IsTest:          cfg.IsTest(),
 		HeartbeatSec:    cfg.IM.HeartbeatSec,

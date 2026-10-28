@@ -10,6 +10,16 @@ export function newClientMsgId(): string {
   return `c-${Date.now().toString(36)}-${rand}`.slice(0, 64)
 }
 
+export function newClientPostId(): string {
+  const rand = Math.random().toString(36).slice(2, 10)
+  return `p-${Date.now().toString(36)}-${rand}`.slice(0, 64)
+}
+
+export function newClientCommentId(): string {
+  const rand = Math.random().toString(36).slice(2, 10)
+  return `cm-${Date.now().toString(36)}-${rand}`.slice(0, 64)
+}
+
 export function formatTime(sec: number): string {
   if (!sec) {
     return ''

@@ -1,0 +1,193 @@
+syntax = "proto3";
+
+package im.v1;
+
+import "base/base.proto";
+import "google/api/annotations.proto";
+
+option go_package = "mall/im/api/post;post";
+
+// 帖子。身份从鉴权取，不读 BaseParam。
+service Post {
+  rpc Recommend (RecommendRequest) returns (RecommendReply) {
+    option (google.api.http) = {
+      post: "/im/api/v1/post/recommend"
+      body: "*"
+    };
+  }
+
+  rpc CreatePost (CreatePostRequest) returns (CreatePostReply) {
+    option (google.api.http) = {
+      post: "/im/api/v1/post/create"
+      body: "*"
+    };
+  }
+
+  rpc DeletePost (DeletePostRequest) returns (DeletePostReply) {
+    option (google.api.http) = {
+      post: "/im/api/v1/post/delete"
+      body: "*"
+    };
+  }
+
+  rpc GetPost (GetPostRequest) returns (GetPostReply) {
+    option (google.api.http) = {
+      post: "/im/api/v1/post/detail"
+      body: "*"
+    };
+  }
+
+  rpc LikePost (LikePostRequest) returns (LikePostReply) {
+    option (google.api.http) = {
+      post: "/im/api/v1/post/like"
+      body: "*"
+    };
+  }
+
+  rpc UnlikePost (UnlikePostRequest) returns (UnlikePostReply) {
+    option (google.api.http) = {
+      post: "/im/api/v1/post/unlike"
+      body: "*"
+    };
+  }
+
+  rpc ListComment (ListCommentRequest) returns (ListCommentReply) {
+    option (google.api.http) = {
+      post: "/im/api/v1/post/comment/list"
+      body: "*"
+    };
+  }
+
+  rpc CreateComment (CreateCommentRequest) returns (CreateCommentReply) {
+    option (google.api.http) = {
+      post: "/im/api/v1/post/comment/create"
+      body: "*"
+    };
+  }
+
+  rpc DeleteComment (DeleteCommentRequest) returns (DeleteCommentReply) {
+    option (google.api.http) = {
+      post: "/im/api/v1/post/comment/delete"
+      body: "*"
+    };
+  }
+}
+
+message PostItem {
+  int64 post_id = 1;
+  int64 user_id = 2;
+  string nickname = 3;
+  // 头像可访问路径（如 /files/...）
+  string avatar = 4;
+  string text = 5;
+  int64 like_count = 6;
+  int64 comment_count = 7;
+  bool liked = 8;
+  int64 ct = 9;
+  // 推荐游标用；列表下一页带回
+  int64 recommend_score = 10;
+}
+
+message CommentItem {
+  int64 comment_id = 1;
+  int64 post_id = 2;
+  int64 user_id = 3;
+  string nickname = 4;
+  string avatar = 5;
+  string text = 6;
+  int64 ct = 7;
+}
+
+message RecommendRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  // false 表示第一页，忽略 cursor
+  bool has_cursor = 2;
+  int64 cursor_score = 3;
+  int64 cursor_id = 4;
+  // 0 默认 20，最大 50
+  int32 limit = 5;
+}
+
+message RecommendReply {
+  repeated PostItem list = 1;
+  bool has_more = 2;
+}
+
+message CreatePostRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  string client_post_id = 2;
+  string text = 3;
+}
+
+message CreatePostReply {
+  PostItem post = 1;
+}
+
+message DeletePostRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 post_id = 2;
+}
+
+message DeletePostReply {}
+
+message GetPostRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 post_id = 2;
+}
+
+message GetPostReply {
+  PostItem post = 1;
+}
+
+message LikePostRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 post_id = 2;
+}
+
+message LikePostReply {
+  PostItem post = 1;
+}
+
+message UnlikePostRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 post_id = 2;
+}
+
+message UnlikePostReply {
+  PostItem post = 1;
+}
+
+message ListCommentRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 post_id = 2;
+  // 0 从最早开始；正数时返回更大的 id
+  int64 after_id = 3;
+  // 0 默认 30，最大 50
+  int32 limit = 4;
+}
+
+message ListCommentReply {
+  repeated CommentItem list = 1;
+  bool has_more = 2;
+}
+
+message CreateCommentRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 post_id = 2;
+  string client_comment_id = 3;
+  string text = 4;
+}
+
+message CreateCommentReply {
+  CommentItem comment = 1;
+  PostItem post = 2;
+}
+
+message DeleteCommentRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  int64 comment_id = 2;
+}
+
+message DeleteCommentReply {
+  PostItem post = 1;
+}

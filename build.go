@@ -197,6 +197,7 @@ func generateImProto(serverDir, binDir string) error {
 		"common/common.proto",
 		"im/im.proto",
 		"profile/profile.proto",
+		"post/post.proto",
 	)
 }
 

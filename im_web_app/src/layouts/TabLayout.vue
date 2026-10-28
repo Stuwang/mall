@@ -9,7 +9,7 @@ const router = useRouter()
 const imStore = useImStore()
 useImLive()
 
-const tabRoutes = [routeNames.online, routeNames.convs, routeNames.mine] as const
+const tabRoutes = [routeNames.online, routeNames.posts, routeNames.convs, routeNames.mine] as const
 
 const active = computed(() => {
   const idx = tabRoutes.indexOf(route.name as (typeof tabRoutes)[number])
@@ -29,6 +29,7 @@ function onChange(index: number | string): void {
     <RouterView />
     <van-tabbar :model-value="active" fixed placeholder safe-area-inset-bottom @change="onChange">
       <van-tabbar-item icon="friends-o">在线</van-tabbar-item>
+      <van-tabbar-item icon="notes-o">帖子</van-tabbar-item>
       <van-tabbar-item icon="chat-o" :badge="imStore.unreadBadge">消息</van-tabbar-item>
       <van-tabbar-item icon="user-o">我的</van-tabbar-item>
     </van-tabbar>

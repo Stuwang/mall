@@ -74,3 +74,51 @@ type AlbumPhoto struct {
 func (AlbumPhoto) TableName() string {
 	return "im_album_photo"
 }
+
+// Post 一条文字帖。删除只改 deleted。计数只由服务端改。
+type Post struct {
+	ID             int64                 `gorm:"column:id;primaryKey;autoIncrement;index:idx_post_rec,priority:3"`
+	UserID         int64                 `gorm:"column:user_id;uniqueIndex:uk_post_idem,priority:1"`
+	ClientPostID   string                `gorm:"column:client_post_id;size:64;uniqueIndex:uk_post_idem,priority:2"`
+	Text           string                `gorm:"column:text;type:text"`
+	LikeCount      int64                 `gorm:"column:like_count"`
+	CommentCount   int64                 `gorm:"column:comment_count"`
+	RecommendScore int64                 `gorm:"column:recommend_score;index:idx_post_rec,priority:2"`
+	Deleted        kitcommon.DeletedFlag `gorm:"column:deleted;index:idx_post_rec,priority:1"`
+	Ct             int64                 `gorm:"column:ct"`
+	Ut             int64                 `gorm:"column:ut"`
+}
+
+func (Post) TableName() string {
+	return "im_post"
+}
+
+// PostComment 帖子下的平级评论。
+type PostComment struct {
+	ID              int64                 `gorm:"column:id;primaryKey;autoIncrement;index:idx_cmt_post,priority:3"`
+	PostID          int64                 `gorm:"column:post_id;uniqueIndex:uk_cmt_idem,priority:1;index:idx_cmt_post,priority:1"`
+	UserID          int64                 `gorm:"column:user_id;uniqueIndex:uk_cmt_idem,priority:2"`
+	ClientCommentID string                `gorm:"column:client_comment_id;size:64;uniqueIndex:uk_cmt_idem,priority:3"`
+	Text            string                `gorm:"column:text;type:text"`
+	Deleted         kitcommon.DeletedFlag `gorm:"column:deleted;index:idx_cmt_post,priority:2"`
+	Ct              int64                 `gorm:"column:ct"`
+	Ut              int64                 `gorm:"column:ut"`
+}
+
+func (PostComment) TableName() string {
+	return "im_post_comment"
+}
+
+// PostLike 一人一帖一行。取消后再次点赞复活。
+type PostLike struct {
+	ID      int64                 `gorm:"column:id;primaryKey;autoIncrement"`
+	PostID  int64                 `gorm:"column:post_id;uniqueIndex:uk_like,priority:1"`
+	UserID  int64                 `gorm:"column:user_id;uniqueIndex:uk_like,priority:2"`
+	Deleted kitcommon.DeletedFlag `gorm:"column:deleted"`
+	Ct      int64                 `gorm:"column:ct"`
+	Ut      int64                 `gorm:"column:ut"`
+}
+
+func (PostLike) TableName() string {
+	return "im_post_like"
+}

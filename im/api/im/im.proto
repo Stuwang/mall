@@ -118,6 +118,8 @@ message OnlineUser {
   int32 conn_count = 3;
   // 头像可访问路径（如 /files/...）
   string avatar = 4;
+  // 相册预览图可访问路径，按从新到旧，最多 4 张
+  repeated string album_urls = 5;
 }
 
 message ListOnlineReply {

@@ -485,7 +485,9 @@ type OnlineUser struct {
 	Nickname  string                 `protobuf:"bytes,2,opt,name=nickname,proto3" json:"nickname,omitempty"`
 	ConnCount int32                  `protobuf:"varint,3,opt,name=conn_count,json=connCount,proto3" json:"conn_count,omitempty"`
 	// 头像可访问路径（如 /files/...）
-	Avatar        string `protobuf:"bytes,4,opt,name=avatar,proto3" json:"avatar,omitempty"`
+	Avatar string `protobuf:"bytes,4,opt,name=avatar,proto3" json:"avatar,omitempty"`
+	// 相册预览图可访问路径，按从新到旧，最多 4 张
+	AlbumUrls     []string `protobuf:"bytes,5,rep,name=album_urls,json=albumUrls,proto3" json:"album_urls,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -546,6 +548,13 @@ func (x *OnlineUser) GetAvatar() string {
 		return x.Avatar
 	}
 	return ""
+}
+
+func (x *OnlineUser) GetAlbumUrls() []string {
+	if x != nil {
+		return x.AlbumUrls
+	}
+	return nil
 }
 
 type ListOnlineReply struct {
@@ -1284,14 +1293,16 @@ const file_im_im_proto_rawDesc = "" +
 	"\asort_ut\x18\x05 \x01(\x03R\x06sortUt\x12,\n" +
 	"\blast_msg\x18\x06 \x01(\v2\x11.im.v1.MsgPreviewR\alastMsg\"K\n" +
 	"\x11ListOnlineRequest\x126\n" +
-	"\tBaseParam\x18\x01 \x01(\v2\x18.helloworld.v1.BaseParamR\tBaseParam\"x\n" +
+	"\tBaseParam\x18\x01 \x01(\v2\x18.helloworld.v1.BaseParamR\tBaseParam\"\x97\x01\n" +
 	"\n" +
 	"OnlineUser\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x1a\n" +
 	"\bnickname\x18\x02 \x01(\tR\bnickname\x12\x1d\n" +
 	"\n" +
 	"conn_count\x18\x03 \x01(\x05R\tconnCount\x12\x16\n" +
-	"\x06avatar\x18\x04 \x01(\tR\x06avatar\"8\n" +
+	"\x06avatar\x18\x04 \x01(\tR\x06avatar\x12\x1d\n" +
+	"\n" +
+	"album_urls\x18\x05 \x03(\tR\talbumUrls\"8\n" +
 	"\x0fListOnlineReply\x12%\n" +
 	"\x04list\x18\x01 \x03(\v2\x11.im.v1.OnlineUserR\x04list\"|\n" +
 	"\x0fListConvRequest\x126\n" +

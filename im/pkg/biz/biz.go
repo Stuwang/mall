@@ -277,19 +277,42 @@ func InternalUpdate(req *api.InternalUpdateRequest) (*api.InternalSendReply, []P
 	}, out.Pushes, nil
 }
 
+const onlineAlbumPreviewLimit = 4
+
 // ListOnlineUsers 组装在线用户资料。entries 由 Hub 提供。
 func ListOnlineUsers(selfID int64, entries []OnlineEntry) (*api.ListOnlineReply, error) {
-	out := make([]*api.OnlineUser, 0, len(entries))
+	userIDs := make([]int64, 0, len(entries))
+	for _, e := range entries {
+		if e.UserID == selfID || e.UserID <= 0 {
+			continue
+		}
+		userIDs = append(userIDs, e.UserID)
+	}
+	albums, err := imdao.NewAlbumPhotoDao(nil).MapLatestByUserIDs(userIDs, onlineAlbumPreviewLimit)
+	if err != nil {
+		logger.Errorf("ListOnlineUsers MapLatestByUserIDs self=%d err=%v", selfID, err)
+		return nil, err
+	}
+	out := make([]*api.OnlineUser, 0, len(userIDs))
 	for _, e := range entries {
 		if e.UserID == selfID || e.UserID <= 0 {
 			continue
 		}
 		nick, avatar := profileOf(e.UserID)
+		photos := albums[e.UserID]
+		urls := make([]string, 0, len(photos))
+		for _, p := range photos {
+			if p == nil || p.URI == "" {
+				continue
+			}
+			urls = append(urls, avatarURL(p.URI))
+		}
 		out = append(out, &api.OnlineUser{
 			UserId:    e.UserID,
 			Nickname:  nick,
 			ConnCount: int32(e.ConnCount),
 			Avatar:    avatar,
+			AlbumUrls: urls,
 		})
 	}
 	sort.Slice(out, func(i, j int) bool {

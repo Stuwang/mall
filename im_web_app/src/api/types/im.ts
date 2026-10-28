@@ -88,6 +88,8 @@ export interface OnlineUser {
   nickname: string
   conn_count: number
   avatar?: string
+  /** 相册预览图，从新到旧，最多 4 张 */
+  album_urls?: string[]
 }
 
 export interface ListOnlineReply {

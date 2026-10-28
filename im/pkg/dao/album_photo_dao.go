@@ -73,6 +73,30 @@ func (d *AlbumPhotoDao) ListActive(userID, beforeID int64, limit int) ([]*model.
 	return list, nil
 }
 
+// MapLatestByUserIDs 批量取每个用户最新 limitPerUser 张未删照片（按 id 降序）。
+func (d *AlbumPhotoDao) MapLatestByUserIDs(userIDs []int64, limitPerUser int) (map[int64][]*model.AlbumPhoto, error) {
+	out := make(map[int64][]*model.AlbumPhoto, len(userIDs))
+	if len(userIDs) == 0 {
+		return out, nil
+	}
+	if limitPerUser <= 0 {
+		limitPerUser = 4
+	}
+	for _, uid := range userIDs {
+		out[uid] = nil
+	}
+	// 在线人数通常很少；按人限量查，避免一次拉全量相册。
+	for _, uid := range userIDs {
+		list, err := d.ListActive(uid, 0, limitPerUser)
+		if err != nil {
+			logger.Errorf("AlbumPhotoDao.MapLatestByUserIDs userID=%d err=%v", uid, err)
+			return nil, err
+		}
+		out[uid] = list
+	}
+	return out, nil
+}
+
 // SoftDelete 仅当属于 userID 且未删除时改标记。返回是否改到一行。
 func (d *AlbumPhotoDao) SoftDelete(userID, photoID int64) (bool, error) {
 	now := time.Now().Unix()

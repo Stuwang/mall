@@ -23,6 +23,13 @@ export interface UpdateUserInfoReply {
   user: UserInfo
 }
 
+export interface ChangePasswordRequest extends WithBaseParam {
+  old_password: string
+  new_password: string
+}
+
+export interface ChangePasswordReply {}
+
 export interface MediaUploadReply {
   uri: string
   url: string

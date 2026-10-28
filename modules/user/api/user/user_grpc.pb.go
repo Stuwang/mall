@@ -24,6 +24,7 @@ const (
 	User_RefreshToken_FullMethodName   = "/user.v1.User/RefreshToken"
 	User_GetUserInfo_FullMethodName    = "/user.v1.User/GetUserInfo"
 	User_UpdateUserInfo_FullMethodName = "/user.v1.User/UpdateUserInfo"
+	User_ChangePassword_FullMethodName = "/user.v1.User/ChangePassword"
 )
 
 // UserClient is the client API for User service.
@@ -42,6 +43,8 @@ type UserClient interface {
 	GetUserInfo(ctx context.Context, in *GetUserInfoRequest, opts ...grpc.CallOption) (*GetUserInfoReply, error)
 	// 用户信息修改
 	UpdateUserInfo(ctx context.Context, in *UpdateUserInfoRequest, opts ...grpc.CallOption) (*UpdateUserInfoReply, error)
+	// 修改登录密码
+	ChangePassword(ctx context.Context, in *ChangePasswordRequest, opts ...grpc.CallOption) (*ChangePasswordReply, error)
 }
 
 type userClient struct {
@@ -102,6 +105,16 @@ func (c *userClient) UpdateUserInfo(ctx context.Context, in *UpdateUserInfoReque
 	return out, nil
 }
 
+func (c *userClient) ChangePassword(ctx context.Context, in *ChangePasswordRequest, opts ...grpc.CallOption) (*ChangePasswordReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ChangePasswordReply)
+	err := c.cc.Invoke(ctx, User_ChangePassword_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServer is the server API for User service.
 // All implementations should embed UnimplementedUserServer
 // for forward compatibility.
@@ -118,6 +131,8 @@ type UserServer interface {
 	GetUserInfo(context.Context, *GetUserInfoRequest) (*GetUserInfoReply, error)
 	// 用户信息修改
 	UpdateUserInfo(context.Context, *UpdateUserInfoRequest) (*UpdateUserInfoReply, error)
+	// 修改登录密码
+	ChangePassword(context.Context, *ChangePasswordRequest) (*ChangePasswordReply, error)
 }
 
 // UnimplementedUserServer should be embedded to have
@@ -141,6 +156,9 @@ func (UnimplementedUserServer) GetUserInfo(context.Context, *GetUserInfoRequest)
 }
 func (UnimplementedUserServer) UpdateUserInfo(context.Context, *UpdateUserInfoRequest) (*UpdateUserInfoReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdateUserInfo not implemented")
+}
+func (UnimplementedUserServer) ChangePassword(context.Context, *ChangePasswordRequest) (*ChangePasswordReply, error) {
+	return nil, status.Error(codes.Unimplemented, "method ChangePassword not implemented")
 }
 func (UnimplementedUserServer) testEmbeddedByValue() {}
 
@@ -252,6 +270,24 @@ func _User_UpdateUserInfo_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _User_ChangePassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChangePasswordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServer).ChangePassword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: User_ChangePassword_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServer).ChangePassword(ctx, req.(*ChangePasswordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // User_ServiceDesc is the grpc.ServiceDesc for User service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -278,6 +314,10 @@ var User_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateUserInfo",
 			Handler:    _User_UpdateUserInfo_Handler,
+		},
+		{
+			MethodName: "ChangePassword",
+			Handler:    _User_ChangePassword_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

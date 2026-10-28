@@ -65,33 +65,40 @@ async function loadMore(): Promise<void> {
   }
 }
 
-function pickPhoto(): void {
+function pickPhotos(): void {
   fileInput.value?.click()
 }
 
-async function onPhotoSelected(ev: Event): Promise<void> {
+async function onPhotosSelected(ev: Event): Promise<void> {
   const input = ev.target as HTMLInputElement
-  const file = input.files?.[0]
+  const files = Array.from(input.files || [])
   input.value = ''
-  if (!file) {
+  if (files.length === 0) {
     return
   }
-  if (!file.type.startsWith('image/')) {
+  const picked = files.filter((f) => f.type.startsWith('image/'))
+  if (picked.length === 0) {
     notifyError(null, '请选择图片文件')
     return
   }
   adding.value = true
+  let ok = 0
   try {
-    const uploaded = await api.auth.uploadMedia(file)
-    if (!uploaded?.uri) {
-      notifyError(null, '上传未返回文件地址')
-      return
+    for (const file of picked) {
+      const uploaded = await api.auth.uploadMedia(file)
+      if (!uploaded?.uri) {
+        notifyError(null, '上传未返回文件地址')
+        continue
+      }
+      const reply = await api.profile.addAlbumPhoto({ image_uri: uploaded.uri })
+      if (reply.photo) {
+        photos.value = [reply.photo, ...photos.value]
+        ok += 1
+      }
     }
-    const reply = await api.profile.addAlbumPhoto({ image_uri: uploaded.uri })
-    if (reply.photo) {
-      photos.value = [reply.photo, ...photos.value]
+    if (ok > 0) {
+      notifySuccess(ok === 1 ? '已添加' : `已添加 ${ok} 张`)
     }
-    notifySuccess('已添加')
   } catch (error) {
     notifyError(error, '添加失败')
   } finally {
@@ -99,7 +106,8 @@ async function onPhotoSelected(ev: Event): Promise<void> {
   }
 }
 
-async function onDelete(photo: AlbumPhoto): Promise<void> {
+async function onDelete(photo: AlbumPhoto, ev: Event): Promise<void> {
+  ev.stopPropagation()
   try {
     await showConfirmDialog({ title: '删除这张照片？' })
   } catch {
@@ -136,28 +144,34 @@ watch(userId, () => {
     <van-nav-bar title="相册" left-arrow fixed placeholder @click-left="router.back()" />
 
     <div v-if="isSelf" class="actions">
-      <van-button round block type="primary" :loading="adding" @click="pickPhoto">添加照片</van-button>
+      <van-button round block type="primary" :loading="adding" @click="pickPhotos">添加照片</van-button>
       <input
         ref="fileInput"
         class="hidden-input"
         type="file"
         accept="image/jpeg,image/png,image/gif,image/webp"
-        @change="onPhotoSelected"
+        multiple
+        @change="onPhotosSelected"
       />
     </div>
 
     <div v-if="loading" class="state muted">加载中…</div>
     <van-empty v-else-if="photos.length === 0" description="还没有照片" />
     <template v-else>
-      <div class="list">
-        <div v-for="p in photos" :key="p.id" class="row">
+      <div class="grid">
+        <div v-for="p in photos" :key="p.id" class="cell">
           <button type="button" class="thumb" @click="openPreview(p.image_url)">
             <img :src="p.image_url" alt="" />
           </button>
-          <div class="body">
-            <div class="caption">{{ p.caption || '无说明' }}</div>
-          </div>
-          <button v-if="isSelf" type="button" class="del" @click="onDelete(p)">删除</button>
+          <button
+            v-if="isSelf"
+            type="button"
+            class="del"
+            aria-label="删除"
+            @click="onDelete(p, $event)"
+          >
+            <van-icon name="cross" />
+          </button>
         </div>
       </div>
       <div v-if="hasMore" class="more">
@@ -183,27 +197,24 @@ watch(userId, () => {
   display: none;
 }
 
-.list {
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
   padding: 8px 12px 16px;
 }
 
-.row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 0 0 8px;
-  padding: 10px;
-  border-radius: 12px;
-  background: #fff;
+.cell {
+  position: relative;
+  aspect-ratio: 1;
 }
 
 .thumb {
-  flex-shrink: 0;
-  width: 72px;
-  height: 72px;
+  width: 100%;
+  height: 100%;
   padding: 0;
   border: none;
-  border-radius: 8px;
+  border-radius: 4px;
   overflow: hidden;
   background: #f2f3f5;
   cursor: pointer;
@@ -216,25 +227,20 @@ watch(userId, () => {
   display: block;
 }
 
-.body {
-  flex: 1;
-  min-width: 0;
-}
-
-.caption {
-  font-size: 14px;
-  color: #323233;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .del {
-  flex-shrink: 0;
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
   border: none;
-  background: transparent;
-  color: #ee0a24;
-  font-size: 14px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
   cursor: pointer;
 }
 

@@ -72,6 +72,52 @@ func Recommend(viewerID int64, hasCursor bool, cursorScore, cursorID int64, limi
 	return &apipost.RecommendReply{List: list, HasMore: hasMore}, nil
 }
 
+// ListUserPost 某人帖子列表。targetUserID <= 0 表示查看自己。
+func ListUserPost(viewerID, targetUserID, beforeID int64, limit int32) (*apipost.ListUserPostReply, error) {
+	uid := targetUserID
+	if uid <= 0 {
+		uid = viewerID
+	}
+	if uid <= 0 {
+		logger.Errorf("ListUserPost empty user viewer=%d", viewerID)
+		return nil, codeerror.ErrorParam
+	}
+	u, err := userdao.NewUserDao(nil).GetByID(uid)
+	if err != nil {
+		logger.Errorf("ListUserPost GetByID viewer=%d target=%d err=%v", viewerID, uid, err)
+		return nil, err
+	}
+	if uid != viewerID && u.Banned() {
+		logger.Errorf("ListUserPost banned target=%d viewer=%d", uid, viewerID)
+		return nil, codeerror.ErrorUserBanned
+	}
+	lim := clampLimit(limit, postListDefault, postListMax)
+	rows, err := imdao.NewPostDao(nil).ListByUser(uid, beforeID, lim+1)
+	if err != nil {
+		logger.Errorf("ListUserPost ListByUser viewer=%d target=%d err=%v", viewerID, uid, err)
+		return nil, err
+	}
+	hasMore := len(rows) > lim
+	if hasMore {
+		rows = rows[:lim]
+	}
+	liked, err := imdao.NewPostLikeDao(nil).ListLikedPostIDs(viewerID, postIDsOf(rows))
+	if err != nil {
+		logger.Errorf("ListUserPost ListLikedPostIDs viewer=%d err=%v", viewerID, err)
+		return nil, err
+	}
+	profiles, err := userProfiles([]int64{uid})
+	if err != nil {
+		logger.Errorf("ListUserPost userProfiles viewer=%d target=%d err=%v", viewerID, uid, err)
+		return nil, err
+	}
+	list := make([]*apipost.PostItem, 0, len(rows))
+	for _, p := range rows {
+		list = append(list, toPostItem(p, profiles[p.UserID], liked[p.ID]))
+	}
+	return &apipost.ListUserPostReply{List: list, HasMore: hasMore}, nil
+}
+
 // CreatePost 发帖。正文与图片至少有一个。
 func CreatePost(userID int64, clientPostID, text string, imageURIs []string) (*apipost.CreatePostReply, error) {
 	if err := requireActiveUser(userID); err != nil {

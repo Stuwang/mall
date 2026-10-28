@@ -36,6 +36,17 @@ export interface RecommendReply {
   has_more: boolean
 }
 
+export interface ListUserPostRequest extends WithBaseParam {
+  user_id?: number
+  before_id?: number
+  limit?: number
+}
+
+export interface ListUserPostReply {
+  list: PostItem[]
+  has_more: boolean
+}
+
 export interface CreatePostRequest extends WithBaseParam {
   client_post_id: string
   text?: string

@@ -145,6 +145,34 @@ func (c *Controller) UpdateUserInfo(ctx context.Context, req *apiuser.UpdateUser
 	}, nil
 }
 
+func (c *Controller) ChangePassword(ctx context.Context, req *apiuser.ChangePasswordRequest) (*apiuser.ChangePasswordReply, error) {
+	info := auth.MustFromContext(ctx)
+	oldPassword := req.GetOldPassword()
+	newPassword := req.GetNewPassword()
+	if oldPassword == "" || newPassword == "" {
+		logger.Errorf("ChangePassword empty password userID=%d", info.UserID)
+		return nil, codeerror.ErrorParam
+	}
+	if oldPassword == newPassword {
+		logger.Errorf("ChangePassword same password userID=%d", info.UserID)
+		return nil, codeerror.ErrorParam
+	}
+	login, err := userdao.NewLoginDao(nil).GetPasswordByUserID(info.UserID)
+	if err != nil {
+		logger.Errorf("ChangePassword GetPasswordByUserID userID=%d err=%v", info.UserID, err)
+		return nil, err
+	}
+	if login.Credential != oldPassword {
+		logger.Errorf("ChangePassword old password mismatch userID=%d", info.UserID)
+		return nil, codeerror.ErrorPassword
+	}
+	if err := userdao.NewLoginDao(nil).UpdatePasswordCredential(info.UserID, newPassword); err != nil {
+		logger.Errorf("ChangePassword UpdatePasswordCredential userID=%d err=%v", info.UserID, err)
+		return nil, err
+	}
+	return &apiuser.ChangePasswordReply{}, nil
+}
+
 func resolveUsername(userID int64, fallback string) (string, error) {
 	login, err := userdao.NewLoginDao(nil).GetPasswordByUserID(userID)
 	if err == nil {

@@ -2,9 +2,11 @@ package userdao
 
 import (
 	"errors"
+	"time"
 
 	"gorm.io/gorm"
 	"mall/kit/codeerror"
+	"mall/kit/logger"
 	usermodel "mall/user/model"
 )
 
@@ -63,6 +65,26 @@ func (d *LoginDao) ExistsPasswordAccount(username string) (bool, error) {
 		return false, codeerror.OrSystem(err, "LoginDao.ExistsPasswordAccount username=%s", username)
 	}
 	return true, nil
+}
+
+// UpdatePasswordCredential 更新密码登录凭据。
+func (d *LoginDao) UpdatePasswordCredential(userID int64, newPassword string) error {
+	now := time.Now().Unix()
+	res := d.db.Model(&usermodel.UserLogin{}).
+		Where("user_id = ? AND type = ?", userID, usermodel.LoginTypePassword).
+		Updates(map[string]interface{}{
+			"credential": newPassword,
+			"ut":         now,
+		})
+	if res.Error != nil {
+		logger.Errorf("LoginDao.UpdatePasswordCredential userID=%d err=%v", userID, res.Error)
+		return codeerror.OrSystem(res.Error, "LoginDao.UpdatePasswordCredential userID=%d", userID)
+	}
+	if res.RowsAffected == 0 {
+		logger.Errorf("LoginDao.UpdatePasswordCredential not found userID=%d", userID)
+		return codeerror.ErrorUserNotFound
+	}
+	return nil
 }
 
 // MapPasswordUsernameByUserIDs 批量查密码账号用户名

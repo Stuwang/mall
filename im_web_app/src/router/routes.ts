@@ -7,6 +7,8 @@ export const routeNames = {
   postDetail: 'postDetail',
   convs: 'convs',
   mine: 'mine',
+  settings: 'settings',
+  about: 'about',
   login: 'login',
   register: 'register',
   chat: 'chat',
@@ -74,6 +76,18 @@ export const routes: RouteRecordRaw[] = [
     name: routeNames.album,
     component: () => import('@/views/profile/AlbumView.vue'),
     meta: { title: '相册', requireAuth: true },
+  },
+  {
+    path: '/settings',
+    name: routeNames.settings,
+    component: () => import('@/views/mine/SettingsView.vue'),
+    meta: { title: '设置', requireAuth: true },
+  },
+  {
+    path: '/about',
+    name: routeNames.about,
+    component: () => import('@/views/mine/AboutView.vue'),
+    meta: { title: '关于', requireAuth: true },
   },
   {
     path: '/posts/new',

@@ -13,6 +13,8 @@ import type {
   LikePostRequest,
   ListCommentReply,
   ListCommentRequest,
+  ListUserPostReply,
+  ListUserPostRequest,
   RecommendReply,
   RecommendRequest,
   UnlikePostReply,
@@ -28,6 +30,10 @@ export class PostApiService {
 
   recommend(request: RecommendRequest = {}): Promise<RecommendReply> {
     return this.http.post<RecommendReply>('/im/api/v1/post/recommend', request)
+  }
+
+  listUser(request: ListUserPostRequest = {}): Promise<ListUserPostReply> {
+    return this.http.post<ListUserPostReply>('/im/api/v1/post/user', request)
   }
 
   create(request: CreatePostRequest): Promise<CreatePostReply> {

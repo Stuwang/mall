@@ -19,6 +19,7 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
+const OperationUserChangePassword = "/user.v1.User/ChangePassword"
 const OperationUserGetUserInfo = "/user.v1.User/GetUserInfo"
 const OperationUserLogin = "/user.v1.User/Login"
 const OperationUserRefreshToken = "/user.v1.User/RefreshToken"
@@ -26,6 +27,8 @@ const OperationUserRegister = "/user.v1.User/Register"
 const OperationUserUpdateUserInfo = "/user.v1.User/UpdateUserInfo"
 
 type UserHTTPServer interface {
+	// ChangePassword 修改登录密码
+	ChangePassword(context.Context, *ChangePasswordRequest) (*ChangePasswordReply, error)
 	// GetUserInfo 用户信息查询
 	GetUserInfo(context.Context, *GetUserInfoRequest) (*GetUserInfoReply, error)
 	// Login 用户登录
@@ -45,6 +48,7 @@ func RegisterUserHTTPServer(s *http.Server, srv UserHTTPServer) {
 	r.POST("/user/api/v1/token/refresh", _User_RefreshToken0_HTTP_Handler(srv))
 	r.POST("/user/api/v1/info", _User_GetUserInfo0_HTTP_Handler(srv))
 	r.POST("/user/api/v1/update", _User_UpdateUserInfo0_HTTP_Handler(srv))
+	r.POST("/user/api/v1/password/change", _User_ChangePassword0_HTTP_Handler(srv))
 }
 
 func _User_Register0_HTTP_Handler(srv UserHTTPServer) func(ctx http.Context) error {
@@ -157,7 +161,31 @@ func _User_UpdateUserInfo0_HTTP_Handler(srv UserHTTPServer) func(ctx http.Contex
 	}
 }
 
+func _User_ChangePassword0_HTTP_Handler(srv UserHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in ChangePasswordRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationUserChangePassword)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.ChangePassword(ctx, req.(*ChangePasswordRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*ChangePasswordReply)
+		return ctx.Result(200, reply)
+	}
+}
+
 type UserHTTPClient interface {
+	// ChangePassword 修改登录密码
+	ChangePassword(ctx context.Context, req *ChangePasswordRequest, opts ...http.CallOption) (rsp *ChangePasswordReply, err error)
 	// GetUserInfo 用户信息查询
 	GetUserInfo(ctx context.Context, req *GetUserInfoRequest, opts ...http.CallOption) (rsp *GetUserInfoReply, err error)
 	// Login 用户登录
@@ -176,6 +204,20 @@ type UserHTTPClientImpl struct {
 
 func NewUserHTTPClient(client *http.Client) UserHTTPClient {
 	return &UserHTTPClientImpl{client}
+}
+
+// ChangePassword 修改登录密码
+func (c *UserHTTPClientImpl) ChangePassword(ctx context.Context, in *ChangePasswordRequest, opts ...http.CallOption) (*ChangePasswordReply, error) {
+	var out ChangePasswordReply
+	pattern := "/user/api/v1/password/change"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationUserChangePassword))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
 }
 
 // GetUserInfo 用户信息查询

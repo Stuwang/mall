@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	Post_Recommend_FullMethodName     = "/im.v1.Post/Recommend"
+	Post_ListUserPost_FullMethodName  = "/im.v1.Post/ListUserPost"
 	Post_CreatePost_FullMethodName    = "/im.v1.Post/CreatePost"
 	Post_DeletePost_FullMethodName    = "/im.v1.Post/DeletePost"
 	Post_GetPost_FullMethodName       = "/im.v1.Post/GetPost"
@@ -37,6 +38,8 @@ const (
 // 帖子。身份从鉴权取，不读 BaseParam。
 type PostClient interface {
 	Recommend(ctx context.Context, in *RecommendRequest, opts ...grpc.CallOption) (*RecommendReply, error)
+	// 某人的帖子，按 id 从新到旧
+	ListUserPost(ctx context.Context, in *ListUserPostRequest, opts ...grpc.CallOption) (*ListUserPostReply, error)
 	CreatePost(ctx context.Context, in *CreatePostRequest, opts ...grpc.CallOption) (*CreatePostReply, error)
 	DeletePost(ctx context.Context, in *DeletePostRequest, opts ...grpc.CallOption) (*DeletePostReply, error)
 	GetPost(ctx context.Context, in *GetPostRequest, opts ...grpc.CallOption) (*GetPostReply, error)
@@ -59,6 +62,16 @@ func (c *postClient) Recommend(ctx context.Context, in *RecommendRequest, opts .
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(RecommendReply)
 	err := c.cc.Invoke(ctx, Post_Recommend_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *postClient) ListUserPost(ctx context.Context, in *ListUserPostRequest, opts ...grpc.CallOption) (*ListUserPostReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListUserPostReply)
+	err := c.cc.Invoke(ctx, Post_ListUserPost_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -152,6 +165,8 @@ func (c *postClient) DeleteComment(ctx context.Context, in *DeleteCommentRequest
 // 帖子。身份从鉴权取，不读 BaseParam。
 type PostServer interface {
 	Recommend(context.Context, *RecommendRequest) (*RecommendReply, error)
+	// 某人的帖子，按 id 从新到旧
+	ListUserPost(context.Context, *ListUserPostRequest) (*ListUserPostReply, error)
 	CreatePost(context.Context, *CreatePostRequest) (*CreatePostReply, error)
 	DeletePost(context.Context, *DeletePostRequest) (*DeletePostReply, error)
 	GetPost(context.Context, *GetPostRequest) (*GetPostReply, error)
@@ -171,6 +186,9 @@ type UnimplementedPostServer struct{}
 
 func (UnimplementedPostServer) Recommend(context.Context, *RecommendRequest) (*RecommendReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method Recommend not implemented")
+}
+func (UnimplementedPostServer) ListUserPost(context.Context, *ListUserPostRequest) (*ListUserPostReply, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListUserPost not implemented")
 }
 func (UnimplementedPostServer) CreatePost(context.Context, *CreatePostRequest) (*CreatePostReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreatePost not implemented")
@@ -230,6 +248,24 @@ func _Post_Recommend_Handler(srv interface{}, ctx context.Context, dec func(inte
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PostServer).Recommend(ctx, req.(*RecommendRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Post_ListUserPost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListUserPostRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PostServer).ListUserPost(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Post_ListUserPost_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PostServer).ListUserPost(ctx, req.(*ListUserPostRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -388,6 +424,10 @@ var Post_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Recommend",
 			Handler:    _Post_Recommend_Handler,
+		},
+		{
+			MethodName: "ListUserPost",
+			Handler:    _Post_ListUserPost_Handler,
 		},
 		{
 			MethodName: "CreatePost",

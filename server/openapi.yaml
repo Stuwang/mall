@@ -1316,6 +1316,32 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/google.rpc.Status'
+    /user/api/v1/password/change:
+        post:
+            tags:
+                - User
+            summary: ChangePassword
+            description: 修改登录密码
+            operationId: User_ChangePassword
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/user.v1.ChangePasswordRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user.v1.ChangePasswordReply'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/google.rpc.Status'
     /user/api/v1/register:
         post:
             tags:
@@ -2502,6 +2528,18 @@ components:
                 pageSize:
                     type: integer
                     format: int32
+        user.v1.ChangePasswordReply:
+            type: object
+            properties: {}
+        user.v1.ChangePasswordRequest:
+            type: object
+            properties:
+                BaseParam:
+                    $ref: '#/components/schemas/helloworld.v1.BaseParam'
+                oldPassword:
+                    type: string
+                newPassword:
+                    type: string
         user.v1.GetUserInfoReply:
             type: object
             properties:

@@ -16,6 +16,14 @@ service Post {
     };
   }
 
+  // 某人的帖子，按 id 从新到旧
+  rpc ListUserPost (ListUserPostRequest) returns (ListUserPostReply) {
+    option (google.api.http) = {
+      post: "/im/api/v1/post/user"
+      body: "*"
+    };
+  }
+
   rpc CreatePost (CreatePostRequest) returns (CreatePostReply) {
     option (google.api.http) = {
       post: "/im/api/v1/post/create"
@@ -111,6 +119,21 @@ message RecommendRequest {
 }
 
 message RecommendReply {
+  repeated PostItem list = 1;
+  bool has_more = 2;
+}
+
+message ListUserPostRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  // <= 0 表示自己
+  int64 user_id = 2;
+  // 0 从最新开始；正数时返回更小的 id
+  int64 before_id = 3;
+  // 0 默认 20，最大 50
+  int32 limit = 4;
+}
+
+message ListUserPostReply {
   repeated PostItem list = 1;
   bool has_more = 2;
 }

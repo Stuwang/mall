@@ -1,5 +1,7 @@
 import type { HttpClient } from '@/api/http/HttpClient'
 import type {
+  ChangePasswordReply,
+  ChangePasswordRequest,
   GetUserInfoReply,
   GetUserInfoRequest,
   LoginReply,
@@ -37,6 +39,10 @@ export class AuthApiService {
 
   updateUserInfo(request: UpdateUserInfoRequest): Promise<UpdateUserInfoReply> {
     return this.http.post<UpdateUserInfoReply>('/user/api/v1/update', request)
+  }
+
+  changePassword(request: ChangePasswordRequest): Promise<ChangePasswordReply> {
+    return this.http.post<ChangePasswordReply>('/user/api/v1/password/change', request)
   }
 
   uploadMedia(file: File): Promise<MediaUploadReply> {

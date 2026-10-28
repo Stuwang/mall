@@ -90,6 +90,21 @@ func (d *PostDao) ListRecommend(hasCursor bool, cursorScore, cursorID int64, lim
 	return list, nil
 }
 
+// ListByUser 某人帖子，按 id 降序。beforeID > 0 时取更小的 id。
+func (d *PostDao) ListByUser(userID, beforeID int64, limit int) ([]*model.Post, error) {
+	q := d.db.Where("user_id = ? AND deleted = ?", userID, kitcommon.DeletedNo)
+	if beforeID > 0 {
+		q = q.Where("id < ?", beforeID)
+	}
+	var list []*model.Post
+	err := q.Order("id DESC").Limit(limit).Find(&list).Error
+	if err != nil {
+		logger.Errorf("PostDao.ListByUser userID=%d err=%v", userID, err)
+		return nil, codeerror.OrSystem(err, "PostDao.ListByUser userID=%d", userID)
+	}
+	return list, nil
+}
+
 func (d *PostDao) SoftDelete(userID, postID int64) (bool, error) {
 	now := time.Now().Unix()
 	res := d.db.Model(&model.Post{}).

@@ -48,6 +48,14 @@ service User {
       body: "*"
     };
   }
+
+  // 修改登录密码
+  rpc ChangePassword (ChangePasswordRequest) returns (ChangePasswordReply) {
+    option (google.api.http) = {
+      post: "/user/api/v1/password/change"
+      body: "*"
+    };
+  }
 }
 
 // 管理侧用户服务（需 admin）
@@ -145,6 +153,14 @@ message UpdateUserInfoRequest {
 message UpdateUserInfoReply {
   UserInfo user = 1;
 }
+
+message ChangePasswordRequest {
+  helloworld.v1.BaseParam BaseParam = 1;
+  string old_password = 2;
+  string new_password = 3;
+}
+
+message ChangePasswordReply {}
 
 message AdminListUsersRequest {
   helloworld.v1.BaseParam BaseParam = 1;

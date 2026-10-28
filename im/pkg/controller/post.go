@@ -26,6 +26,16 @@ func (c *PostController) Recommend(ctx context.Context, req *apipost.RecommendRe
 	return reply, nil
 }
 
+func (c *PostController) ListUserPost(ctx context.Context, req *apipost.ListUserPostRequest) (*apipost.ListUserPostReply, error) {
+	a := auth.MustFromContext(ctx)
+	reply, err := biz.ListUserPost(a.UserID, req.GetUserId(), req.GetBeforeId(), req.GetLimit())
+	if err != nil {
+		logger.Errorf("ListUserPost viewer=%d target=%d err=%v", a.UserID, req.GetUserId(), err)
+		return nil, err
+	}
+	return reply, nil
+}
+
 func (c *PostController) CreatePost(ctx context.Context, req *apipost.CreatePostRequest) (*apipost.CreatePostReply, error) {
 	a := auth.MustFromContext(ctx)
 	reply, err := biz.CreatePost(a.UserID, req.GetClientPostId(), req.GetText(), req.GetImageUris())

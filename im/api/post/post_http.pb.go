@@ -26,6 +26,7 @@ const OperationPostDeletePost = "/im.v1.Post/DeletePost"
 const OperationPostGetPost = "/im.v1.Post/GetPost"
 const OperationPostLikePost = "/im.v1.Post/LikePost"
 const OperationPostListComment = "/im.v1.Post/ListComment"
+const OperationPostListUserPost = "/im.v1.Post/ListUserPost"
 const OperationPostRecommend = "/im.v1.Post/Recommend"
 const OperationPostUnlikePost = "/im.v1.Post/UnlikePost"
 
@@ -37,6 +38,8 @@ type PostHTTPServer interface {
 	GetPost(context.Context, *GetPostRequest) (*GetPostReply, error)
 	LikePost(context.Context, *LikePostRequest) (*LikePostReply, error)
 	ListComment(context.Context, *ListCommentRequest) (*ListCommentReply, error)
+	// ListUserPost 某人的帖子，按 id 从新到旧
+	ListUserPost(context.Context, *ListUserPostRequest) (*ListUserPostReply, error)
 	Recommend(context.Context, *RecommendRequest) (*RecommendReply, error)
 	UnlikePost(context.Context, *UnlikePostRequest) (*UnlikePostReply, error)
 }
@@ -44,6 +47,7 @@ type PostHTTPServer interface {
 func RegisterPostHTTPServer(s *http.Server, srv PostHTTPServer) {
 	r := s.Route("/")
 	r.POST("/im/api/v1/post/recommend", _Post_Recommend0_HTTP_Handler(srv))
+	r.POST("/im/api/v1/post/user", _Post_ListUserPost0_HTTP_Handler(srv))
 	r.POST("/im/api/v1/post/create", _Post_CreatePost0_HTTP_Handler(srv))
 	r.POST("/im/api/v1/post/delete", _Post_DeletePost0_HTTP_Handler(srv))
 	r.POST("/im/api/v1/post/detail", _Post_GetPost0_HTTP_Handler(srv))
@@ -72,6 +76,28 @@ func _Post_Recommend0_HTTP_Handler(srv PostHTTPServer) func(ctx http.Context) er
 			return err
 		}
 		reply := out.(*RecommendReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _Post_ListUserPost0_HTTP_Handler(srv PostHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in ListUserPostRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationPostListUserPost)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.ListUserPost(ctx, req.(*ListUserPostRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*ListUserPostReply)
 		return ctx.Result(200, reply)
 	}
 }
@@ -260,6 +286,8 @@ type PostHTTPClient interface {
 	GetPost(ctx context.Context, req *GetPostRequest, opts ...http.CallOption) (rsp *GetPostReply, err error)
 	LikePost(ctx context.Context, req *LikePostRequest, opts ...http.CallOption) (rsp *LikePostReply, err error)
 	ListComment(ctx context.Context, req *ListCommentRequest, opts ...http.CallOption) (rsp *ListCommentReply, err error)
+	// ListUserPost 某人的帖子，按 id 从新到旧
+	ListUserPost(ctx context.Context, req *ListUserPostRequest, opts ...http.CallOption) (rsp *ListUserPostReply, err error)
 	Recommend(ctx context.Context, req *RecommendRequest, opts ...http.CallOption) (rsp *RecommendReply, err error)
 	UnlikePost(ctx context.Context, req *UnlikePostRequest, opts ...http.CallOption) (rsp *UnlikePostReply, err error)
 }
@@ -355,6 +383,20 @@ func (c *PostHTTPClientImpl) ListComment(ctx context.Context, in *ListCommentReq
 	pattern := "/im/api/v1/post/comment/list"
 	path := binding.EncodeURL(pattern, in, false)
 	opts = append(opts, http.Operation(OperationPostListComment))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// ListUserPost 某人的帖子，按 id 从新到旧
+func (c *PostHTTPClientImpl) ListUserPost(ctx context.Context, in *ListUserPostRequest, opts ...http.CallOption) (*ListUserPostReply, error) {
+	var out ListUserPostReply
+	pattern := "/im/api/v1/post/user"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationPostListUserPost))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
 	if err != nil {

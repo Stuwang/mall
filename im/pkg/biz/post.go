@@ -29,7 +29,7 @@ const (
 	postImageMax       = 9
 )
 
-// Recommend 推荐列表。
+// Recommend 帖子列表（暂按 id 倒序，从新到旧）。
 func Recommend(viewerID int64, hasCursor bool, cursorScore, cursorID int64, limit int32) (*apipost.RecommendReply, error) {
 	lim := clampLimit(limit, postListDefault, postListMax)
 	rows, err := imdao.NewPostDao(nil).ListRecommend(hasCursor, cursorScore, cursorID, lim+1)

@@ -40,7 +40,11 @@ async function onSubmit(): Promise<void> {
 <template>
   <div class="page auth-page">
     <van-nav-bar title="注册" left-arrow @click-left="router.back()" />
-    <van-form @submit="onSubmit">
+    <div class="auth-hero im-fade-up">
+      <h1>创建账号</h1>
+      <p>加入后即可聊天、发帖、建相册</p>
+    </div>
+    <van-form class="im-fade-up" @submit="onSubmit">
       <van-cell-group inset>
         <van-field
           v-model="form.username"
@@ -76,6 +80,22 @@ async function onSubmit(): Promise<void> {
 </template>
 
 <style scoped>
+.auth-hero {
+  padding: 20px 28px 8px;
+}
+
+.auth-hero h1 {
+  margin: 0 0 8px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.auth-hero p {
+  margin: 0;
+  color: var(--im-text-secondary);
+  font-size: 14px;
+}
+
 .auth-actions {
   margin: 24px 16px;
 }

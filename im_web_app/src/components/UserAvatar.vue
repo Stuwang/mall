@@ -37,10 +37,11 @@ const text = computed(() => avatarLabel(props.nickname, props.userId))
   justify-content: center;
   border-radius: 50%;
   color: #fff;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1;
   user-select: none;
   overflow: hidden;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
 }
 
 .img {

@@ -72,17 +72,15 @@ func (d *PostDao) GetByClientID(userID int64, clientPostID string) (*model.Post,
 	return &p, nil
 }
 
-// ListRecommend 按 recommend_score、id 降序。hasCursor 为真时取更小的游标。
+// ListRecommend 按 id 降序（从新到旧）。hasCursor 为真时取 id 更小的下一页；cursorScore 暂忽略。
 func (d *PostDao) ListRecommend(hasCursor bool, cursorScore, cursorID int64, limit int) ([]*model.Post, error) {
+	_ = cursorScore
 	q := d.db.Where("deleted = ?", kitcommon.DeletedNo)
-	if hasCursor {
-		q = q.Where(
-			"(recommend_score < ?) OR (recommend_score = ? AND id < ?)",
-			cursorScore, cursorScore, cursorID,
-		)
+	if hasCursor && cursorID > 0 {
+		q = q.Where("id < ?", cursorID)
 	}
 	var list []*model.Post
-	err := q.Order("recommend_score DESC, id DESC").Limit(limit).Find(&list).Error
+	err := q.Order("id DESC").Limit(limit).Find(&list).Error
 	if err != nil {
 		logger.Errorf("PostDao.ListRecommend err=%v", err)
 		return nil, codeerror.OrSystem(err, "PostDao.ListRecommend")

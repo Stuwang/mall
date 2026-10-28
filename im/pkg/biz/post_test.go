@@ -76,7 +76,7 @@ func TestPostCreateRecommendLikeComment(t *testing.T) {
 		t.Fatalf("recommend len=%d", len(rec.List))
 	}
 	if rec.List[0].GetPostId() != p2.Post.GetPostId() {
-		t.Fatalf("want p2 first by score got %#v", rec.List[0])
+		t.Fatalf("want p2 first by id desc got %#v", rec.List[0])
 	}
 
 	unliked, err := biz.UnlikePost(a, p2.Post.GetPostId())

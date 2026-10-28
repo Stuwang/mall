@@ -35,7 +35,7 @@ type PostItem struct {
 	CommentCount int64  `protobuf:"varint,7,opt,name=comment_count,json=commentCount,proto3" json:"comment_count,omitempty"`
 	Liked        bool   `protobuf:"varint,8,opt,name=liked,proto3" json:"liked,omitempty"`
 	Ct           int64  `protobuf:"varint,9,opt,name=ct,proto3" json:"ct,omitempty"`
-	// 推荐游标用；列表下一页带回
+	// 历史字段；当前列表按 id 倒序，分页用 post_id
 	RecommendScore int64 `protobuf:"varint,10,opt,name=recommend_score,json=recommendScore,proto3" json:"recommend_score,omitempty"`
 	// 图片可访问路径（如 /files/...），按发布顺序
 	ImageUrls     []string `protobuf:"bytes,11,rep,name=image_urls,json=imageUrls,proto3" json:"image_urls,omitempty"`
@@ -246,9 +246,11 @@ type RecommendRequest struct {
 	state     protoimpl.MessageState `protogen:"open.v1"`
 	BaseParam *base.BaseParam        `protobuf:"bytes,1,opt,name=BaseParam,proto3" json:"BaseParam,omitempty"`
 	// false 表示第一页，忽略 cursor
-	HasCursor   bool  `protobuf:"varint,2,opt,name=has_cursor,json=hasCursor,proto3" json:"has_cursor,omitempty"`
+	HasCursor bool `protobuf:"varint,2,opt,name=has_cursor,json=hasCursor,proto3" json:"has_cursor,omitempty"`
+	// 已废弃，忽略；保留兼容
 	CursorScore int64 `protobuf:"varint,3,opt,name=cursor_score,json=cursorScore,proto3" json:"cursor_score,omitempty"`
-	CursorId    int64 `protobuf:"varint,4,opt,name=cursor_id,json=cursorId,proto3" json:"cursor_id,omitempty"`
+	// 上一页最后一条 post_id；has_cursor 时取更小的 id
+	CursorId int64 `protobuf:"varint,4,opt,name=cursor_id,json=cursorId,proto3" json:"cursor_id,omitempty"`
 	// 0 默认 20，最大 50
 	Limit         int32 `protobuf:"varint,5,opt,name=limit,proto3" json:"limit,omitempty"`
 	unknownFields protoimpl.UnknownFields

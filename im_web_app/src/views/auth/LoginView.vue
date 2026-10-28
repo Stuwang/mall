@@ -36,12 +36,12 @@ async function onSubmit(): Promise<void> {
 
 <template>
   <div class="page auth-page">
-    <van-nav-bar title="登录" />
-    <div class="auth-hero">
-      <h1>IM</h1>
-      <p class="muted">一对一即时消息</p>
+    <div class="auth-hero im-fade-up">
+      <div class="brand">IM</div>
+      <h1>欢迎回来</h1>
+      <p>一对一即时消息 · 帖子与相册</p>
     </div>
-    <van-form @submit="onSubmit">
+    <van-form class="auth-form im-fade-up" @submit="onSubmit">
       <van-cell-group inset>
         <van-field
           v-model="form.username"
@@ -79,15 +79,52 @@ async function onSubmit(): Promise<void> {
 </template>
 
 <style scoped>
+.auth-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 24px 0 48px;
+}
+
 .auth-hero {
-  padding: 32px 24px 12px;
+  padding: 12px 28px 28px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  height: 56px;
+  padding: 0 14px;
+  margin-bottom: 18px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, var(--im-primary), var(--im-primary-deep));
+  color: #fff;
+  font-family: Outfit, 'Noto Sans SC', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  box-shadow: 0 14px 28px rgba(15, 143, 134, 0.28);
 }
 
 .auth-hero h1 {
   margin: 0 0 8px;
-  font-size: 32px;
-  letter-spacing: 0.04em;
-  color: var(--im-primary);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.auth-hero p {
+  margin: 0;
+  color: var(--im-text-secondary);
+  font-size: 14px;
+}
+
+.auth-form {
+  animation-delay: 0.08s;
 }
 
 .auth-actions {

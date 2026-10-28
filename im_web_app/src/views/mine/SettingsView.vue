@@ -194,6 +194,10 @@ function logout(): void {
 </template>
 
 <style scoped>
+.page :deep(.van-cell-group) {
+  margin-top: 8px;
+}
+
 .hidden-input {
   display: none;
 }

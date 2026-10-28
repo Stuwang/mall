@@ -305,7 +305,9 @@ function openPeerProfile(): void {
   flex: 1;
   overflow-y: auto;
   padding: 12px 12px 8px;
-  background: linear-gradient(180deg, #eef3f8 0%, var(--im-bg) 120px);
+  background:
+    radial-gradient(700px 280px at 10% 0%, rgba(15, 143, 134, 0.1), transparent 60%),
+    linear-gradient(180deg, rgba(245, 247, 250, 0.9) 0%, var(--im-bg) 160px);
 }
 
 .msg-row {
@@ -327,9 +329,10 @@ function openPeerProfile(): void {
 .bubble {
   max-width: calc(100% - 96px);
   padding: 10px 12px;
-  border-radius: 12px;
+  border-radius: 16px;
   background: var(--im-bubble-peer);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--im-border);
+  box-shadow: var(--im-shadow-sm);
 }
 
 .bubble.image {
@@ -383,9 +386,11 @@ function openPeerProfile(): void {
   display: flex;
   gap: 8px;
   align-items: flex-end;
-  padding: 8px 12px calc(8px + var(--im-safe-bottom));
-  background: #fff;
-  border-top: 1px solid #ebedf0;
+  padding: 10px 12px calc(10px + var(--im-safe-bottom));
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-top: 1px solid var(--im-border);
 }
 
 .img-btn {
@@ -393,9 +398,9 @@ function openPeerProfile(): void {
   width: 36px;
   height: 36px;
   border: none;
-  border-radius: 8px;
-  background: #f7f8fa;
-  color: #323233;
+  border-radius: 10px;
+  background: var(--im-primary-soft);
+  color: var(--im-primary-deep);
   font-size: 20px;
   display: inline-flex;
   align-items: center;
@@ -413,8 +418,8 @@ function openPeerProfile(): void {
 
 .composer :deep(.van-field) {
   flex: 1;
-  background: #f7f8fa;
-  border-radius: 8px;
+  background: #f3f5f8;
+  border-radius: 12px;
   padding: 6px 10px;
 }
 </style>

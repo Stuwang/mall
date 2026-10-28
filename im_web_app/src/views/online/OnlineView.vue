@@ -35,18 +35,26 @@ function openProfile(userId: number): void {
 
 <template>
   <div class="page">
-    <van-nav-bar title="在线用户" />
-    <p class="hint muted">点头像看主页，点消息开聊。仅显示当前 WebSocket 在线的用户。</p>
+    <van-nav-bar title="在线" />
+    <div class="banner im-fade-up">
+      <div class="banner-title">此刻在线</div>
+      <div class="banner-desc">点头像看主页，点消息开聊</div>
+    </div>
     <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
       <van-empty v-if="imStore.online.length === 0" description="暂时没有其他在线用户" />
       <div v-else class="user-list">
-        <div v-for="u in imStore.online" :key="u.user_id" class="user-item">
+        <div
+          v-for="u in imStore.online"
+          :key="u.user_id"
+          class="user-item"
+        >
           <button type="button" class="avatar-hit" @click="openProfile(u.user_id)">
+            <span class="online-dot" aria-hidden="true" />
             <UserAvatar
               :user-id="u.user_id"
               :nickname="u.nickname"
               :src="u.avatar"
-              :size="48"
+              :size="52"
             />
           </button>
           <div class="meta">
@@ -67,12 +75,29 @@ function openProfile(userId: number): void {
 </template>
 
 <style scoped>
-.hint {
-  margin: 12px 16px 0;
+.banner {
+  margin: 12px 16px 4px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(215, 243, 239, 0.75));
+  border: 1px solid var(--im-border);
+  box-shadow: var(--im-shadow-sm);
+}
+
+.banner-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.banner-desc {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--im-text-secondary);
 }
 
 .user-list {
-  padding: 8px 12px 16px;
+  padding: 10px 12px 16px;
 }
 
 .user-item {
@@ -80,14 +105,15 @@ function openProfile(userId: number): void {
   align-items: center;
   gap: 12px;
   width: 100%;
-  margin: 0 0 8px;
-  padding: 12px;
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  margin: 0 0 10px;
+  padding: 14px;
+  border-radius: var(--im-radius);
+  background: var(--im-card);
+  border: 1px solid var(--im-border);
 }
 
 .avatar-hit {
+  position: relative;
   display: inline-flex;
   flex-shrink: 0;
   padding: 0;
@@ -95,6 +121,19 @@ function openProfile(userId: number): void {
   border-radius: 50%;
   background: transparent;
   cursor: pointer;
+}
+
+.online-dot {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  z-index: 1;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--im-success);
+  box-shadow: 0 0 0 2px rgba(31, 157, 106, 0.18);
 }
 
 .meta {
@@ -114,15 +153,18 @@ function openProfile(userId: number): void {
 .msg-btn {
   flex-shrink: 0;
   border: none;
-  border-radius: 16px;
-  padding: 6px 14px;
-  background: var(--im-primary);
-  color: #fff;
-  font-size: 14px;
+  border-radius: 999px;
+  padding: 8px 16px;
+  background: var(--im-primary-soft);
+  color: var(--im-primary-deep);
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .msg-btn:active {
-  opacity: 0.85;
+  background: var(--im-primary);
+  color: #fff;
 }
 </style>

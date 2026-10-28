@@ -51,7 +51,10 @@ function unreadBadge(peerId: number): string | undefined {
   <div class="page">
     <van-nav-bar title="消息">
       <template #right>
-        <span class="ws-dot" :class="{ on: imStore.wsConnected }" />
+        <span class="ws-pill" :class="{ on: imStore.wsConnected }">
+          <span class="ws-dot" />
+          {{ imStore.wsConnected ? '已连接' : '未连接' }}
+        </span>
       </template>
     </van-nav-bar>
     <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
@@ -68,7 +71,7 @@ function unreadBadge(peerId: number): string | undefined {
             :user-id="c.peer.user_id"
             :nickname="c.peer?.nickname"
             :src="c.peer?.avatar"
-            :size="48"
+            :size="52"
           />
           <div class="body">
             <div class="top">
@@ -87,39 +90,50 @@ function unreadBadge(peerId: number): string | undefined {
 </template>
 
 <style scoped>
-.ws-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #c8c9cc;
-  margin-right: 8px;
+.ws-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(139, 149, 165, 0.12);
+  color: var(--im-muted);
+  font-size: 11px;
+  font-weight: 600;
 }
 
-.ws-dot.on {
-  background: #07c160;
+.ws-pill.on {
+  background: rgba(31, 157, 106, 0.12);
+  color: var(--im-success);
+}
+
+.ws-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
 }
 
 .conv-list {
-  padding: 8px 12px 16px;
+  padding: 10px 12px 16px;
 }
 
 .conv-item {
   display: flex;
   gap: 12px;
   width: 100%;
-  margin: 0 0 8px;
-  padding: 12px;
-  border: none;
-  border-radius: 12px;
-  background: #fff;
+  margin: 0 0 10px;
+  padding: 14px;
+  border: 1px solid var(--im-border);
+  border-radius: var(--im-radius);
+  background: var(--im-card);
   text-align: left;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .conv-item:active {
-  background: #f2f3f5;
+  background: #f6f8fa;
 }
 
 .body {

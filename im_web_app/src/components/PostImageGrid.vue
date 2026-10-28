@@ -69,7 +69,13 @@ function onClick(cell: { src?: string; more?: number; index: number }, ev: Event
       class="cell"
       @click="onClick(cell, $event)"
     >
-      <img v-if="cell.src" :src="cell.src" alt="" />
+      <img
+        v-if="cell.src"
+        :src="cell.src"
+        alt=""
+        loading="lazy"
+        decoding="async"
+      />
       <span v-if="cell.more" class="more">+{{ cell.more }}</span>
     </button>
   </div>

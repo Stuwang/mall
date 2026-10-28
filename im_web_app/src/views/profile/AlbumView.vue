@@ -200,8 +200,12 @@ watch(userId, () => {
 .grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-  padding: 8px 12px 16px;
+  gap: 6px;
+  margin: 8px 12px 16px;
+  padding: 8px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid var(--im-border);
 }
 
 .cell {
@@ -214,9 +218,9 @@ watch(userId, () => {
   height: 100%;
   padding: 0;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   overflow: hidden;
-  background: #f2f3f5;
+  background: #dfe5ec;
   cursor: pointer;
 }
 

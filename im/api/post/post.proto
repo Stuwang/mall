@@ -92,7 +92,7 @@ message PostItem {
   int64 comment_count = 7;
   bool liked = 8;
   int64 ct = 9;
-  // 推荐游标用；列表下一页带回
+  // 历史字段；当前列表按 id 倒序，分页用 post_id
   int64 recommend_score = 10;
   // 图片可访问路径（如 /files/...），按发布顺序
   repeated string image_urls = 11;
@@ -112,7 +112,9 @@ message RecommendRequest {
   helloworld.v1.BaseParam BaseParam = 1;
   // false 表示第一页，忽略 cursor
   bool has_cursor = 2;
+  // 已废弃，忽略；保留兼容
   int64 cursor_score = 3;
+  // 上一页最后一条 post_id；has_cursor 时取更小的 id
   int64 cursor_id = 4;
   // 0 默认 20，最大 50
   int32 limit = 5;

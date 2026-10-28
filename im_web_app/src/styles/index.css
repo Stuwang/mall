@@ -1,20 +1,54 @@
 :root {
-  --im-bg: #f7f8fa;
+  --im-bg: #eef1f4;
+  --im-bg-deep: #e4e9ef;
   --im-card: #ffffff;
-  --im-text: #323233;
-  --im-muted: #969799;
-  --im-primary: #1989fa;
-  --im-bubble-me: #cce6ff;
+  --im-text: #1c2430;
+  --im-text-secondary: #5a6573;
+  --im-muted: #8b95a5;
+  --im-primary: #0f8f86;
+  --im-primary-soft: #d7f3ef;
+  --im-primary-deep: #0a6b65;
+  --im-accent: #e8873a;
+  --im-danger: #e5484d;
+  --im-success: #1f9d6a;
+  --im-border: rgba(28, 36, 48, 0.06);
+  --im-shadow: 0 8px 24px rgba(28, 36, 48, 0.06);
+  --im-shadow-sm: 0 2px 8px rgba(28, 36, 48, 0.04);
+  --im-radius: 16px;
+  --im-radius-sm: 12px;
+  --im-bubble-me: #c8ebe6;
   --im-bubble-peer: #ffffff;
   --im-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --van-primary-color: var(--im-primary);
+  --van-success-color: var(--im-success);
+  --van-danger-color: var(--im-danger);
+  --van-text-color: var(--im-text);
+  --van-text-color-2: var(--im-text-secondary);
+  --van-text-color-3: var(--im-muted);
+  --van-background: var(--im-bg);
+  --van-background-2: var(--im-card);
+  --van-border-color: var(--im-border);
+  --van-nav-bar-height: 48px;
+  --van-nav-bar-background: #ffffff;
+  --van-nav-bar-title-text-color: var(--im-text);
+  --van-tabbar-background: #ffffff;
+  --van-tabbar-item-active-color: var(--im-primary);
+  --van-tabbar-item-text-color: var(--im-muted);
+  --van-button-primary-background: var(--im-primary);
+  --van-button-primary-border-color: var(--im-primary);
+  --van-cell-background: transparent;
+  --van-cell-group-inset-padding: 0 16px;
+  --van-cell-group-inset-radius: var(--im-radius);
+  --van-cell-group-background: var(--im-card);
   color: var(--im-text);
   font-family:
+    'Noto Sans SC',
     'PingFang SC',
     'Hiragino Sans GB',
     'Microsoft YaHei',
     system-ui,
     sans-serif;
-  line-height: 1.4;
+  line-height: 1.45;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -34,6 +68,10 @@ body,
 
 body {
   overscroll-behavior-y: none;
+  /* 不用 background-attachment:fixed，移动端滚动会整页重绘导致卡顿 */
+  background:
+    radial-gradient(900px 360px at 10% -12%, rgba(15, 143, 134, 0.12), transparent 55%),
+    linear-gradient(180deg, #f5f7fa 0%, var(--im-bg) 48%, var(--im-bg-deep) 100%);
 }
 
 a {
@@ -43,14 +81,99 @@ a {
 
 .page {
   min-height: 100%;
-  background: var(--im-bg);
+  background: transparent;
 }
 
 .page-with-tab {
-  padding-bottom: calc(50px + var(--im-safe-bottom));
+  padding-bottom: calc(56px + var(--im-safe-bottom));
 }
 
 .muted {
   color: var(--im-muted);
   font-size: 12px;
+}
+
+.im-card {
+  background: var(--im-card);
+  border: 1px solid var(--im-border);
+  border-radius: var(--im-radius);
+  box-shadow: var(--im-shadow-sm);
+}
+
+.im-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 8px 0 0;
+  padding: 14px 18px 10px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--im-text);
+}
+
+.van-nav-bar {
+  /* 毛玻璃在列表滚动时合成开销大，改用不透明底 */
+  background: var(--im-card) !important;
+  border-bottom: 1px solid var(--im-border);
+}
+
+.van-nav-bar__title {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.van-tabbar {
+  background: var(--im-card) !important;
+  border-top: 1px solid var(--im-border);
+  box-shadow: 0 -4px 16px rgba(28, 36, 48, 0.04);
+}
+
+.van-tabbar-item {
+  font-weight: 500;
+}
+
+.van-tabbar-item--active {
+  font-weight: 700;
+}
+
+.van-cell-group--inset {
+  overflow: hidden;
+  border: 1px solid var(--im-border);
+  box-shadow: var(--im-shadow-sm);
+}
+
+.van-cell-group__title {
+  margin: 18px 16px 8px;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--im-muted);
+}
+
+.van-button--primary {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  box-shadow: 0 8px 18px rgba(15, 143, 134, 0.22);
+}
+
+.van-empty__description {
+  color: var(--im-muted);
+}
+
+@keyframes im-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.im-fade-up {
+  animation: im-fade-up 0.35s ease both;
 }

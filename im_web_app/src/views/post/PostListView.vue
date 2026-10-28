@@ -55,7 +55,6 @@ async function loadMore(): Promise<void> {
     const last = posts.value[posts.value.length - 1]
     const reply = await api.post.recommend({
       has_cursor: true,
-      cursor_score: last?.recommend_score ?? 0,
       cursor_id: last?.post_id ?? 0,
       limit: 20,
     })
@@ -121,12 +120,14 @@ onMounted(() => {
       <div v-if="loading" class="state muted">加载中…</div>
       <van-empty v-else-if="posts.length === 0" description="还没有帖子" />
       <div v-else class="list">
-        <button
+        <article
           v-for="p in posts"
           :key="p.post_id"
-          type="button"
           class="card"
+          role="button"
+          tabindex="0"
           @click="openDetail(p.post_id)"
+          @keydown.enter.prevent="openDetail(p.post_id)"
         >
           <div class="author" @click="openProfile(p.user_id, $event)">
             <UserAvatar
@@ -152,7 +153,7 @@ onMounted(() => {
               {{ p.comment_count }}
             </span>
           </div>
-        </button>
+        </article>
         <div v-if="hasMore" class="more">
           <van-button size="small" plain :loading="loadingMore" @click="loadMore">加载更多</van-button>
         </div>
@@ -164,8 +165,11 @@ onMounted(() => {
 <style scoped>
 .nav-action {
   color: var(--im-primary);
-  font-size: 15px;
-  padding: 0 4px;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--im-primary-soft);
   cursor: pointer;
 }
 
@@ -175,27 +179,29 @@ onMounted(() => {
 }
 
 .list {
-  padding: 8px 12px 16px;
+  padding: 10px 12px 16px;
 }
 
 .card {
   display: block;
   width: 100%;
-  margin: 0 0 10px;
-  padding: 14px;
-  border: none;
-  border-radius: 12px;
-  background: #fff;
+  margin: 0 0 12px;
+  padding: 16px;
+  border: 1px solid var(--im-border);
+  border-radius: var(--im-radius);
+  background: var(--im-card);
   text-align: left;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  /* 长列表用 content-visibility，离屏卡不参与布局/绘制 */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 220px;
 }
 
 .author {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .author-meta {
@@ -204,7 +210,7 @@ onMounted(() => {
 
 .name {
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -212,8 +218,8 @@ onMounted(() => {
 
 .text {
   font-size: 15px;
-  line-height: 1.5;
-  color: #323233;
+  line-height: 1.55;
+  color: var(--im-text);
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 4;
@@ -224,9 +230,11 @@ onMounted(() => {
 
 .stats {
   display: flex;
-  gap: 16px;
-  margin-top: 12px;
-  color: #969799;
+  gap: 18px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--im-border);
+  color: var(--im-muted);
   font-size: 13px;
 }
 
@@ -240,6 +248,7 @@ onMounted(() => {
   padding: 0;
   cursor: pointer;
   font-size: 13px;
+  font-weight: 500;
 }
 
 .more {

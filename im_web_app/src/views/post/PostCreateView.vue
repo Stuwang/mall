@@ -146,8 +146,11 @@ async function onSubmit(): Promise<void> {
 <style scoped>
 .nav-action {
   color: var(--im-primary);
-  font-size: 15px;
-  padding: 0 4px;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--im-primary-soft);
   cursor: pointer;
 }
 
@@ -158,9 +161,11 @@ async function onSubmit(): Promise<void> {
 
 .editor {
   margin: 12px;
-  border-radius: 12px;
+  border-radius: var(--im-radius);
   overflow: hidden;
-  background: #fff;
+  background: var(--im-card);
+  border: 1px solid var(--im-border);
+  box-shadow: var(--im-shadow-sm);
 }
 
 .pics {
@@ -193,8 +198,10 @@ async function onSubmit(): Promise<void> {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  color: #969799;
+  color: var(--im-muted);
   font-size: 12px;
+  border: 1px dashed rgba(15, 143, 134, 0.35);
+  background: var(--im-primary-soft);
   cursor: pointer;
 }
 

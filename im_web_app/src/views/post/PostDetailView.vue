@@ -269,9 +269,11 @@ watch(postId, () => {
 
 .content {
   margin: 12px;
-  padding: 14px;
-  border-radius: 12px;
-  background: #fff;
+  padding: 16px;
+  border-radius: var(--im-radius);
+  background: var(--im-card);
+  border: 1px solid var(--im-border);
+  box-shadow: var(--im-shadow-sm);
 }
 
 .author {
@@ -307,7 +309,9 @@ watch(postId, () => {
   display: flex;
   gap: 16px;
   margin-top: 14px;
-  color: #969799;
+  padding-top: 12px;
+  border-top: 1px solid var(--im-border);
+  color: var(--im-muted);
 }
 
 .stat {
@@ -337,8 +341,10 @@ watch(postId, () => {
   gap: 10px;
   margin: 0 0 10px;
   padding: 12px;
-  border-radius: 12px;
-  background: #fff;
+  border-radius: var(--im-radius-sm);
+  background: var(--im-card);
+  border: 1px solid var(--im-border);
+  box-shadow: var(--im-shadow-sm);
 }
 
 .cmt-avatar {
@@ -398,8 +404,10 @@ watch(postId, () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
-  background: #fff;
-  border-top: 1px solid #ebedf0;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-top: 1px solid var(--im-border);
 }
 </style>

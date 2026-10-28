@@ -80,10 +80,6 @@ function openAlbum(): void {
   void router.push({ name: routeNames.album, params: { userId: String(userId.value) } })
 }
 
-function openAlbumPhoto(): void {
-  openAlbum()
-}
-
 function startChat(): void {
   if (!profile.value) {
     return
@@ -134,40 +130,40 @@ watch(userId, () => {
 
     <div v-if="loading" class="state muted">加载中…</div>
     <template v-else-if="profile">
-      <div class="header">
+      <div class="hero im-fade-up">
+        <div class="hero-bg" aria-hidden="true" />
         <UserAvatar
           :user-id="profile.user_id"
           :nickname="displayName"
           :src="profile.avatar"
-          :size="80"
+          :size="88"
         />
         <div class="name">{{ displayName }}</div>
-        <div class="muted">用户 ID {{ profile.user_id }}</div>
+        <div class="uid">用户 ID {{ profile.user_id }}</div>
+        <div v-if="!isSelf" class="actions">
+          <van-button round type="primary" @click="startChat">发消息</van-button>
+        </div>
       </div>
 
-      <div v-if="!isSelf" class="actions">
-        <van-button round block type="primary" @click="startChat">发消息</van-button>
-      </div>
-
-      <button type="button" class="section" @click="openAlbum">
+      <button type="button" class="im-section-title" @click="openAlbum">
         <span>相册</span>
-        <span class="section-more">{{ profile.photo_count }} 张 · 查看全部</span>
+        <span class="section-more">{{ profile.photo_count }} 张 · 全部</span>
       </button>
 
       <van-empty v-if="photos.length === 0" description="还没有照片" />
-      <div v-else class="album-grid">
+      <div v-else class="album-grid im-fade-up">
         <button
           v-for="p in photos"
           :key="p.id"
           type="button"
           class="album-cell"
-          @click="openAlbumPhoto"
+          @click="openAlbum"
         >
           <img :src="p.image_url" alt="" />
         </button>
       </div>
 
-      <div class="section static">
+      <div class="im-section-title static">
         <span>帖子</span>
       </div>
 
@@ -210,66 +206,93 @@ watch(userId, () => {
   text-align: center;
 }
 
-.header {
+.hero {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 24px 16px 8px;
+  margin: 12px 16px 4px;
+  padding: 28px 16px 22px;
+  overflow: hidden;
+  border-radius: 22px;
+  background: var(--im-card);
+  border: 1px solid var(--im-border);
+  box-shadow: var(--im-shadow);
+}
+
+.hero-bg {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 96px;
+  background:
+    linear-gradient(135deg, rgba(15, 143, 134, 0.18), rgba(232, 135, 58, 0.12));
+  pointer-events: none;
 }
 
 .name {
+  position: relative;
   max-width: 100%;
-  font-size: 20px;
-  font-weight: 600;
+  margin-top: 4px;
+  font-size: 22px;
+  font-weight: 700;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.uid {
+  position: relative;
+  font-size: 12px;
+  color: var(--im-muted);
+}
+
 .actions {
-  padding: 12px 16px 4px;
-}
-
-.section {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  position: relative;
+  margin-top: 10px;
   width: 100%;
-  margin: 8px 0 0;
-  padding: 12px 16px;
-  border: none;
-  background: transparent;
-  font-size: 16px;
-  font-weight: 600;
-  text-align: left;
-  cursor: pointer;
+  max-width: 200px;
 }
 
-.section.static {
-  cursor: default;
+.actions :deep(.van-button) {
+  width: 100%;
 }
 
 .section-more {
-  font-size: 13px;
-  font-weight: 400;
-  color: #969799;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--im-muted);
+}
+
+.im-section-title {
+  width: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.im-section-title.static {
+  cursor: default;
 }
 
 .album-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-  padding: 0 16px 8px;
+  gap: 6px;
+  margin: 0 16px 8px;
+  padding: 6px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid var(--im-border);
 }
 
 .album-cell {
   aspect-ratio: 1;
   padding: 0;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   overflow: hidden;
-  background: #f2f3f5;
+  background: #dfe5ec;
   cursor: pointer;
 }
 
@@ -278,6 +301,11 @@ watch(userId, () => {
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: transform 0.25s ease;
+}
+
+.album-cell:active img {
+  transform: scale(1.04);
 }
 
 .post-list {
@@ -287,14 +315,14 @@ watch(userId, () => {
 .card {
   display: block;
   width: 100%;
-  margin: 0 0 10px;
-  padding: 14px;
-  border: none;
-  border-radius: 12px;
-  background: #fff;
+  margin: 0 0 12px;
+  padding: 16px;
+  border: 1px solid var(--im-border);
+  border-radius: var(--im-radius);
+  background: var(--im-card);
   text-align: left;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--im-shadow-sm);
 }
 
 .post-meta {
@@ -304,8 +332,8 @@ watch(userId, () => {
 
 .text {
   font-size: 15px;
-  line-height: 1.5;
-  color: #323233;
+  line-height: 1.55;
+  color: var(--im-text);
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 4;
@@ -316,9 +344,11 @@ watch(userId, () => {
 
 .stats {
   display: flex;
-  gap: 16px;
+  gap: 18px;
   margin-top: 12px;
-  color: #969799;
+  padding-top: 12px;
+  border-top: 1px solid var(--im-border);
+  color: var(--im-muted);
   font-size: 13px;
 }
 

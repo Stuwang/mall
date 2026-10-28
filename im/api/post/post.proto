@@ -86,6 +86,8 @@ message PostItem {
   int64 ct = 9;
   // 推荐游标用；列表下一页带回
   int64 recommend_score = 10;
+  // 图片可访问路径（如 /files/...），按发布顺序
+  repeated string image_urls = 11;
 }
 
 message CommentItem {
@@ -116,7 +118,10 @@ message RecommendReply {
 message CreatePostRequest {
   helloworld.v1.BaseParam BaseParam = 1;
   string client_post_id = 2;
+  // 可空；正文与图片至少有一个
   string text = 3;
+  // 逻辑 URI 或 /files/ 路径，最多 9 张
+  repeated string image_uris = 4;
 }
 
 message CreatePostReply {

@@ -75,12 +75,14 @@ func (AlbumPhoto) TableName() string {
 	return "im_album_photo"
 }
 
-// Post 一条文字帖。删除只改 deleted。计数只由服务端改。
+// Post 一条帖子。删除只改 deleted。计数只由服务端改。
+// Images 存逻辑 URI 的 JSON 数组，如 ["local_file:///a.jpg"]。
 type Post struct {
 	ID             int64                 `gorm:"column:id;primaryKey;autoIncrement;index:idx_post_rec,priority:3"`
 	UserID         int64                 `gorm:"column:user_id;uniqueIndex:uk_post_idem,priority:1"`
 	ClientPostID   string                `gorm:"column:client_post_id;size:64;uniqueIndex:uk_post_idem,priority:2"`
 	Text           string                `gorm:"column:text;type:text"`
+	Images         string                `gorm:"column:images;type:text"`
 	LikeCount      int64                 `gorm:"column:like_count"`
 	CommentCount   int64                 `gorm:"column:comment_count"`
 	RecommendScore int64                 `gorm:"column:recommend_score;index:idx_post_rec,priority:2"`

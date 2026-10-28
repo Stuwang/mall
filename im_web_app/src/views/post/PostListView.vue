@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import type { PostItem } from '@/api/types'
+import PostImageGrid from '@/components/PostImageGrid.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
 import { appContext } from '@/app/AppContext'
 import { routeNames } from '@/router/routes'
@@ -139,7 +140,8 @@ onMounted(() => {
               <div class="muted">{{ formatTime(p.ct) }}</div>
             </div>
           </div>
-          <div class="text">{{ p.text }}</div>
+          <div v-if="p.text" class="text">{{ p.text }}</div>
+          <PostImageGrid v-if="p.image_urls?.length" :images="p.image_urls" />
           <div class="stats">
             <button type="button" class="stat" @click="toggleLike(p, $event)">
               <van-icon :name="p.liked ? 'good-job' : 'good-job-o'" />

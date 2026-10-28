@@ -14,7 +14,7 @@ import (
 func TestPostCreateRecommendLikeComment(t *testing.T) {
 	a, b, _ := setup(t)
 
-	p1, err := biz.CreatePost(a, "post0001", "第一条")
+	p1, err := biz.CreatePost(a, "post0001", "第一条", nil)
 	if err != nil {
 		t.Fatalf("create1: %v", err)
 	}
@@ -23,7 +23,7 @@ func TestPostCreateRecommendLikeComment(t *testing.T) {
 	}
 
 	// 幂等同正文
-	again, err := biz.CreatePost(a, "post0001", "第一条")
+	again, err := biz.CreatePost(a, "post0001", "第一条", nil)
 	if err != nil {
 		t.Fatalf("idempotent: %v", err)
 	}
@@ -32,7 +32,7 @@ func TestPostCreateRecommendLikeComment(t *testing.T) {
 	}
 
 	// 幂等不同正文
-	_, err = biz.CreatePost(a, "post0001", "改了")
+	_, err = biz.CreatePost(a, "post0001", "改了", nil)
 	if err == nil {
 		t.Fatal("want idempotency conflict")
 	}
@@ -40,7 +40,7 @@ func TestPostCreateRecommendLikeComment(t *testing.T) {
 		t.Fatalf("want 1133 got %v", err)
 	}
 
-	p2, err := biz.CreatePost(b, "post0002", "第二条")
+	p2, err := biz.CreatePost(b, "post0002", "第二条", nil)
 	if err != nil {
 		t.Fatalf("create2: %v", err)
 	}
@@ -131,7 +131,7 @@ func TestPostRecommendCursorAndBan(t *testing.T) {
 	a, b, c := setup(t)
 	for i, text := range []string{"a1", "a2", "a3"} {
 		cid := "postcur0" + string(rune('1'+i))
-		if _, err := biz.CreatePost(a, cid, text); err != nil {
+		if _, err := biz.CreatePost(a, cid, text, nil); err != nil {
 			t.Fatalf("create %s: %v", cid, err)
 		}
 	}
@@ -177,7 +177,7 @@ func TestPostRecommendCursorAndBan(t *testing.T) {
 		}
 	}
 
-	_, err = biz.CreatePost(a, "postban01", "不能发")
+	_, err = biz.CreatePost(a, "postban01", "不能发", nil)
 	if err == nil {
 		t.Fatal("banned create should fail")
 	}
@@ -188,14 +188,14 @@ func TestPostRecommendCursorAndBan(t *testing.T) {
 
 func TestPostTextLimits(t *testing.T) {
 	a, _, _ := setup(t)
-	_, err := biz.CreatePost(a, "postlen01", "")
+	_, err := biz.CreatePost(a, "postlen01", "", nil)
 	if err == nil {
-		t.Fatal("empty text")
+		t.Fatal("empty text and images")
 	}
 	if ce, ok := codeerror.As(err); !ok || !ce.Is(codeerror.ErrorParam) {
 		t.Fatalf("want param got %v", err)
 	}
-	_, err = biz.CreatePost(a, "postlen02", strings.Repeat("字", 1001))
+	_, err = biz.CreatePost(a, "postlen02", strings.Repeat("字", 1001), nil)
 	if err == nil {
 		t.Fatal("too long")
 	}

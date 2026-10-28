@@ -28,7 +28,7 @@ func (c *PostController) Recommend(ctx context.Context, req *apipost.RecommendRe
 
 func (c *PostController) CreatePost(ctx context.Context, req *apipost.CreatePostRequest) (*apipost.CreatePostReply, error) {
 	a := auth.MustFromContext(ctx)
-	reply, err := biz.CreatePost(a.UserID, req.GetClientPostId(), req.GetText())
+	reply, err := biz.CreatePost(a.UserID, req.GetClientPostId(), req.GetText(), req.GetImageUris())
 	if err != nil {
 		logger.Errorf("CreatePost user=%d err=%v", a.UserID, err)
 		return nil, err

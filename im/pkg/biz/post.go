@@ -1,6 +1,7 @@
 package biz
 
 import (
+	"encoding/json"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -25,6 +26,7 @@ const (
 	postListMax        = 50
 	commentListDefault = 30
 	commentListMax     = 50
+	postImageMax       = 9
 )
 
 // Recommend 推荐列表。
@@ -70,8 +72,8 @@ func Recommend(viewerID int64, hasCursor bool, cursorScore, cursorID int64, limi
 	return &apipost.RecommendReply{List: list, HasMore: hasMore}, nil
 }
 
-// CreatePost 发帖。
-func CreatePost(userID int64, clientPostID, text string) (*apipost.CreatePostReply, error) {
+// CreatePost 发帖。正文与图片至少有一个。
+func CreatePost(userID int64, clientPostID, text string, imageURIs []string) (*apipost.CreatePostReply, error) {
 	if err := requireActiveUser(userID); err != nil {
 		return nil, err
 	}
@@ -80,9 +82,23 @@ func CreatePost(userID int64, clientPostID, text string) (*apipost.CreatePostRep
 		return nil, codeerror.ErrorParam
 	}
 	text = strings.TrimSpace(text)
-	if n := utf8.RuneCountInString(text); n < 1 || n > postTextMax {
+	n := utf8.RuneCountInString(text)
+	if n > postTextMax {
 		logger.Errorf("CreatePost text length user=%d n=%d", userID, n)
 		return nil, codeerror.ErrorParam
+	}
+	uris, err := normalizePostImages(imageURIs)
+	if err != nil {
+		return nil, err
+	}
+	if n < 1 && len(uris) == 0 {
+		logger.Errorf("CreatePost empty text and images user=%d", userID)
+		return nil, codeerror.ErrorParam
+	}
+	imagesJSON, err := encodePostImages(uris)
+	if err != nil {
+		logger.Errorf("CreatePost encode images user=%d err=%v", userID, err)
+		return nil, codeerror.OrSystem(err, "CreatePost encode images")
 	}
 	dao := imdao.NewPostDao(nil)
 	exist, err := dao.GetByClientID(userID, clientPostID)
@@ -91,7 +107,7 @@ func CreatePost(userID int64, clientPostID, text string) (*apipost.CreatePostRep
 		return nil, err
 	}
 	if exist != nil {
-		if exist.Text != text {
+		if exist.Text != text || exist.Images != imagesJSON {
 			logger.Errorf("CreatePost idempotency conflict user=%d postID=%d", userID, exist.ID)
 			return nil, bizerror.ErrorPostIdempotency
 		}
@@ -106,6 +122,7 @@ func CreatePost(userID int64, clientPostID, text string) (*apipost.CreatePostRep
 		UserID:         userID,
 		ClientPostID:   clientPostID,
 		Text:           text,
+		Images:         imagesJSON,
 		LikeCount:      0,
 		CommentCount:   0,
 		RecommendScore: 0,
@@ -533,7 +550,72 @@ func toPostItem(p *model.Post, brief userBrief, liked bool) *apipost.PostItem {
 		Liked:          liked,
 		Ct:             p.Ct,
 		RecommendScore: p.RecommendScore,
+		ImageUrls:      decodePostImageURLs(p.Images),
 	}
+}
+
+func normalizePostImages(raw []string) ([]string, error) {
+	if len(raw) == 0 {
+		return nil, nil
+	}
+	if len(raw) > postImageMax {
+		logger.Errorf("normalizePostImages too many n=%d max=%d", len(raw), postImageMax)
+		return nil, codeerror.ErrorParam
+	}
+	out := make([]string, 0, len(raw))
+	for _, r := range raw {
+		r = strings.TrimSpace(r)
+		if r == "" {
+			continue
+		}
+		uri, err := normalizeImageURI(r)
+		if err != nil {
+			logger.Errorf("normalizePostImages invalid uri=%s err=%v", r, err)
+			return nil, codeerror.ErrorParam
+		}
+		out = append(out, uri)
+	}
+	if len(out) > postImageMax {
+		logger.Errorf("normalizePostImages too many after trim n=%d", len(out))
+		return nil, codeerror.ErrorParam
+	}
+	return out, nil
+}
+
+func encodePostImages(uris []string) (string, error) {
+	if len(uris) == 0 {
+		return "", nil
+	}
+	bs, err := json.Marshal(uris)
+	if err != nil {
+		return "", err
+	}
+	return string(bs), nil
+}
+
+func decodePostImageURLs(raw string) []string {
+	uris := decodePostImageURIs(raw)
+	if len(uris) == 0 {
+		return nil
+	}
+	out := make([]string, 0, len(uris))
+	for _, uri := range uris {
+		out = append(out, avatarURL(uri))
+	}
+	return out
+}
+
+func decodePostImageURIs(raw string) []string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return nil
+	}
+	var uris []string
+	if err := json.Unmarshal([]byte(raw), &uris); err != nil {
+		logger.Errorf("decodePostImageURIs err=%v", err)
+		return nil
+	}
+	return uris
 }
 
 func toCommentItem(c *model.PostComment, brief userBrief) *apipost.CommentItem {

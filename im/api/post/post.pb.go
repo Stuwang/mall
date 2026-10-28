@@ -37,8 +37,10 @@ type PostItem struct {
 	Ct           int64  `protobuf:"varint,9,opt,name=ct,proto3" json:"ct,omitempty"`
 	// 推荐游标用；列表下一页带回
 	RecommendScore int64 `protobuf:"varint,10,opt,name=recommend_score,json=recommendScore,proto3" json:"recommend_score,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	// 图片可访问路径（如 /files/...），按发布顺序
+	ImageUrls     []string `protobuf:"bytes,11,rep,name=image_urls,json=imageUrls,proto3" json:"image_urls,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *PostItem) Reset() {
@@ -139,6 +141,13 @@ func (x *PostItem) GetRecommendScore() int64 {
 		return x.RecommendScore
 	}
 	return 0
+}
+
+func (x *PostItem) GetImageUrls() []string {
+	if x != nil {
+		return x.ImageUrls
+	}
+	return nil
 }
 
 type CommentItem struct {
@@ -364,10 +373,13 @@ func (x *RecommendReply) GetHasMore() bool {
 }
 
 type CreatePostRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	BaseParam     *base.BaseParam        `protobuf:"bytes,1,opt,name=BaseParam,proto3" json:"BaseParam,omitempty"`
-	ClientPostId  string                 `protobuf:"bytes,2,opt,name=client_post_id,json=clientPostId,proto3" json:"client_post_id,omitempty"`
-	Text          string                 `protobuf:"bytes,3,opt,name=text,proto3" json:"text,omitempty"`
+	state        protoimpl.MessageState `protogen:"open.v1"`
+	BaseParam    *base.BaseParam        `protobuf:"bytes,1,opt,name=BaseParam,proto3" json:"BaseParam,omitempty"`
+	ClientPostId string                 `protobuf:"bytes,2,opt,name=client_post_id,json=clientPostId,proto3" json:"client_post_id,omitempty"`
+	// 可空；正文与图片至少有一个
+	Text string `protobuf:"bytes,3,opt,name=text,proto3" json:"text,omitempty"`
+	// 逻辑 URI 或 /files/ 路径，最多 9 张
+	ImageUris     []string `protobuf:"bytes,4,rep,name=image_uris,json=imageUris,proto3" json:"image_uris,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -421,6 +433,13 @@ func (x *CreatePostRequest) GetText() string {
 		return x.Text
 	}
 	return ""
+}
+
+func (x *CreatePostRequest) GetImageUris() []string {
+	if x != nil {
+		return x.ImageUris
+	}
+	return nil
 }
 
 type CreatePostReply struct {
@@ -1185,7 +1204,7 @@ var File_post_post_proto protoreflect.FileDescriptor
 
 const file_post_post_proto_rawDesc = "" +
 	"\n" +
-	"\x0fpost/post.proto\x12\x05im.v1\x1a\x0fbase/base.proto\x1a\x1cgoogle/api/annotations.proto\"\x97\x02\n" +
+	"\x0fpost/post.proto\x12\x05im.v1\x1a\x0fbase/base.proto\x1a\x1cgoogle/api/annotations.proto\"\xb6\x02\n" +
 	"\bPostItem\x12\x17\n" +
 	"\apost_id\x18\x01 \x01(\x03R\x06postId\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\x03R\x06userId\x12\x1a\n" +
@@ -1198,7 +1217,9 @@ const file_post_post_proto_rawDesc = "" +
 	"\x05liked\x18\b \x01(\bR\x05liked\x12\x0e\n" +
 	"\x02ct\x18\t \x01(\x03R\x02ct\x12'\n" +
 	"\x0frecommend_score\x18\n" +
-	" \x01(\x03R\x0erecommendScore\"\xb6\x01\n" +
+	" \x01(\x03R\x0erecommendScore\x12\x1d\n" +
+	"\n" +
+	"image_urls\x18\v \x03(\tR\timageUrls\"\xb6\x01\n" +
 	"\vCommentItem\x12\x1d\n" +
 	"\n" +
 	"comment_id\x18\x01 \x01(\x03R\tcommentId\x12\x17\n" +
@@ -1217,11 +1238,13 @@ const file_post_post_proto_rawDesc = "" +
 	"\x05limit\x18\x05 \x01(\x05R\x05limit\"P\n" +
 	"\x0eRecommendReply\x12#\n" +
 	"\x04list\x18\x01 \x03(\v2\x0f.im.v1.PostItemR\x04list\x12\x19\n" +
-	"\bhas_more\x18\x02 \x01(\bR\ahasMore\"\x85\x01\n" +
+	"\bhas_more\x18\x02 \x01(\bR\ahasMore\"\xa4\x01\n" +
 	"\x11CreatePostRequest\x126\n" +
 	"\tBaseParam\x18\x01 \x01(\v2\x18.helloworld.v1.BaseParamR\tBaseParam\x12$\n" +
 	"\x0eclient_post_id\x18\x02 \x01(\tR\fclientPostId\x12\x12\n" +
-	"\x04text\x18\x03 \x01(\tR\x04text\"6\n" +
+	"\x04text\x18\x03 \x01(\tR\x04text\x12\x1d\n" +
+	"\n" +
+	"image_uris\x18\x04 \x03(\tR\timageUris\"6\n" +
 	"\x0fCreatePostReply\x12#\n" +
 	"\x04post\x18\x01 \x01(\v2\x0f.im.v1.PostItemR\x04post\"d\n" +
 	"\x11DeletePostRequest\x126\n" +

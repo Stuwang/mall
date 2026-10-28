@@ -11,6 +11,7 @@ export interface PostItem {
   liked: boolean
   ct: number
   recommend_score?: number
+  image_urls?: string[]
 }
 
 export interface CommentItem {
@@ -37,7 +38,8 @@ export interface RecommendReply {
 
 export interface CreatePostRequest extends WithBaseParam {
   client_post_id: string
-  text: string
+  text?: string
+  image_uris?: string[]
 }
 
 export interface CreatePostReply {

@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { showConfirmDialog } from 'vant'
 import { useRoute, useRouter } from 'vue-router'
 import type { CommentItem, PostItem } from '@/api/types'
+import PostImageGrid from '@/components/PostImageGrid.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
 import { appContext } from '@/app/AppContext'
 import { routeNames } from '@/router/routes'
@@ -191,7 +192,8 @@ watch(postId, () => {
             <div class="muted">{{ formatTime(post.ct) }}</div>
           </div>
         </button>
-        <div class="text">{{ post.text }}</div>
+        <div v-if="post.text" class="text">{{ post.text }}</div>
+        <PostImageGrid v-if="post.image_urls?.length" :images="post.image_urls" />
         <div class="stats">
           <button type="button" class="stat" @click="toggleLike">
             <van-icon :name="post.liked ? 'good-job' : 'good-job-o'" />

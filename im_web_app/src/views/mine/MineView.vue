@@ -7,6 +7,7 @@ import { routeNames } from '@/router/routes'
 import { useAuthStore } from '@/stores/authStore'
 import { useImLive } from '@/stores/imStore'
 import { notifyError } from '@/utils/notify'
+import { useRestoreScroll } from '@/utils/restoreScroll'
 
 const route = useRoute()
 const router = useRouter()
@@ -41,6 +42,8 @@ function openCoin(): void {
 onMounted(() => {
   void loadBalance()
 })
+
+useRestoreScroll()
 
 watch(
   () => route.fullPath,

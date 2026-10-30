@@ -1,20 +1,23 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { showConfirmDialog } from 'vant'
 import { useRoute, useRouter } from 'vue-router'
 import type { AlbumPhoto } from '@/api/types'
 import ImageViewer from '@/components/ImageViewer.vue'
 import { appContext } from '@/app/AppContext'
 import { useAuthStore } from '@/stores/authStore'
+import { touchAlbum } from '@/utils/feedSync'
 import { notifyError, notifySuccess } from '@/utils/notify'
+import { useRestoreScroll } from '@/utils/restoreScroll'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const api = appContext.api
 
-const userId = computed(() => Number(route.params.userId))
-const isSelf = computed(() => userId.value === (authStore.user?.id ?? 0))
+/** 实例按 fullPath 缓存，进入时记下 id。离开后 route 已不是本页。 */
+const userId = Number(route.params.userId)
+const isSelf = computed(() => userId === (authStore.user?.id ?? 0))
 
 const loading = ref(true)
 const loadingMore = ref(false)
@@ -29,7 +32,7 @@ async function loadFirst(): Promise<void> {
   loading.value = true
   try {
     const album = await api.profile.listAlbum({
-      user_id: userId.value,
+      user_id: userId,
       before_id: 0,
       limit: 30,
     })
@@ -52,7 +55,7 @@ async function loadMore(): Promise<void> {
   try {
     const beforeId = photos.value[photos.value.length - 1]?.id ?? 0
     const album = await api.profile.listAlbum({
-      user_id: userId.value,
+      user_id: userId,
       before_id: beforeId,
       limit: 30,
     })
@@ -97,6 +100,7 @@ async function onPhotosSelected(ev: Event): Promise<void> {
       }
     }
     if (ok > 0) {
+      touchAlbum(userId)
       notifySuccess(ok === 1 ? '已添加' : `已添加 ${ok} 张`)
     }
   } catch (error) {
@@ -116,6 +120,7 @@ async function onDelete(photo: AlbumPhoto, ev: Event): Promise<void> {
   try {
     await api.profile.deleteAlbumPhoto({ photo_id: photo.id })
     photos.value = photos.value.filter((p) => p.id !== photo.id)
+    touchAlbum(userId)
     notifySuccess('已删除')
   } catch (error) {
     notifyError(error, '删除失败')
@@ -134,9 +139,7 @@ onMounted(() => {
   void loadFirst()
 })
 
-watch(userId, () => {
-  void loadFirst()
-})
+useRestoreScroll()
 </script>
 
 <template>

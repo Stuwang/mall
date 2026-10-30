@@ -66,19 +66,19 @@ export const routes: RouteRecordRaw[] = [
     path: '/chat/:peerId',
     name: routeNames.chat,
     component: () => import('@/views/chat/ChatView.vue'),
-    meta: { title: '聊天', requireAuth: true },
+    meta: { title: '聊天', requireAuth: true, keepAlive: true },
   },
   {
     path: '/u/:userId',
     name: routeNames.profile,
     component: () => import('@/views/profile/ProfileView.vue'),
-    meta: { title: '主页', requireAuth: true },
+    meta: { title: '主页', requireAuth: true, keepAlive: true },
   },
   {
     path: '/u/:userId/album',
     name: routeNames.album,
     component: () => import('@/views/profile/AlbumView.vue'),
-    meta: { title: '相册', requireAuth: true },
+    meta: { title: '相册', requireAuth: true, keepAlive: true },
   },
   {
     path: '/settings',
@@ -96,7 +96,7 @@ export const routes: RouteRecordRaw[] = [
     path: '/coin',
     name: routeNames.coin,
     component: () => import('@/views/coin/CoinView.vue'),
-    meta: { title: '我的金币', requireAuth: true },
+    meta: { title: '我的金币', requireAuth: true, keepAlive: true },
   },
   {
     path: '/coin/pay/:orderId',
@@ -120,7 +120,7 @@ export const routes: RouteRecordRaw[] = [
     path: '/posts/:postId',
     name: routeNames.postDetail,
     component: () => import('@/views/post/PostDetailView.vue'),
-    meta: { title: '帖子', requireAuth: true },
+    meta: { title: '帖子', requireAuth: true, keepAlive: true },
   },
   {
     path: '/:pathMatch(.*)*',

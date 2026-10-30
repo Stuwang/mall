@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onActivated, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { AlbumPhoto, GetProfileReply, PostItem } from '@/api/types'
 import PostImageGrid from '@/components/PostImageGrid.vue'
@@ -9,7 +9,9 @@ import { routeNames } from '@/router/routes'
 import { useAuthStore } from '@/stores/authStore'
 import { useImLive, useImStore } from '@/stores/imStore'
 import { formatTime } from '@/utils/conv'
+import { applyPostEvents, eventsSince, feedCursor, patchPost } from '@/utils/feedSync'
 import { notifyError } from '@/utils/notify'
+import { useRestoreScroll } from '@/utils/restoreScroll'
 
 const route = useRoute()
 const router = useRouter()
@@ -18,8 +20,9 @@ const imStore = useImStore()
 const api = appContext.api
 useImLive()
 
-const userId = computed(() => Number(route.params.userId))
-const isSelf = computed(() => userId.value === (authStore.user?.id ?? 0))
+/** 实例按 fullPath 缓存，进入时记下 id。离开后 route 已不是本页。 */
+const userId = Number(route.params.userId)
+const isSelf = computed(() => userId === (authStore.user?.id ?? 0))
 
 const loading = ref(true)
 const profile = ref<GetProfileReply | null>(null)
@@ -30,7 +33,7 @@ const postsHasMore = ref(false)
 const loadingMorePosts = ref(false)
 
 const displayName = computed(
-  () => profile.value?.nickname || `用户${profile.value?.user_id || userId.value}`,
+  () => profile.value?.nickname || `用户${profile.value?.user_id || userId}`,
 )
 
 async function loadAll(): Promise<void> {
@@ -45,9 +48,9 @@ async function loadAll(): Promise<void> {
         })
       : Promise.resolve(null)
     const [p, album, userPosts, coin] = await Promise.all([
-      api.profile.getProfile({ user_id: userId.value }),
-      api.profile.listAlbum({ user_id: userId.value, before_id: 0, limit: 9 }),
-      api.post.listUser({ user_id: userId.value, before_id: 0, limit: 20 }),
+      api.profile.getProfile({ user_id: userId }),
+      api.profile.listAlbum({ user_id: userId, before_id: 0, limit: 9 }),
+      api.post.listUser({ user_id: userId, before_id: 0, limit: 20 }),
       coinTask,
     ])
     profile.value = p
@@ -68,6 +71,45 @@ async function loadAll(): Promise<void> {
   }
 }
 
+async function reloadUserPosts(): Promise<void> {
+  try {
+    const userPosts = await api.post.listUser({
+      user_id: userId,
+      before_id: 0,
+      limit: 20,
+    })
+    posts.value = userPosts.list || []
+    postsHasMore.value = Boolean(userPosts.has_more)
+  } catch (error) {
+    notifyError(error, '加载帖子失败')
+  }
+}
+
+async function refreshAlbum(): Promise<void> {
+  try {
+    const [p, album] = await Promise.all([
+      api.profile.getProfile({ user_id: userId }),
+      api.profile.listAlbum({ user_id: userId, before_id: 0, limit: 9 }),
+    ])
+    profile.value = p
+    photos.value = album.list || []
+  } catch (error) {
+    notifyError(error, '加载相册失败')
+  }
+}
+
+async function refreshCoin(): Promise<void> {
+  if (!isSelf.value) {
+    return
+  }
+  try {
+    const coin = await api.coin.balance()
+    coinBalance.value = coin.balance
+  } catch (error) {
+    notifyError(error, '加载金币失败')
+  }
+}
+
 async function loadMorePosts(): Promise<void> {
   if (!postsHasMore.value || loadingMorePosts.value || posts.value.length === 0) {
     return
@@ -76,7 +118,7 @@ async function loadMorePosts(): Promise<void> {
   try {
     const beforeId = posts.value[posts.value.length - 1]?.post_id ?? 0
     const reply = await api.post.listUser({
-      user_id: userId.value,
+      user_id: userId,
       before_id: beforeId,
       limit: 20,
     })
@@ -90,7 +132,7 @@ async function loadMorePosts(): Promise<void> {
 }
 
 function openAlbum(): void {
-  void router.push({ name: routeNames.album, params: { userId: String(userId.value) } })
+  void router.push({ name: routeNames.album, params: { userId: String(userId) } })
 }
 
 function openCoin(): void {
@@ -120,6 +162,7 @@ async function toggleLike(p: PostItem, ev: Event): Promise<void> {
       : await api.post.unlike({ post_id: p.post_id })
     if (reply.post) {
       Object.assign(p, reply.post)
+      patchPost(reply.post)
     }
   } catch (error) {
     p.liked = prev.liked
@@ -132,13 +175,39 @@ function openDetail(postId: number): void {
   void router.push({ name: routeNames.postDetail, params: { postId: String(postId) } })
 }
 
+const pinTop = { current: false }
+let seenFeed = 0
+
 onMounted(() => {
+  seenFeed = feedCursor()
   void loadAll()
 })
 
-watch(userId, () => {
-  void loadAll()
+onActivated(() => {
+  const { missed, events } = eventsSince(seenFeed)
+  seenFeed = feedCursor()
+  if (missed) {
+    pinTop.current = true
+    void loadAll()
+    return
+  }
+  const reloadPosts = applyPostEvents(posts.value, events, {
+    mode: 'profile',
+    userId: userId,
+  })
+  if (reloadPosts) {
+    pinTop.current = true
+    void reloadUserPosts()
+  }
+  if (events.some((event) => event.kind === 'album' && event.userId === userId)) {
+    void refreshAlbum()
+  }
+  if (events.some((event) => event.kind === 'coin')) {
+    void refreshCoin()
+  }
 })
+
+useRestoreScroll(pinTop)
 </script>
 
 <template>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onActivated, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import type { PostItem } from '@/api/types'
 import PostImageGrid from '@/components/PostImageGrid.vue'
@@ -7,7 +7,9 @@ import UserAvatar from '@/components/UserAvatar.vue'
 import { appContext } from '@/app/AppContext'
 import { routeNames } from '@/router/routes'
 import { formatTime } from '@/utils/conv'
+import { applyPostEvents, eventsSince, feedCursor, patchPost } from '@/utils/feedSync'
 import { notifyError } from '@/utils/notify'
+import { useRestoreScroll } from '@/utils/restoreScroll'
 
 const router = useRouter()
 const api = appContext.api
@@ -78,6 +80,7 @@ async function toggleLike(p: PostItem, ev: Event): Promise<void> {
       : await api.post.unlike({ post_id: p.post_id })
     if (reply.post) {
       Object.assign(p, reply.post)
+      patchPost(reply.post)
     }
   } catch (error) {
     p.liked = prev.liked
@@ -103,9 +106,25 @@ function displayName(p: PostItem): string {
   return p.nickname || `用户${p.user_id}`
 }
 
+const pinTop = { current: false }
+let seenFeed = 0
+
 onMounted(() => {
+  seenFeed = feedCursor()
   void loadFirst()
 })
+
+onActivated(() => {
+  const { missed, events } = eventsSince(seenFeed)
+  seenFeed = feedCursor()
+  const reload = missed || applyPostEvents(posts.value, events, { mode: 'feed' })
+  if (reload) {
+    pinTop.current = true
+    void loadFirst()
+  }
+})
+
+useRestoreScroll(pinTop)
 </script>
 
 <template>

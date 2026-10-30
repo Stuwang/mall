@@ -113,6 +113,13 @@ export class ImClient {
     this.emit()
   }
 
+  /** 只在当前会话仍是这个对端时清除，避免后台缓存页卸载时把正在看的聊天标成已离开。 */
+  clearActivePeer(peerUserId: number): void {
+    if (this.activePeerId === peerUserId) {
+      this.setActivePeer(0)
+    }
+  }
+
   /** 续签后更新重连所用 token，不打断当前连接。 */
   replaceToken(accessToken: string): void {
     this.ws.replaceToken(accessToken)

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onActivated, onDeactivated, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ContentTypeGift, ContentTypeImage, ContentTypeText, type Gift } from '@/api/types'
 import { appContext } from '@/app/AppContext'
@@ -10,6 +10,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { useImLive, useImStore } from '@/stores/imStore'
 import { isGiftIconUrl } from '@/utils/coin'
 import { formatTime, newClientMsgId } from '@/utils/conv'
+import { touchCoin } from '@/utils/feedSync'
 import { notifyError, notifyFail } from '@/utils/notify'
 
 const route = useRoute()
@@ -19,7 +20,8 @@ const imStore = useImStore()
 const api = appContext.api
 useImLive()
 
-const peerId = computed(() => Number(route.params.peerId))
+/** 实例按 fullPath 缓存，进入时记下对端。离开后 route 已不是本页。 */
+const peerId = Number(route.params.peerId)
 const draft = ref('')
 const sending = ref(false)
 const listRef = ref<HTMLElement | null>(null)
@@ -36,22 +38,23 @@ const sendingGift = ref(false)
 /** 用户是否贴在底部；图片加载撑高后据此继续贴底 */
 const stickToBottom = ref(true)
 let listResizeObserver: ResizeObserver | null = null
+let pageActive = false
 
 const peerNickname = computed(() => {
-  const conv = imStore.convs.find((c) => c.peer?.user_id === peerId.value)
+  const conv = imStore.convs.find((c) => c.peer?.user_id === peerId)
   if (conv?.peer?.nickname) {
     return conv.peer.nickname
   }
-  const online = imStore.online.find((u) => u.user_id === peerId.value)
-  return online?.nickname || `用户${peerId.value}`
+  const online = imStore.online.find((u) => u.user_id === peerId)
+  return online?.nickname || `用户${peerId}`
 })
 
 const peerAvatar = computed(() => {
-  const conv = imStore.convs.find((c) => c.peer?.user_id === peerId.value)
+  const conv = imStore.convs.find((c) => c.peer?.user_id === peerId)
   if (conv?.peer?.avatar) {
     return conv.peer.avatar
   }
-  return imStore.online.find((u) => u.user_id === peerId.value)?.avatar || ''
+  return imStore.online.find((u) => u.user_id === peerId)?.avatar || ''
 })
 
 const selfNickname = computed(() => authStore.user?.nickname || authStore.user?.username || '我')
@@ -60,7 +63,7 @@ const selfAvatar = computed(() => authStore.user?.avatar || '')
 
 const selfId = computed(() => authStore.user?.id ?? 0)
 
-const messages = computed(() => imStore.messagesOf(peerId.value))
+const messages = computed(() => imStore.messagesOf(peerId))
 
 function isNearBottom(threshold = 80): boolean {
   const el = listRef.value
@@ -113,25 +116,36 @@ function bindListResize(): void {
 }
 
 onMounted(() => {
-  imStore.setActivePeer(peerId.value)
+  imStore.setActivePeer(peerId)
   bindListResize()
-  void imStore.syncPeer(peerId.value).then(() => scrollBottom())
+  void imStore.syncPeer(peerId).then(() => scrollBottom())
+})
+
+onActivated(() => {
+  pageActive = true
+  imStore.setActivePeer(peerId)
+  if (stickToBottom.value) {
+    void scrollBottom()
+  }
+})
+
+onDeactivated(() => {
+  pageActive = false
+  imStore.clearActivePeer(peerId)
 })
 
 onUnmounted(() => {
   listResizeObserver?.disconnect()
   listResizeObserver = null
-  imStore.setActivePeer(0)
-})
-
-watch(peerId, (id) => {
-  imStore.setActivePeer(id)
-  void imStore.syncPeer(id).then(() => scrollBottom())
+  imStore.clearActivePeer(peerId)
 })
 
 watch(
   () => messages.value.length,
   () => {
+    if (!pageActive) {
+      return
+    }
     void scrollBottom()
   },
 )
@@ -147,7 +161,7 @@ async function onSend(): Promise<void> {
   }
   sending.value = true
   try {
-    await imStore.sendText(peerId.value, text, peerNickname.value, peerAvatar.value)
+    await imStore.sendText(peerId, text, peerNickname.value, peerAvatar.value)
     draft.value = ''
     await scrollBottom()
   } catch (error) {
@@ -177,7 +191,7 @@ async function onImageSelected(ev: Event): Promise<void> {
   }
   sending.value = true
   try {
-    await imStore.sendImage(peerId.value, file, peerNickname.value, peerAvatar.value)
+    await imStore.sendImage(peerId, file, peerNickname.value, peerAvatar.value)
     await scrollBottom()
   } catch (error) {
     notifyError(error, '发送图片失败')
@@ -218,10 +232,10 @@ function isText(m: { content_type?: number }): boolean {
 }
 
 function openPeerProfile(): void {
-  if (!peerId.value) {
+  if (!peerId) {
     return
   }
-  void router.push({ name: routeNames.profile, params: { userId: String(peerId.value) } })
+  void router.push({ name: routeNames.profile, params: { userId: String(peerId) } })
 }
 
 async function openGifts(): Promise<void> {
@@ -247,7 +261,7 @@ async function onSendGift(gift: Gift): Promise<void> {
   if (sendingGift.value || giftsLoading.value) {
     return
   }
-  if (!peerId.value) {
+  if (!peerId) {
     notifyFail('无法送礼')
     return
   }
@@ -262,11 +276,12 @@ async function onSendGift(gift: Gift): Promise<void> {
   sendingGift.value = true
   try {
     const reply = await api.coin.sendGift({
-      peer_user_id: peerId.value,
+      peer_user_id: peerId,
       gift_id: gift.id,
       client_msg_id: newClientMsgId(),
     })
     giftBalance.value = reply.balance
+    touchCoin()
     imStore.deliverServerMsg(reply.msg)
     giftOpen.value = false
     await scrollBottom()

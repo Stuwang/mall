@@ -26,7 +26,11 @@ function onChange(index: number | string): void {
 
 <template>
   <div class="page page-with-tab">
-    <RouterView />
+    <RouterView v-slot="{ Component }">
+      <KeepAlive>
+        <component :is="Component" />
+      </KeepAlive>
+    </RouterView>
     <van-tabbar :model-value="active" fixed placeholder safe-area-inset-bottom @change="onChange">
       <van-tabbar-item icon="friends-o">在线</van-tabbar-item>
       <van-tabbar-item icon="notes-o">帖子</van-tabbar-item>

@@ -43,6 +43,11 @@ export const useImStore = defineStore('im', () => {
     refresh()
   }
 
+  function clearActivePeer(peerUserId: number): void {
+    imClient.clearActivePeer(peerUserId)
+    refresh()
+  }
+
   async function refreshOnline(): Promise<void> {
     await imClient.refreshOnline()
     refresh()
@@ -100,6 +105,7 @@ export const useImStore = defineStore('im', () => {
     messagesOf,
     unreadOf,
     setActivePeer,
+    clearActivePeer,
     refreshOnline,
     syncAll,
     syncPeer,

@@ -5,6 +5,7 @@ import UserAvatar from '@/components/UserAvatar.vue'
 import { routeNames } from '@/router/routes'
 import { useImLive, useImStore } from '@/stores/imStore'
 import { notifyError } from '@/utils/notify'
+import { useRestoreScroll } from '@/utils/restoreScroll'
 
 const router = useRouter()
 const imStore = useImStore()
@@ -32,6 +33,8 @@ function startChat(userId: number, nickname: string, avatar: string | undefined,
 function openProfile(userId: number): void {
   void router.push({ name: routeNames.profile, params: { userId: String(userId) } })
 }
+
+useRestoreScroll()
 </script>
 
 <template>

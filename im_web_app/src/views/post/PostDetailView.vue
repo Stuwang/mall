@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onActivated, onMounted, ref } from 'vue'
 import { showConfirmDialog } from 'vant'
 import { useRoute, useRouter } from 'vue-router'
 import type { CommentItem, PostItem } from '@/api/types'
@@ -9,14 +9,17 @@ import { appContext } from '@/app/AppContext'
 import { routeNames } from '@/router/routes'
 import { useAuthStore } from '@/stores/authStore'
 import { formatTime, newClientCommentId } from '@/utils/conv'
+import { eventsSince, feedCursor, patchPost, removePost } from '@/utils/feedSync'
 import { notifyError, notifySuccess } from '@/utils/notify'
+import { useRestoreScroll } from '@/utils/restoreScroll'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const api = appContext.api
 
-const postId = computed(() => Number(route.params.postId))
+/** 实例按 fullPath 缓存，进入时记下 id。离开后 route 已不是本页，不能再跟着 params 变。 */
+const postId = Number(route.params.postId)
 const isSelf = computed(() => post.value?.user_id === (authStore.user?.id ?? 0))
 
 const loading = ref(true)
@@ -32,8 +35,8 @@ async function loadAll(): Promise<void> {
   loading.value = true
   try {
     const [detail, cmt] = await Promise.all([
-      api.post.detail({ post_id: postId.value }),
-      api.post.listComment({ post_id: postId.value, after_id: 0, limit: 30 }),
+      api.post.detail({ post_id: postId }),
+      api.post.listComment({ post_id: postId, after_id: 0, limit: 30 }),
     ])
     post.value = detail.post
     comments.value = cmt.list || []
@@ -55,7 +58,7 @@ async function loadMoreComments(): Promise<void> {
   try {
     const afterId = comments.value[comments.value.length - 1]?.comment_id ?? 0
     const reply = await api.post.listComment({
-      post_id: postId.value,
+      post_id: postId,
       after_id: afterId,
       limit: 30,
     })
@@ -83,6 +86,7 @@ async function toggleLike(): Promise<void> {
       : await api.post.unlike({ post_id: p.post_id })
     if (reply.post) {
       post.value = reply.post
+      patchPost(reply.post)
     }
   } catch (error) {
     p.liked = prev.liked
@@ -101,7 +105,7 @@ async function sendComment(): Promise<void> {
   sending.value = true
   try {
     const reply = await api.post.createComment({
-      post_id: postId.value,
+      post_id: postId,
       client_comment_id: newClientCommentId(),
       text: body,
     })
@@ -110,6 +114,7 @@ async function sendComment(): Promise<void> {
     }
     if (reply.post) {
       post.value = reply.post
+      patchPost(reply.post)
     }
     draft.value = ''
   } catch (error) {
@@ -126,7 +131,8 @@ async function onDeletePost(): Promise<void> {
     return
   }
   try {
-    await api.post.delete({ post_id: postId.value })
+    await api.post.delete({ post_id: postId })
+    removePost(postId)
     notifySuccess('已删除')
     void router.replace({ name: routeNames.posts })
   } catch (error) {
@@ -145,6 +151,7 @@ async function onDeleteComment(c: CommentItem): Promise<void> {
     comments.value = comments.value.filter((x) => x.comment_id !== c.comment_id)
     if (reply.post) {
       post.value = reply.post
+      patchPost(reply.post)
     }
     notifySuccess('已删除')
   } catch (error) {
@@ -160,13 +167,34 @@ function displayName(nickname: string, userId: number): string {
   return nickname || `用户${userId}`
 }
 
+let seenFeed = 0
+
 onMounted(() => {
+  seenFeed = feedCursor()
   void loadAll()
 })
 
-watch(postId, () => {
-  void loadAll()
+onActivated(() => {
+  const { events } = eventsSince(seenFeed)
+  seenFeed = feedCursor()
+  const current = post.value
+  if (!current) {
+    return
+  }
+  for (const event of events) {
+    if (event.kind === 'remove' && event.postId === current.post_id) {
+      post.value = null
+      return
+    }
+    if (event.kind === 'patch' && event.postId === current.post_id) {
+      current.liked = event.liked
+      current.like_count = event.likeCount
+      current.comment_count = event.commentCount
+    }
+  }
 })
+
+useRestoreScroll()
 </script>
 
 <template>

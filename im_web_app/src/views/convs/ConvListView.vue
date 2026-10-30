@@ -6,6 +6,7 @@ import { routeNames } from '@/router/routes'
 import { useImLive, useImStore } from '@/stores/imStore'
 import { formatTime } from '@/utils/conv'
 import { notifyError } from '@/utils/notify'
+import { useRestoreScroll } from '@/utils/restoreScroll'
 
 const router = useRouter()
 const imStore = useImStore()
@@ -37,6 +38,8 @@ function previewText(c: (typeof imStore.convs)[number]): string {
 function openChat(peerId: number): void {
   void router.push({ name: routeNames.chat, params: { peerId: String(peerId) } })
 }
+
+useRestoreScroll()
 
 function unreadBadge(peerId: number): string | undefined {
   const n = imStore.unreadOf(peerId)

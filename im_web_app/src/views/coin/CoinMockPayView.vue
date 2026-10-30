@@ -11,6 +11,7 @@ import {
 import { appContext } from '@/app/AppContext'
 import { routeNames } from '@/router/routes'
 import { formatYuanFromFen, parseRouteId } from '@/utils/coin'
+import { touchCoin } from '@/utils/feedSync'
 import { notifyError, notifySuccess } from '@/utils/notify'
 
 const route = useRoute()
@@ -72,6 +73,7 @@ async function onPaySuccess(): Promise<void> {
   paying.value = true
   try {
     await api.coin.mockPaySuccess({ order_id: order.value.id })
+    touchCoin()
     notifySuccess('支付成功')
     await router.replace({ name: routeNames.coin })
   } catch (error) {

@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onActivated, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { CoinChangeGiftSend, CoinChangeRecharge, type LedgerItem } from '@/api/types'
 import { appContext } from '@/app/AppContext'
 import { routeNames } from '@/router/routes'
 import { formatCoinChange } from '@/utils/coin'
 import { formatTime, newClientOrderId } from '@/utils/conv'
+import { eventsSince, feedCursor } from '@/utils/feedSync'
 import { notifyError, notifyFail } from '@/utils/notify'
+import { useRestoreScroll } from '@/utils/restoreScroll'
 
 const packs = [10, 50, 100, 500, 1000] as const
 const ledgerLimit = 20
@@ -138,9 +140,24 @@ async function onRecharge(): Promise<void> {
   }
 }
 
+const pinTop = { current: false }
+let seenFeed = 0
+
 onMounted(() => {
+  seenFeed = feedCursor()
   void loadFirst()
 })
+
+onActivated(() => {
+  const { missed, events } = eventsSince(seenFeed)
+  seenFeed = feedCursor()
+  if (missed || events.some((event) => event.kind === 'coin')) {
+    pinTop.current = true
+    void loadFirst()
+  }
+})
+
+useRestoreScroll(pinTop)
 </script>
 
 <template>

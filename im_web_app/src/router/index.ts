@@ -5,6 +5,13 @@ import { routeNames, routes } from './routes'
 export const router = createRouter({
   history: createWebHistory(),
   routes,
+  scrollBehavior(to) {
+    // 缓存页自己恢复滚动。新开的表单、支付页从顶部开始。
+    if (to.meta.tab || to.meta.keepAlive) {
+      return false
+    }
+    return { top: 0 }
+  },
 })
 
 router.beforeEach((to) => {

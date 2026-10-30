@@ -121,7 +121,7 @@ func handleFiles(w stdhttp.ResponseWriter, r *stdhttp.Request) {
 	}
 	defer f.Close()
 	w.Header().Set("Content-Type", contentType)
-	w.Header().Set("Cache-Control", "public, max-age=86400")
+	w.Header().Set("Cache-Control", "public, max-age=2592000")
 	if r.Method == stdhttp.MethodHead {
 		return
 	}

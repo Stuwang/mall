@@ -3,10 +3,13 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { appContext } from '@/app/AppContext'
 import { routeNames } from '@/router/routes'
+import { useAuthStore } from '@/stores/authStore'
 import { newClientPostId } from '@/utils/conv'
+import { reloadPosts, reloadProfilePosts } from '@/utils/feedSync'
 import { notifyError, notifySuccess } from '@/utils/notify'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const api = appContext.api
 
 const text = ref('')
@@ -81,6 +84,8 @@ async function onSubmit(): Promise<void> {
       image_uris: images.value.map((x) => x.uri),
     })
     notifySuccess('已发布')
+    reloadPosts()
+    reloadProfilePosts(authStore.user?.id ?? 0)
     void router.replace({ name: routeNames.posts })
   } catch (error) {
     notifyError(error, '发布失败')

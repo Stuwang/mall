@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package mesh.svc.v1;
+
+option go_package = "mall/service_mesh_example/api/svc/v1;svcv1";
+
+// Svc 只提供 gRPC，不对外暴露 HTTP 业务端口。
+service Svc {
+  rpc Ping(PingRequest) returns (PingReply);
+  rpc Call(CallRequest) returns (CallReply);
+}
+
+message PingRequest {
+  string trace = 1;
+}
+
+message PingReply {
+  string service = 1;
+  string trace = 2;
+}
+
+message CallRequest {
+  string trace = 1;
+  repeated string targets = 2;
+  int32 depth = 3;
+}
+
+message CallReply {
+  string service = 1;
+  string trace = 2;
+  repeated Hop hops = 3;
+}
+
+message Hop {
+  string service = 1;
+  string trace = 2;
+  string error = 3;
+  repeated Hop hops = 4;
+}

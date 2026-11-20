@@ -1,0 +1,126 @@
+# biz 对外 HTTP，permissive mTLS，这样网格外的调用能进来。
+# svc 只注册 gRPC，strict mTLS，没有 NodePort。
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: Mesh
+metadata:
+  name: mesh
+  namespace: mesh
+spec:
+  allowEnablingPermissiveMutualTLS: true
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceDefaults
+metadata:
+  name: biz-a
+  namespace: mesh
+spec:
+  protocol: http
+  mutualTLSMode: permissive
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceDefaults
+metadata:
+  name: biz-b
+  namespace: mesh
+spec:
+  protocol: http
+  mutualTLSMode: permissive
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceDefaults
+metadata:
+  name: biz-c
+  namespace: mesh
+spec:
+  protocol: http
+  mutualTLSMode: permissive
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceDefaults
+metadata:
+  name: svc-a
+  namespace: mesh
+spec:
+  protocol: grpc
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceDefaults
+metadata:
+  name: svc-b
+  namespace: mesh
+spec:
+  protocol: grpc
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceDefaults
+metadata:
+  name: svc-c
+  namespace: mesh
+spec:
+  protocol: grpc
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+  name: svc-a
+  namespace: mesh
+spec:
+  destination:
+    name: svc-a
+  sources:
+    - name: biz-a
+      action: allow
+    - name: biz-b
+      action: allow
+    - name: biz-c
+      action: allow
+    - name: svc-a
+      action: allow
+    - name: svc-b
+      action: allow
+    - name: svc-c
+      action: allow
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+  name: svc-b
+  namespace: mesh
+spec:
+  destination:
+    name: svc-b
+  sources:
+    - name: biz-a
+      action: allow
+    - name: biz-b
+      action: allow
+    - name: biz-c
+      action: allow
+    - name: svc-a
+      action: allow
+    - name: svc-b
+      action: allow
+    - name: svc-c
+      action: allow
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+  name: svc-c
+  namespace: mesh
+spec:
+  destination:
+    name: svc-c
+  sources:
+    - name: biz-a
+      action: allow
+    - name: biz-b
+      action: allow
+    - name: biz-c
+      action: allow
+    - name: svc-a
+      action: allow
+    - name: svc-b
+      action: allow
+    - name: svc-c
+      action: allow

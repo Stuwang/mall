@@ -6,4 +6,5 @@ use (
 	./modules/kit
 	./modules/user
 	./server
+	./service_mesh_example
 )

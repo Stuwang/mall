@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package mesh.biz.v1;
+
+import "google/api/annotations.proto";
+
+option go_package = "mall/service_mesh_example/api/biz/v1;bizv1";
+
+// Biz 是对外的 HTTP 服务。网格内部的下游只走 svc 的 gRPC。
+service Biz {
+  rpc Ping(PingRequest) returns (PingReply) {
+    option (google.api.http) = {
+      get: "/api/v1/ping"
+    };
+  }
+  rpc Call(CallRequest) returns (CallReply) {
+    option (google.api.http) = {
+      get: "/api/v1/call"
+      additional_bindings {
+        post: "/api/v1/call"
+        body: "*"
+      }
+    };
+  }
+}
+
+message PingRequest {}
+
+message PingReply {
+  string service = 1;
+}
+
+message CallRequest {
+  // trace 由调用方带上，服务把自己的名字追加在后面。
+  string trace = 1;
+  // targets 为空时调用全部 svc。逗号分隔和重复字段都可以。
+  repeated string targets = 2;
+  // depth 为 1 时 svc 只应答自己；大于 1 时 svc 再去调其他 svc。
+  int32 depth = 3;
+}
+
+message CallReply {
+  string service = 1;
+  string trace = 2;
+  repeated Hop hops = 3;
+}
+
+message Hop {
+  string service = 1;
+  string trace = 2;
+  string error = 3;
+  repeated Hop hops = 4;
+}

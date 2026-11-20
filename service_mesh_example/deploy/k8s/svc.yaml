@@ -1,0 +1,251 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: svc-a
+  namespace: mesh
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: svc-a
+  template:
+    metadata:
+      labels:
+        app: svc-a
+      annotations:
+        consul.hashicorp.com/connect-inject: "true"
+        consul.hashicorp.com/transparent-proxy: "true"
+        consul.hashicorp.com/transparent-proxy-exclude-inbound-ports: "8081"
+        consul.hashicorp.com/connect-service: "svc-a"
+        consul.hashicorp.com/connect-service-port: "9000"
+        consul.hashicorp.com/connect-service-protocol: "grpc"
+    spec:
+      containers:
+        - name: svc
+          image: docker.io/library/mesh-svc:local
+          imagePullPolicy: Never
+          env:
+            - name: SERVICE_NAME
+              value: svc-a
+            - name: GRPC_ADDR
+              value: ":9000"
+            - name: HEALTH_ADDR
+              value: ":8081"
+            - name: SVC_ADDRS
+              valueFrom:
+                configMapKeyRef:
+                  name: mesh-peers
+                  key: SVC_ADDRS
+          ports:
+            - name: grpc
+              containerPort: 9000
+            - name: health
+              containerPort: 8081
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            periodSeconds: 10
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            failureThreshold: 30
+            periodSeconds: 2
+          resources:
+            requests:
+              cpu: 20m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            allowPrivilegeEscalation: false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-a
+  namespace: mesh
+spec:
+  type: ClusterIP
+  selector:
+    app: svc-a
+  ports:
+    - name: grpc
+      port: 9000
+      targetPort: grpc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: svc-b
+  namespace: mesh
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: svc-b
+  template:
+    metadata:
+      labels:
+        app: svc-b
+      annotations:
+        consul.hashicorp.com/connect-inject: "true"
+        consul.hashicorp.com/transparent-proxy: "true"
+        consul.hashicorp.com/transparent-proxy-exclude-inbound-ports: "8081"
+        consul.hashicorp.com/connect-service: "svc-b"
+        consul.hashicorp.com/connect-service-port: "9000"
+        consul.hashicorp.com/connect-service-protocol: "grpc"
+    spec:
+      containers:
+        - name: svc
+          image: docker.io/library/mesh-svc:local
+          imagePullPolicy: Never
+          env:
+            - name: SERVICE_NAME
+              value: svc-b
+            - name: GRPC_ADDR
+              value: ":9000"
+            - name: HEALTH_ADDR
+              value: ":8081"
+            - name: SVC_ADDRS
+              valueFrom:
+                configMapKeyRef:
+                  name: mesh-peers
+                  key: SVC_ADDRS
+          ports:
+            - name: grpc
+              containerPort: 9000
+            - name: health
+              containerPort: 8081
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            periodSeconds: 10
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            failureThreshold: 30
+            periodSeconds: 2
+          resources:
+            requests:
+              cpu: 20m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            allowPrivilegeEscalation: false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-b
+  namespace: mesh
+spec:
+  type: ClusterIP
+  selector:
+    app: svc-b
+  ports:
+    - name: grpc
+      port: 9000
+      targetPort: grpc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: svc-c
+  namespace: mesh
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: svc-c
+  template:
+    metadata:
+      labels:
+        app: svc-c
+      annotations:
+        consul.hashicorp.com/connect-inject: "true"
+        consul.hashicorp.com/transparent-proxy: "true"
+        consul.hashicorp.com/transparent-proxy-exclude-inbound-ports: "8081"
+        consul.hashicorp.com/connect-service: "svc-c"
+        consul.hashicorp.com/connect-service-port: "9000"
+        consul.hashicorp.com/connect-service-protocol: "grpc"
+    spec:
+      containers:
+        - name: svc
+          image: docker.io/library/mesh-svc:local
+          imagePullPolicy: Never
+          env:
+            - name: SERVICE_NAME
+              value: svc-c
+            - name: GRPC_ADDR
+              value: ":9000"
+            - name: HEALTH_ADDR
+              value: ":8081"
+            - name: SVC_ADDRS
+              valueFrom:
+                configMapKeyRef:
+                  name: mesh-peers
+                  key: SVC_ADDRS
+          ports:
+            - name: grpc
+              containerPort: 9000
+            - name: health
+              containerPort: 8081
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            periodSeconds: 10
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            failureThreshold: 30
+            periodSeconds: 2
+          resources:
+            requests:
+              cpu: 20m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            allowPrivilegeEscalation: false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-c
+  namespace: mesh
+spec:
+  type: ClusterIP
+  selector:
+    app: svc-c
+  ports:
+    - name: grpc
+      port: 9000
+      targetPort: grpc

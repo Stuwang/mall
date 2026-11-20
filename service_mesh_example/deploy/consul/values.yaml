@@ -1,0 +1,50 @@
+# 单节点 Kiri（k3s）上的 Consul service mesh。
+# 业务镜像不走仓库，由 deploy.ps1 导入 k3s containerd；这里的官方镜像同样先在 Kiri 里拉好再导入。
+
+global:
+  name: consul
+  datacenter: dc1
+  imagePullPolicy: IfNotPresent
+  gossipEncryption:
+    autoGenerate: true
+  tls:
+    enabled: true
+  # 本机 k3s 的 ServiceAccount 登录会被 Consul ACL auth method 拒绝，init 容器起不来。
+  # 网格仍然做透明代理和 mTLS。svc 用 strict，网格外连不进去。
+  acls:
+    manageSystemACLs: false
+
+server:
+  replicas: 1
+  storage: 1Gi
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 100m
+    limits:
+      memory: 1Gi
+      cpu: "1"
+
+client:
+  enabled: false
+
+ui:
+  enabled: true
+  service:
+    type: ClusterIP
+
+connectInject:
+  enabled: true
+  default: false
+  replicas: 1
+  transparentProxy:
+    defaultEnabled: true
+    defaultOverwriteProbes: true
+  disruptionBudget:
+    maxUnavailable: 1
+  apiGateway:
+    manageExternalCRDs: false
+    manageNonStandardCRDs: false
+
+syncCatalog:
+  enabled: false

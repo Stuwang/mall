@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mesh-peers
+  namespace: mesh
+data:
+  SVC_ADDRS: svc-a=svc-a.mesh.svc.cluster.local:9000,svc-b=svc-b.mesh.svc.cluster.local:9000,svc-c=svc-c.mesh.svc.cluster.local:9000

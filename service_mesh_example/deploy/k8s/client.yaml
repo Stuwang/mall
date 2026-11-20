@@ -1,0 +1,29 @@
+# 不注入 sidecar，用来模拟网格外的调用方。
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mesh-client
+  namespace: mesh
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mesh-client
+  template:
+    metadata:
+      labels:
+        app: mesh-client
+      annotations:
+        consul.hashicorp.com/connect-inject: "false"
+    spec:
+      containers:
+        - name: client
+          image: docker.io/library/alpine:3.21
+          imagePullPolicy: Never
+          command: ["sleep", "infinity"]
+          resources:
+            requests:
+              cpu: 5m
+              memory: 8Mi
+            limits:
+              memory: 32Mi

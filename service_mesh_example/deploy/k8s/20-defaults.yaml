@@ -1,0 +1,50 @@
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceDefaults
+metadata:
+  name: biz-a
+  namespace: mesh
+spec:
+  protocol: http
+  mutualTLSMode: permissive
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceDefaults
+metadata:
+  name: biz-b
+  namespace: mesh
+spec:
+  protocol: http
+  mutualTLSMode: permissive
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceDefaults
+metadata:
+  name: biz-c
+  namespace: mesh
+spec:
+  protocol: http
+  mutualTLSMode: permissive
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceDefaults
+metadata:
+  name: svc-a
+  namespace: mesh
+spec:
+  protocol: grpc
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceDefaults
+metadata:
+  name: svc-b
+  namespace: mesh
+spec:
+  protocol: grpc
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceDefaults
+metadata:
+  name: svc-c
+  namespace: mesh
+spec:
+  protocol: grpc

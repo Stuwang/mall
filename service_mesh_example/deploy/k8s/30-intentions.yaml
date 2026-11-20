@@ -1,0 +1,66 @@
+# ACL 开启后默认拒绝。biz 和 svc 都可以调用任意内部 svc。
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+  name: svc-a
+  namespace: mesh
+spec:
+  destination:
+    name: svc-a
+  sources:
+    - name: biz-a
+      action: allow
+    - name: biz-b
+      action: allow
+    - name: biz-c
+      action: allow
+    - name: svc-a
+      action: allow
+    - name: svc-b
+      action: allow
+    - name: svc-c
+      action: allow
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+  name: svc-b
+  namespace: mesh
+spec:
+  destination:
+    name: svc-b
+  sources:
+    - name: biz-a
+      action: allow
+    - name: biz-b
+      action: allow
+    - name: biz-c
+      action: allow
+    - name: svc-a
+      action: allow
+    - name: svc-b
+      action: allow
+    - name: svc-c
+      action: allow
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+  name: svc-c
+  namespace: mesh
+spec:
+  destination:
+    name: svc-c
+  sources:
+    - name: biz-a
+      action: allow
+    - name: biz-b
+      action: allow
+    - name: biz-c
+      action: allow
+    - name: svc-a
+      action: allow
+    - name: svc-b
+      action: allow
+    - name: svc-c
+      action: allow

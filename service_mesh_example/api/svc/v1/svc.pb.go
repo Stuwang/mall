@@ -327,8 +327,14 @@ const file_svc_v1_svc_proto_rawDesc = "" +
 	"\aservice\x18\x01 \x01(\tR\aservice\x12\x14\n" +
 	"\x05trace\x18\x02 \x01(\tR\x05trace\x12\x14\n" +
 	"\x05error\x18\x03 \x01(\tR\x05error\x12$\n" +
-	"\x04hops\x18\x04 \x03(\v2\x10.mesh.svc.v1.HopR\x04hops2y\n" +
-	"\x03Svc\x128\n" +
+	"\x04hops\x18\x04 \x03(\v2\x10.mesh.svc.v1.HopR\x04hops2z\n" +
+	"\x04SvcA\x128\n" +
+	"\x04Ping\x12\x18.mesh.svc.v1.PingRequest\x1a\x16.mesh.svc.v1.PingReply\x128\n" +
+	"\x04Call\x12\x18.mesh.svc.v1.CallRequest\x1a\x16.mesh.svc.v1.CallReply2z\n" +
+	"\x04SvcB\x128\n" +
+	"\x04Ping\x12\x18.mesh.svc.v1.PingRequest\x1a\x16.mesh.svc.v1.PingReply\x128\n" +
+	"\x04Call\x12\x18.mesh.svc.v1.CallRequest\x1a\x16.mesh.svc.v1.CallReply2z\n" +
+	"\x04SvcC\x128\n" +
 	"\x04Ping\x12\x18.mesh.svc.v1.PingRequest\x1a\x16.mesh.svc.v1.PingReply\x128\n" +
 	"\x04Call\x12\x18.mesh.svc.v1.CallRequest\x1a\x16.mesh.svc.v1.CallReplyB,Z*mall/service_mesh_example/api/svc/v1;svcv1b\x06proto3"
 
@@ -355,12 +361,20 @@ var file_svc_v1_svc_proto_goTypes = []any{
 var file_svc_v1_svc_proto_depIdxs = []int32{
 	4, // 0: mesh.svc.v1.CallReply.hops:type_name -> mesh.svc.v1.Hop
 	4, // 1: mesh.svc.v1.Hop.hops:type_name -> mesh.svc.v1.Hop
-	0, // 2: mesh.svc.v1.Svc.Ping:input_type -> mesh.svc.v1.PingRequest
-	2, // 3: mesh.svc.v1.Svc.Call:input_type -> mesh.svc.v1.CallRequest
-	1, // 4: mesh.svc.v1.Svc.Ping:output_type -> mesh.svc.v1.PingReply
-	3, // 5: mesh.svc.v1.Svc.Call:output_type -> mesh.svc.v1.CallReply
-	4, // [4:6] is the sub-list for method output_type
-	2, // [2:4] is the sub-list for method input_type
+	0, // 2: mesh.svc.v1.SvcA.Ping:input_type -> mesh.svc.v1.PingRequest
+	2, // 3: mesh.svc.v1.SvcA.Call:input_type -> mesh.svc.v1.CallRequest
+	0, // 4: mesh.svc.v1.SvcB.Ping:input_type -> mesh.svc.v1.PingRequest
+	2, // 5: mesh.svc.v1.SvcB.Call:input_type -> mesh.svc.v1.CallRequest
+	0, // 6: mesh.svc.v1.SvcC.Ping:input_type -> mesh.svc.v1.PingRequest
+	2, // 7: mesh.svc.v1.SvcC.Call:input_type -> mesh.svc.v1.CallRequest
+	1, // 8: mesh.svc.v1.SvcA.Ping:output_type -> mesh.svc.v1.PingReply
+	3, // 9: mesh.svc.v1.SvcA.Call:output_type -> mesh.svc.v1.CallReply
+	1, // 10: mesh.svc.v1.SvcB.Ping:output_type -> mesh.svc.v1.PingReply
+	3, // 11: mesh.svc.v1.SvcB.Call:output_type -> mesh.svc.v1.CallReply
+	1, // 12: mesh.svc.v1.SvcC.Ping:output_type -> mesh.svc.v1.PingReply
+	3, // 13: mesh.svc.v1.SvcC.Call:output_type -> mesh.svc.v1.CallReply
+	8, // [8:14] is the sub-list for method output_type
+	2, // [2:8] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name
 	2, // [2:2] is the sub-list for extension extendee
 	0, // [0:2] is the sub-list for field type_name
@@ -379,7 +393,7 @@ func file_svc_v1_svc_proto_init() {
 			NumEnums:      0,
 			NumMessages:   5,
 			NumExtensions: 0,
-			NumServices:   1,
+			NumServices:   3,
 		},
 		GoTypes:           file_svc_v1_svc_proto_goTypes,
 		DependencyIndexes: file_svc_v1_svc_proto_depIdxs,

@@ -9,7 +9,6 @@ import (
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
 	kgrpc "github.com/go-kratos/kratos/v2/transport/grpc"
 
-	svcv1 "mall/service_mesh_example/api/svc/v1"
 	"mall/service_mesh_example/internal/config"
 	"mall/service_mesh_example/internal/health"
 	"mall/service_mesh_example/internal/peers"
@@ -29,7 +28,7 @@ func main() {
 	}
 	helper = log.NewHelper(log.With(logger, "service", cfg.Name))
 
-	pool := peers.New(cfg.Peers, logger)
+	pool := peers.New(cfg.GatewayAddr, logger)
 	grpcSrv := kgrpc.NewServer(
 		kgrpc.Address(cfg.GRPCAddr),
 		kgrpc.Middleware(
@@ -37,7 +36,10 @@ func main() {
 			logging.Server(logger),
 		),
 	)
-	svcv1.RegisterSvcServer(grpcSrv, svc.New(cfg.Name, pool, logger))
+	if err := svc.Register(cfg.Name, grpcSrv, svc.New(cfg.Name, pool, logger)); err != nil {
+		helper.Errorf("register grpc: %v", err)
+		os.Exit(1)
+	}
 
 	app := kratos.New(
 		kratos.ID(cfg.Name),

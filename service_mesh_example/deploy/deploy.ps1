@@ -119,6 +119,12 @@ kubectl apply -f (Join-Path $PSScriptRoot "k8s\svc.yaml")
 Assert-Ok "apply svc"
 kubectl apply -f (Join-Path $PSScriptRoot "k8s\client.yaml")
 Assert-Ok "apply client"
+kubectl apply -f (Join-Path $PSScriptRoot "k8s\gateway.yaml")
+Assert-Ok "apply gateway"
+kubectl -n mesh wait --for=condition=Programmed gateway/mesh-ingress --timeout=180s
+Assert-Ok "wait mesh-ingress"
+kubectl -n mesh wait --for=condition=Programmed gateway/mesh-eastwest --timeout=180s
+Assert-Ok "wait mesh-eastwest"
 
 $deploys = @("biz-a", "biz-b", "biz-c", "svc-a", "svc-b", "svc-c", "mesh-client")
 foreach ($name in $deploys) {
@@ -128,23 +134,23 @@ foreach ($name in $deploys) {
 
 if ($SkipVerify) { return }
 
-Write-Host "==> ping biz-a from outside the mesh"
-$ping = kubectl -n mesh exec deploy/mesh-client -- wget -T 20 -qO- "http://biz-a.mesh.svc.cluster.local:18081/api/v1/ping"
+Write-Host "==> ping biz-a through the gateway"
+$ping = kubectl -n mesh exec deploy/mesh-client -- wget -T 20 -qO- "http://mesh-ingress.mesh.svc.cluster.local:8080/biz_a/ping"
 Assert-Ok "ping biz-a"
 Write-Host $ping
 if ($ping -notmatch "biz-a") { throw "ping response missing biz-a: $ping" }
 
 Write-Host "==> biz-a call svc-a,svc-b,svc-c depth=2"
-$call = kubectl -n mesh exec deploy/mesh-client -- wget -T 30 -qO- "http://biz-a.mesh.svc.cluster.local:18081/api/v1/call?depth=2&targets=svc-a,svc-b,svc-c"
+$call = kubectl -n mesh exec deploy/mesh-client -- wget -T 30 -qO- "http://mesh-ingress.mesh.svc.cluster.local:8080/biz_a/call?depth=2&targets=svc-a,svc-b,svc-c"
 Assert-Ok "call biz-a"
 Write-Host $call
 foreach ($name in @("svc-a", "svc-b", "svc-c")) {
     if ($call -notmatch $name) { throw "call response missing $name" }
 }
 
-Write-Host "==> svc-a must reject a client that is not in the mesh"
+Write-Host "==> svc-a business port is not on the pod IP"
 kubectl -n mesh exec deploy/mesh-client -- wget -T 8 -S -O - "http://svc-a.mesh.svc.cluster.local:9000/"
 if ($LASTEXITCODE -eq 0) {
-    throw "svc-a accepted a non-mesh HTTP call"
+    throw "svc-a accepted a direct ClusterIP call"
 }
-Write-Host "svc-a rejected the outside call (exit $LASTEXITCODE)"
+Write-Host "svc-a refused the direct call (exit $LASTEXITCODE)"

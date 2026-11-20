@@ -37,9 +37,10 @@ connectInject:
   enabled: true
   default: false
   replicas: 1
+  # 关闭透明代理，Pod 里不再写 nftables。出站统一拨 API Gateway。
   transparentProxy:
-    defaultEnabled: true
-    defaultOverwriteProbes: true
+    defaultEnabled: false
+    defaultOverwriteProbes: false
   disruptionBudget:
     maxUnavailable: 1
   apiGateway:

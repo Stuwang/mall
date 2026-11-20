@@ -1,0 +1,126 @@
+# 南北向：对外 HTTP。GatewayClass consul 的 Service 类型是 LoadBalancer。
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: mesh-ingress
+  namespace: mesh
+spec:
+  gatewayClassName: consul
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 8080
+      allowedRoutes:
+        namespaces:
+          from: Same
+---
+# 东西向：集群内 gRPC。单独的 GatewayClass，Service 类型是 ClusterIP。
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: GatewayClassConfig
+metadata:
+  name: consul-eastwest
+spec:
+  serviceType: ClusterIP
+  deployment:
+    defaultInstances: 1
+    maxInstances: 1
+    minInstances: 1
+    resources:
+      requests:
+        cpu: 100m
+        memory: 100Mi
+      limits:
+        cpu: 100m
+        memory: 100Mi
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: consul-eastwest
+spec:
+  controllerName: consul.hashicorp.com/gateway-controller
+  parametersRef:
+    group: consul.hashicorp.com
+    kind: GatewayClassConfig
+    name: consul-eastwest
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: mesh-eastwest
+  namespace: mesh
+  annotations:
+    api-gateway.consul.hashicorp.com/listener-grpc-protocol: "grpc"
+spec:
+  gatewayClassName: consul-eastwest
+  listeners:
+    - name: grpc
+      protocol: HTTP
+      port: 9090
+      allowedRoutes:
+        namespaces:
+          from: Same
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: biz-routes
+  namespace: mesh
+spec:
+  parentRefs:
+    - name: mesh-ingress
+      sectionName: http
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /biz_a
+      backendRefs:
+        - name: biz-a
+          port: 8000
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /biz_b
+      backendRefs:
+        - name: biz-b
+          port: 8000
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /biz_c
+      backendRefs:
+        - name: biz-c
+          port: 8000
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: svc-routes
+  namespace: mesh
+spec:
+  parentRefs:
+    - name: mesh-eastwest
+      sectionName: grpc
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /mesh.svc.v1.SvcA
+      backendRefs:
+        - name: svc-a
+          port: 9000
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /mesh.svc.v1.SvcB
+      backendRefs:
+        - name: svc-b
+          port: 9000
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /mesh.svc.v1.SvcC
+      backendRefs:
+        - name: svc-c
+          port: 9000

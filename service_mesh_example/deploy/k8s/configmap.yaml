@@ -4,5 +4,5 @@ metadata:
   name: mesh-peers
   namespace: mesh
 data:
-  # 集群 DNS。Pod 里的 Consul 透明代理会把这些地址转成网格里的 mTLS。
-  SVC_ADDRS: svc-a=svc-a.mesh.svc.cluster.local:9000,svc-b=svc-b.mesh.svc.cluster.local:9000,svc-c=svc-c.mesh.svc.cluster.local:9000
+  # 所有 svc 的 gRPC 都拨这个地址，靠方法路径区分 svc-a / svc-b / svc-c。
+  GATEWAY_ADDR: mesh-eastwest.mesh.svc.cluster.local:9090

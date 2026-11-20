@@ -6,18 +6,52 @@ import "google/api/annotations.proto";
 
 option go_package = "mall/service_mesh_example/api/biz/v1;bizv1";
 
-// Biz 是对外的 HTTP 服务。网格内部的下游只走 svc 的 gRPC。
-service Biz {
+// BizA 的 HTTP 路径以 /biz_a 开头。三个 biz 共用消息，只是路径和服务名不同。
+service BizA {
   rpc Ping(PingRequest) returns (PingReply) {
     option (google.api.http) = {
-      get: "/api/v1/ping"
+      get: "/biz_a/ping"
     };
   }
   rpc Call(CallRequest) returns (CallReply) {
     option (google.api.http) = {
-      get: "/api/v1/call"
+      get: "/biz_a/call"
       additional_bindings {
-        post: "/api/v1/call"
+        post: "/biz_a/call"
+        body: "*"
+      }
+    };
+  }
+}
+
+service BizB {
+  rpc Ping(PingRequest) returns (PingReply) {
+    option (google.api.http) = {
+      get: "/biz_b/ping"
+    };
+  }
+  rpc Call(CallRequest) returns (CallReply) {
+    option (google.api.http) = {
+      get: "/biz_b/call"
+      additional_bindings {
+        post: "/biz_b/call"
+        body: "*"
+      }
+    };
+  }
+}
+
+service BizC {
+  rpc Ping(PingRequest) returns (PingReply) {
+    option (google.api.http) = {
+      get: "/biz_c/ping"
+    };
+  }
+  rpc Call(CallRequest) returns (CallReply) {
+    option (google.api.http) = {
+      get: "/biz_c/call"
+      additional_bindings {
+        post: "/biz_c/call"
         body: "*"
       }
     };

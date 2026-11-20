@@ -19,28 +19,28 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
-const OperationBizCall = "/mesh.biz.v1.Biz/Call"
-const OperationBizPing = "/mesh.biz.v1.Biz/Ping"
+const OperationBizACall = "/mesh.biz.v1.BizA/Call"
+const OperationBizAPing = "/mesh.biz.v1.BizA/Ping"
 
-type BizHTTPServer interface {
+type BizAHTTPServer interface {
 	Call(context.Context, *CallRequest) (*CallReply, error)
 	Ping(context.Context, *PingRequest) (*PingReply, error)
 }
 
-func RegisterBizHTTPServer(s *http.Server, srv BizHTTPServer) {
+func RegisterBizAHTTPServer(s *http.Server, srv BizAHTTPServer) {
 	r := s.Route("/")
-	r.GET("/api/v1/ping", _Biz_Ping0_HTTP_Handler(srv))
-	r.POST("/api/v1/call", _Biz_Call0_HTTP_Handler(srv))
-	r.GET("/api/v1/call", _Biz_Call1_HTTP_Handler(srv))
+	r.GET("/biz_a/ping", _BizA_Ping0_HTTP_Handler(srv))
+	r.POST("/biz_a/call", _BizA_Call0_HTTP_Handler(srv))
+	r.GET("/biz_a/call", _BizA_Call1_HTTP_Handler(srv))
 }
 
-func _Biz_Ping0_HTTP_Handler(srv BizHTTPServer) func(ctx http.Context) error {
+func _BizA_Ping0_HTTP_Handler(srv BizAHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in PingRequest
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
-		http.SetOperation(ctx, OperationBizPing)
+		http.SetOperation(ctx, OperationBizAPing)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
 			return srv.Ping(ctx, req.(*PingRequest))
 		})
@@ -53,7 +53,7 @@ func _Biz_Ping0_HTTP_Handler(srv BizHTTPServer) func(ctx http.Context) error {
 	}
 }
 
-func _Biz_Call0_HTTP_Handler(srv BizHTTPServer) func(ctx http.Context) error {
+func _BizA_Call0_HTTP_Handler(srv BizAHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in CallRequest
 		if err := ctx.Bind(&in); err != nil {
@@ -62,7 +62,7 @@ func _Biz_Call0_HTTP_Handler(srv BizHTTPServer) func(ctx http.Context) error {
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
-		http.SetOperation(ctx, OperationBizCall)
+		http.SetOperation(ctx, OperationBizACall)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
 			return srv.Call(ctx, req.(*CallRequest))
 		})
@@ -75,13 +75,13 @@ func _Biz_Call0_HTTP_Handler(srv BizHTTPServer) func(ctx http.Context) error {
 	}
 }
 
-func _Biz_Call1_HTTP_Handler(srv BizHTTPServer) func(ctx http.Context) error {
+func _BizA_Call1_HTTP_Handler(srv BizAHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in CallRequest
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
-		http.SetOperation(ctx, OperationBizCall)
+		http.SetOperation(ctx, OperationBizACall)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
 			return srv.Call(ctx, req.(*CallRequest))
 		})
@@ -94,24 +94,24 @@ func _Biz_Call1_HTTP_Handler(srv BizHTTPServer) func(ctx http.Context) error {
 	}
 }
 
-type BizHTTPClient interface {
+type BizAHTTPClient interface {
 	Call(ctx context.Context, req *CallRequest, opts ...http.CallOption) (rsp *CallReply, err error)
 	Ping(ctx context.Context, req *PingRequest, opts ...http.CallOption) (rsp *PingReply, err error)
 }
 
-type BizHTTPClientImpl struct {
+type BizAHTTPClientImpl struct {
 	cc *http.Client
 }
 
-func NewBizHTTPClient(client *http.Client) BizHTTPClient {
-	return &BizHTTPClientImpl{client}
+func NewBizAHTTPClient(client *http.Client) BizAHTTPClient {
+	return &BizAHTTPClientImpl{client}
 }
 
-func (c *BizHTTPClientImpl) Call(ctx context.Context, in *CallRequest, opts ...http.CallOption) (*CallReply, error) {
+func (c *BizAHTTPClientImpl) Call(ctx context.Context, in *CallRequest, opts ...http.CallOption) (*CallReply, error) {
 	var out CallReply
-	pattern := "/api/v1/call"
+	pattern := "/biz_a/call"
 	path := binding.EncodeURL(pattern, in, true)
-	opts = append(opts, http.Operation(OperationBizCall))
+	opts = append(opts, http.Operation(OperationBizACall))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {
@@ -120,11 +120,239 @@ func (c *BizHTTPClientImpl) Call(ctx context.Context, in *CallRequest, opts ...h
 	return &out, nil
 }
 
-func (c *BizHTTPClientImpl) Ping(ctx context.Context, in *PingRequest, opts ...http.CallOption) (*PingReply, error) {
+func (c *BizAHTTPClientImpl) Ping(ctx context.Context, in *PingRequest, opts ...http.CallOption) (*PingReply, error) {
 	var out PingReply
-	pattern := "/api/v1/ping"
+	pattern := "/biz_a/ping"
 	path := binding.EncodeURL(pattern, in, true)
-	opts = append(opts, http.Operation(OperationBizPing))
+	opts = append(opts, http.Operation(OperationBizAPing))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+const OperationBizBCall = "/mesh.biz.v1.BizB/Call"
+const OperationBizBPing = "/mesh.biz.v1.BizB/Ping"
+
+type BizBHTTPServer interface {
+	Call(context.Context, *CallRequest) (*CallReply, error)
+	Ping(context.Context, *PingRequest) (*PingReply, error)
+}
+
+func RegisterBizBHTTPServer(s *http.Server, srv BizBHTTPServer) {
+	r := s.Route("/")
+	r.GET("/biz_b/ping", _BizB_Ping1_HTTP_Handler(srv))
+	r.POST("/biz_b/call", _BizB_Call2_HTTP_Handler(srv))
+	r.GET("/biz_b/call", _BizB_Call3_HTTP_Handler(srv))
+}
+
+func _BizB_Ping1_HTTP_Handler(srv BizBHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in PingRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationBizBPing)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.Ping(ctx, req.(*PingRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*PingReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _BizB_Call2_HTTP_Handler(srv BizBHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in CallRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationBizBCall)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.Call(ctx, req.(*CallRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*CallReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _BizB_Call3_HTTP_Handler(srv BizBHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in CallRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationBizBCall)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.Call(ctx, req.(*CallRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*CallReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+type BizBHTTPClient interface {
+	Call(ctx context.Context, req *CallRequest, opts ...http.CallOption) (rsp *CallReply, err error)
+	Ping(ctx context.Context, req *PingRequest, opts ...http.CallOption) (rsp *PingReply, err error)
+}
+
+type BizBHTTPClientImpl struct {
+	cc *http.Client
+}
+
+func NewBizBHTTPClient(client *http.Client) BizBHTTPClient {
+	return &BizBHTTPClientImpl{client}
+}
+
+func (c *BizBHTTPClientImpl) Call(ctx context.Context, in *CallRequest, opts ...http.CallOption) (*CallReply, error) {
+	var out CallReply
+	pattern := "/biz_b/call"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationBizBCall))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *BizBHTTPClientImpl) Ping(ctx context.Context, in *PingRequest, opts ...http.CallOption) (*PingReply, error) {
+	var out PingReply
+	pattern := "/biz_b/ping"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationBizBPing))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+const OperationBizCCall = "/mesh.biz.v1.BizC/Call"
+const OperationBizCPing = "/mesh.biz.v1.BizC/Ping"
+
+type BizCHTTPServer interface {
+	Call(context.Context, *CallRequest) (*CallReply, error)
+	Ping(context.Context, *PingRequest) (*PingReply, error)
+}
+
+func RegisterBizCHTTPServer(s *http.Server, srv BizCHTTPServer) {
+	r := s.Route("/")
+	r.GET("/biz_c/ping", _BizC_Ping2_HTTP_Handler(srv))
+	r.POST("/biz_c/call", _BizC_Call4_HTTP_Handler(srv))
+	r.GET("/biz_c/call", _BizC_Call5_HTTP_Handler(srv))
+}
+
+func _BizC_Ping2_HTTP_Handler(srv BizCHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in PingRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationBizCPing)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.Ping(ctx, req.(*PingRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*PingReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _BizC_Call4_HTTP_Handler(srv BizCHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in CallRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationBizCCall)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.Call(ctx, req.(*CallRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*CallReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _BizC_Call5_HTTP_Handler(srv BizCHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in CallRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationBizCCall)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.Call(ctx, req.(*CallRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*CallReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+type BizCHTTPClient interface {
+	Call(ctx context.Context, req *CallRequest, opts ...http.CallOption) (rsp *CallReply, err error)
+	Ping(ctx context.Context, req *PingRequest, opts ...http.CallOption) (rsp *PingReply, err error)
+}
+
+type BizCHTTPClientImpl struct {
+	cc *http.Client
+}
+
+func NewBizCHTTPClient(client *http.Client) BizCHTTPClient {
+	return &BizCHTTPClientImpl{client}
+}
+
+func (c *BizCHTTPClientImpl) Call(ctx context.Context, in *CallRequest, opts ...http.CallOption) (*CallReply, error) {
+	var out CallReply
+	pattern := "/biz_c/call"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationBizCCall))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *BizCHTTPClientImpl) Ping(ctx context.Context, in *PingRequest, opts ...http.CallOption) (*PingReply, error) {
+	var out PingReply
+	pattern := "/biz_c/ping"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationBizCPing))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {

@@ -14,8 +14,7 @@ spec:
         app: svc-a
       annotations:
         consul.hashicorp.com/connect-inject: "true"
-        consul.hashicorp.com/transparent-proxy: "true"
-        consul.hashicorp.com/transparent-proxy-exclude-inbound-ports: "8081"
+        consul.hashicorp.com/transparent-proxy: "false"
         consul.hashicorp.com/connect-service: "svc-a"
         consul.hashicorp.com/connect-service-port: "9000"
         consul.hashicorp.com/connect-service-protocol: "grpc"
@@ -28,14 +27,14 @@ spec:
             - name: SERVICE_NAME
               value: svc-a
             - name: GRPC_ADDR
-              value: ":9000"
+              value: "127.0.0.1:9000"
             - name: HEALTH_ADDR
               value: ":8081"
-            - name: SVC_ADDRS
+            - name: GATEWAY_ADDR
               valueFrom:
                 configMapKeyRef:
                   name: mesh-peers
-                  key: SVC_ADDRS
+                  key: GATEWAY_ADDR
           ports:
             - name: grpc
               containerPort: 9000
@@ -98,8 +97,7 @@ spec:
         app: svc-b
       annotations:
         consul.hashicorp.com/connect-inject: "true"
-        consul.hashicorp.com/transparent-proxy: "true"
-        consul.hashicorp.com/transparent-proxy-exclude-inbound-ports: "8081"
+        consul.hashicorp.com/transparent-proxy: "false"
         consul.hashicorp.com/connect-service: "svc-b"
         consul.hashicorp.com/connect-service-port: "9000"
         consul.hashicorp.com/connect-service-protocol: "grpc"
@@ -112,14 +110,14 @@ spec:
             - name: SERVICE_NAME
               value: svc-b
             - name: GRPC_ADDR
-              value: ":9000"
+              value: "127.0.0.1:9000"
             - name: HEALTH_ADDR
               value: ":8081"
-            - name: SVC_ADDRS
+            - name: GATEWAY_ADDR
               valueFrom:
                 configMapKeyRef:
                   name: mesh-peers
-                  key: SVC_ADDRS
+                  key: GATEWAY_ADDR
           ports:
             - name: grpc
               containerPort: 9000
@@ -182,8 +180,7 @@ spec:
         app: svc-c
       annotations:
         consul.hashicorp.com/connect-inject: "true"
-        consul.hashicorp.com/transparent-proxy: "true"
-        consul.hashicorp.com/transparent-proxy-exclude-inbound-ports: "8081"
+        consul.hashicorp.com/transparent-proxy: "false"
         consul.hashicorp.com/connect-service: "svc-c"
         consul.hashicorp.com/connect-service-port: "9000"
         consul.hashicorp.com/connect-service-protocol: "grpc"
@@ -196,14 +193,14 @@ spec:
             - name: SERVICE_NAME
               value: svc-c
             - name: GRPC_ADDR
-              value: ":9000"
+              value: "127.0.0.1:9000"
             - name: HEALTH_ADDR
               value: ":8081"
-            - name: SVC_ADDRS
+            - name: GATEWAY_ADDR
               valueFrom:
                 configMapKeyRef:
                   name: mesh-peers
-                  key: SVC_ADDRS
+                  key: GATEWAY_ADDR
           ports:
             - name: grpc
               containerPort: 9000

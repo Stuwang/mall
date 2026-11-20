@@ -19,143 +19,423 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Biz_Ping_FullMethodName = "/mesh.biz.v1.Biz/Ping"
-	Biz_Call_FullMethodName = "/mesh.biz.v1.Biz/Call"
+	BizA_Ping_FullMethodName = "/mesh.biz.v1.BizA/Ping"
+	BizA_Call_FullMethodName = "/mesh.biz.v1.BizA/Call"
 )
 
-// BizClient is the client API for Biz service.
+// BizAClient is the client API for BizA service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// Biz 是对外的 HTTP 服务。网格内部的下游只走 svc 的 gRPC。
-type BizClient interface {
+// BizA 的 HTTP 路径以 /biz_a 开头。三个 biz 共用消息，只是路径和服务名不同。
+type BizAClient interface {
 	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingReply, error)
 	Call(ctx context.Context, in *CallRequest, opts ...grpc.CallOption) (*CallReply, error)
 }
 
-type bizClient struct {
+type bizAClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewBizClient(cc grpc.ClientConnInterface) BizClient {
-	return &bizClient{cc}
+func NewBizAClient(cc grpc.ClientConnInterface) BizAClient {
+	return &bizAClient{cc}
 }
 
-func (c *bizClient) Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingReply, error) {
+func (c *bizAClient) Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(PingReply)
-	err := c.cc.Invoke(ctx, Biz_Ping_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, BizA_Ping_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *bizClient) Call(ctx context.Context, in *CallRequest, opts ...grpc.CallOption) (*CallReply, error) {
+func (c *bizAClient) Call(ctx context.Context, in *CallRequest, opts ...grpc.CallOption) (*CallReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CallReply)
-	err := c.cc.Invoke(ctx, Biz_Call_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, BizA_Call_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// BizServer is the server API for Biz service.
-// All implementations must embed UnimplementedBizServer
+// BizAServer is the server API for BizA service.
+// All implementations must embed UnimplementedBizAServer
 // for forward compatibility.
 //
-// Biz 是对外的 HTTP 服务。网格内部的下游只走 svc 的 gRPC。
-type BizServer interface {
+// BizA 的 HTTP 路径以 /biz_a 开头。三个 biz 共用消息，只是路径和服务名不同。
+type BizAServer interface {
 	Ping(context.Context, *PingRequest) (*PingReply, error)
 	Call(context.Context, *CallRequest) (*CallReply, error)
-	mustEmbedUnimplementedBizServer()
+	mustEmbedUnimplementedBizAServer()
 }
 
-// UnimplementedBizServer must be embedded to have
+// UnimplementedBizAServer must be embedded to have
 // forward compatible implementations.
 //
 // NOTE: this should be embedded by value instead of pointer to avoid a nil
 // pointer dereference when methods are called.
-type UnimplementedBizServer struct{}
+type UnimplementedBizAServer struct{}
 
-func (UnimplementedBizServer) Ping(context.Context, *PingRequest) (*PingReply, error) {
+func (UnimplementedBizAServer) Ping(context.Context, *PingRequest) (*PingReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method Ping not implemented")
 }
-func (UnimplementedBizServer) Call(context.Context, *CallRequest) (*CallReply, error) {
+func (UnimplementedBizAServer) Call(context.Context, *CallRequest) (*CallReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method Call not implemented")
 }
-func (UnimplementedBizServer) mustEmbedUnimplementedBizServer() {}
-func (UnimplementedBizServer) testEmbeddedByValue()             {}
+func (UnimplementedBizAServer) mustEmbedUnimplementedBizAServer() {}
+func (UnimplementedBizAServer) testEmbeddedByValue()              {}
 
-// UnsafeBizServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to BizServer will
+// UnsafeBizAServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to BizAServer will
 // result in compilation errors.
-type UnsafeBizServer interface {
-	mustEmbedUnimplementedBizServer()
+type UnsafeBizAServer interface {
+	mustEmbedUnimplementedBizAServer()
 }
 
-func RegisterBizServer(s grpc.ServiceRegistrar, srv BizServer) {
-	// If the following call panics, it indicates UnimplementedBizServer was
+func RegisterBizAServer(s grpc.ServiceRegistrar, srv BizAServer) {
+	// If the following call panics, it indicates UnimplementedBizAServer was
 	// embedded by pointer and is nil.  This will cause panics if an
 	// unimplemented method is ever invoked, so we test this at initialization
 	// time to prevent it from happening at runtime later due to I/O.
 	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
 		t.testEmbeddedByValue()
 	}
-	s.RegisterService(&Biz_ServiceDesc, srv)
+	s.RegisterService(&BizA_ServiceDesc, srv)
 }
 
-func _Biz_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _BizA_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PingRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BizServer).Ping(ctx, in)
+		return srv.(BizAServer).Ping(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Biz_Ping_FullMethodName,
+		FullMethod: BizA_Ping_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BizServer).Ping(ctx, req.(*PingRequest))
+		return srv.(BizAServer).Ping(ctx, req.(*PingRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Biz_Call_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _BizA_Call_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CallRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BizServer).Call(ctx, in)
+		return srv.(BizAServer).Call(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Biz_Call_FullMethodName,
+		FullMethod: BizA_Call_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BizServer).Call(ctx, req.(*CallRequest))
+		return srv.(BizAServer).Call(ctx, req.(*CallRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// Biz_ServiceDesc is the grpc.ServiceDesc for Biz service.
+// BizA_ServiceDesc is the grpc.ServiceDesc for BizA service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Biz_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "mesh.biz.v1.Biz",
-	HandlerType: (*BizServer)(nil),
+var BizA_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "mesh.biz.v1.BizA",
+	HandlerType: (*BizAServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "Ping",
-			Handler:    _Biz_Ping_Handler,
+			Handler:    _BizA_Ping_Handler,
 		},
 		{
 			MethodName: "Call",
-			Handler:    _Biz_Call_Handler,
+			Handler:    _BizA_Call_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "biz/v1/biz.proto",
+}
+
+const (
+	BizB_Ping_FullMethodName = "/mesh.biz.v1.BizB/Ping"
+	BizB_Call_FullMethodName = "/mesh.biz.v1.BizB/Call"
+)
+
+// BizBClient is the client API for BizB service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type BizBClient interface {
+	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingReply, error)
+	Call(ctx context.Context, in *CallRequest, opts ...grpc.CallOption) (*CallReply, error)
+}
+
+type bizBClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewBizBClient(cc grpc.ClientConnInterface) BizBClient {
+	return &bizBClient{cc}
+}
+
+func (c *bizBClient) Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PingReply)
+	err := c.cc.Invoke(ctx, BizB_Ping_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bizBClient) Call(ctx context.Context, in *CallRequest, opts ...grpc.CallOption) (*CallReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CallReply)
+	err := c.cc.Invoke(ctx, BizB_Call_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// BizBServer is the server API for BizB service.
+// All implementations must embed UnimplementedBizBServer
+// for forward compatibility.
+type BizBServer interface {
+	Ping(context.Context, *PingRequest) (*PingReply, error)
+	Call(context.Context, *CallRequest) (*CallReply, error)
+	mustEmbedUnimplementedBizBServer()
+}
+
+// UnimplementedBizBServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedBizBServer struct{}
+
+func (UnimplementedBizBServer) Ping(context.Context, *PingRequest) (*PingReply, error) {
+	return nil, status.Error(codes.Unimplemented, "method Ping not implemented")
+}
+func (UnimplementedBizBServer) Call(context.Context, *CallRequest) (*CallReply, error) {
+	return nil, status.Error(codes.Unimplemented, "method Call not implemented")
+}
+func (UnimplementedBizBServer) mustEmbedUnimplementedBizBServer() {}
+func (UnimplementedBizBServer) testEmbeddedByValue()              {}
+
+// UnsafeBizBServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to BizBServer will
+// result in compilation errors.
+type UnsafeBizBServer interface {
+	mustEmbedUnimplementedBizBServer()
+}
+
+func RegisterBizBServer(s grpc.ServiceRegistrar, srv BizBServer) {
+	// If the following call panics, it indicates UnimplementedBizBServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&BizB_ServiceDesc, srv)
+}
+
+func _BizB_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BizBServer).Ping(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BizB_Ping_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BizBServer).Ping(ctx, req.(*PingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BizB_Call_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CallRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BizBServer).Call(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BizB_Call_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BizBServer).Call(ctx, req.(*CallRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// BizB_ServiceDesc is the grpc.ServiceDesc for BizB service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var BizB_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "mesh.biz.v1.BizB",
+	HandlerType: (*BizBServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Ping",
+			Handler:    _BizB_Ping_Handler,
+		},
+		{
+			MethodName: "Call",
+			Handler:    _BizB_Call_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "biz/v1/biz.proto",
+}
+
+const (
+	BizC_Ping_FullMethodName = "/mesh.biz.v1.BizC/Ping"
+	BizC_Call_FullMethodName = "/mesh.biz.v1.BizC/Call"
+)
+
+// BizCClient is the client API for BizC service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type BizCClient interface {
+	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingReply, error)
+	Call(ctx context.Context, in *CallRequest, opts ...grpc.CallOption) (*CallReply, error)
+}
+
+type bizCClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewBizCClient(cc grpc.ClientConnInterface) BizCClient {
+	return &bizCClient{cc}
+}
+
+func (c *bizCClient) Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PingReply)
+	err := c.cc.Invoke(ctx, BizC_Ping_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bizCClient) Call(ctx context.Context, in *CallRequest, opts ...grpc.CallOption) (*CallReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CallReply)
+	err := c.cc.Invoke(ctx, BizC_Call_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// BizCServer is the server API for BizC service.
+// All implementations must embed UnimplementedBizCServer
+// for forward compatibility.
+type BizCServer interface {
+	Ping(context.Context, *PingRequest) (*PingReply, error)
+	Call(context.Context, *CallRequest) (*CallReply, error)
+	mustEmbedUnimplementedBizCServer()
+}
+
+// UnimplementedBizCServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedBizCServer struct{}
+
+func (UnimplementedBizCServer) Ping(context.Context, *PingRequest) (*PingReply, error) {
+	return nil, status.Error(codes.Unimplemented, "method Ping not implemented")
+}
+func (UnimplementedBizCServer) Call(context.Context, *CallRequest) (*CallReply, error) {
+	return nil, status.Error(codes.Unimplemented, "method Call not implemented")
+}
+func (UnimplementedBizCServer) mustEmbedUnimplementedBizCServer() {}
+func (UnimplementedBizCServer) testEmbeddedByValue()              {}
+
+// UnsafeBizCServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to BizCServer will
+// result in compilation errors.
+type UnsafeBizCServer interface {
+	mustEmbedUnimplementedBizCServer()
+}
+
+func RegisterBizCServer(s grpc.ServiceRegistrar, srv BizCServer) {
+	// If the following call panics, it indicates UnimplementedBizCServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&BizC_ServiceDesc, srv)
+}
+
+func _BizC_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BizCServer).Ping(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BizC_Ping_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BizCServer).Ping(ctx, req.(*PingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BizC_Call_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CallRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BizCServer).Call(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BizC_Call_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BizCServer).Call(ctx, req.(*CallRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// BizC_ServiceDesc is the grpc.ServiceDesc for BizC service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var BizC_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "mesh.biz.v1.BizC",
+	HandlerType: (*BizCServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Ping",
+			Handler:    _BizC_Ping_Handler,
+		},
+		{
+			MethodName: "Call",
+			Handler:    _BizC_Call_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

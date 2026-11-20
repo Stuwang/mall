@@ -11,9 +11,11 @@ import (
 	"mall/service_mesh_example/internal/peers"
 )
 
-// Server 实现内部 Svc。
+// Server 实现内部 svc。一个进程只注册其中一个 proto service。
 type Server struct {
-	svcv1.UnimplementedSvcServer
+	svcv1.UnimplementedSvcAServer
+	svcv1.UnimplementedSvcBServer
+	svcv1.UnimplementedSvcCServer
 
 	name string
 	pool *peers.Pool

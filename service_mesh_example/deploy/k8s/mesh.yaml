@@ -1,5 +1,6 @@
-# biz 对外 HTTP，permissive mTLS，这样网格外的调用能进来。
-# svc 只注册 gRPC，strict mTLS，没有 NodePort。
+# 业务端口只监听 127.0.0.1，网格外和 ClusterIP 都进不去。
+# 南北向 mesh-ingress 访问 biz，东西向 mesh-eastwest 访问 svc。二者身份分开。
+# ACL 目前关闭，下面的 intention 先写成网关放行，打开 ACL 后仍然适用。
 apiVersion: consul.hashicorp.com/v1alpha1
 kind: Mesh
 metadata:
@@ -68,17 +69,7 @@ spec:
   destination:
     name: svc-a
   sources:
-    - name: biz-a
-      action: allow
-    - name: biz-b
-      action: allow
-    - name: biz-c
-      action: allow
-    - name: svc-a
-      action: allow
-    - name: svc-b
-      action: allow
-    - name: svc-c
+    - name: mesh-eastwest
       action: allow
 ---
 apiVersion: consul.hashicorp.com/v1alpha1
@@ -90,17 +81,7 @@ spec:
   destination:
     name: svc-b
   sources:
-    - name: biz-a
-      action: allow
-    - name: biz-b
-      action: allow
-    - name: biz-c
-      action: allow
-    - name: svc-a
-      action: allow
-    - name: svc-b
-      action: allow
-    - name: svc-c
+    - name: mesh-eastwest
       action: allow
 ---
 apiVersion: consul.hashicorp.com/v1alpha1
@@ -112,15 +93,41 @@ spec:
   destination:
     name: svc-c
   sources:
-    - name: biz-a
+    - name: mesh-eastwest
       action: allow
-    - name: biz-b
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+  name: biz-a
+  namespace: mesh
+spec:
+  destination:
+    name: biz-a
+  sources:
+    - name: mesh-ingress
       action: allow
-    - name: biz-c
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+  name: biz-b
+  namespace: mesh
+spec:
+  destination:
+    name: biz-b
+  sources:
+    - name: mesh-ingress
       action: allow
-    - name: svc-a
-      action: allow
-    - name: svc-b
-      action: allow
-    - name: svc-c
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+  name: biz-c
+  namespace: mesh
+spec:
+  destination:
+    name: biz-c
+  sources:
+    - name: mesh-ingress
       action: allow

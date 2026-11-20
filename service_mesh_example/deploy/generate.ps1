@@ -10,11 +10,9 @@ function Assert-Ok([string]$What) {
 
 Push-Location $Root
 try {
+    $env:PATH = $Bin + [IO.Path]::PathSeparator + $env:PATH
     & (Join-Path $Bin "protoc.exe") `
         -I api -I (Join-Path $Repo "server\third_party") `
-        --plugin=("protoc-gen-go=" + (Join-Path $Bin "protoc-gen-go.exe")) `
-        --plugin=("protoc-gen-go-grpc=" + (Join-Path $Bin "protoc-gen-go-grpc.exe")) `
-        --plugin=("protoc-gen-go-http=" + (Join-Path $Bin "protoc-gen-go-http.exe")) `
         --go_out=. --go_opt=module=mall/service_mesh_example `
         --go-grpc_out=. --go-grpc_opt=module=mall/service_mesh_example `
         --go-http_out=. --go-http_opt=module=mall/service_mesh_example `

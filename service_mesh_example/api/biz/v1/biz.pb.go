@@ -313,10 +313,16 @@ const file_biz_v1_biz_proto_rawDesc = "" +
 	"\aservice\x18\x01 \x01(\tR\aservice\x12\x14\n" +
 	"\x05trace\x18\x02 \x01(\tR\x05trace\x12\x14\n" +
 	"\x05error\x18\x03 \x01(\tR\x05error\x12$\n" +
-	"\x04hops\x18\x04 \x03(\v2\x10.mesh.biz.v1.HopR\x04hops2\xb8\x01\n" +
-	"\x03Biz\x12N\n" +
-	"\x04Ping\x12\x18.mesh.biz.v1.PingRequest\x1a\x16.mesh.biz.v1.PingReply\"\x14\x82\xd3\xe4\x93\x02\x0e\x12\f/api/v1/ping\x12a\n" +
-	"\x04Call\x12\x18.mesh.biz.v1.CallRequest\x1a\x16.mesh.biz.v1.CallReply\"'\x82\xd3\xe4\x93\x02!Z\x11:\x01*\"\f/api/v1/call\x12\f/api/v1/callB,Z*mall/service_mesh_example/api/biz/v1;bizv1b\x06proto3"
+	"\x04hops\x18\x04 \x03(\v2\x10.mesh.biz.v1.HopR\x04hops2\xb6\x01\n" +
+	"\x04BizA\x12M\n" +
+	"\x04Ping\x12\x18.mesh.biz.v1.PingRequest\x1a\x16.mesh.biz.v1.PingReply\"\x13\x82\xd3\xe4\x93\x02\r\x12\v/biz_a/ping\x12_\n" +
+	"\x04Call\x12\x18.mesh.biz.v1.CallRequest\x1a\x16.mesh.biz.v1.CallReply\"%\x82\xd3\xe4\x93\x02\x1fZ\x10:\x01*\"\v/biz_a/call\x12\v/biz_a/call2\xb6\x01\n" +
+	"\x04BizB\x12M\n" +
+	"\x04Ping\x12\x18.mesh.biz.v1.PingRequest\x1a\x16.mesh.biz.v1.PingReply\"\x13\x82\xd3\xe4\x93\x02\r\x12\v/biz_b/ping\x12_\n" +
+	"\x04Call\x12\x18.mesh.biz.v1.CallRequest\x1a\x16.mesh.biz.v1.CallReply\"%\x82\xd3\xe4\x93\x02\x1fZ\x10:\x01*\"\v/biz_b/call\x12\v/biz_b/call2\xb6\x01\n" +
+	"\x04BizC\x12M\n" +
+	"\x04Ping\x12\x18.mesh.biz.v1.PingRequest\x1a\x16.mesh.biz.v1.PingReply\"\x13\x82\xd3\xe4\x93\x02\r\x12\v/biz_c/ping\x12_\n" +
+	"\x04Call\x12\x18.mesh.biz.v1.CallRequest\x1a\x16.mesh.biz.v1.CallReply\"%\x82\xd3\xe4\x93\x02\x1fZ\x10:\x01*\"\v/biz_c/call\x12\v/biz_c/callB,Z*mall/service_mesh_example/api/biz/v1;bizv1b\x06proto3"
 
 var (
 	file_biz_v1_biz_proto_rawDescOnce sync.Once
@@ -341,12 +347,20 @@ var file_biz_v1_biz_proto_goTypes = []any{
 var file_biz_v1_biz_proto_depIdxs = []int32{
 	4, // 0: mesh.biz.v1.CallReply.hops:type_name -> mesh.biz.v1.Hop
 	4, // 1: mesh.biz.v1.Hop.hops:type_name -> mesh.biz.v1.Hop
-	0, // 2: mesh.biz.v1.Biz.Ping:input_type -> mesh.biz.v1.PingRequest
-	2, // 3: mesh.biz.v1.Biz.Call:input_type -> mesh.biz.v1.CallRequest
-	1, // 4: mesh.biz.v1.Biz.Ping:output_type -> mesh.biz.v1.PingReply
-	3, // 5: mesh.biz.v1.Biz.Call:output_type -> mesh.biz.v1.CallReply
-	4, // [4:6] is the sub-list for method output_type
-	2, // [2:4] is the sub-list for method input_type
+	0, // 2: mesh.biz.v1.BizA.Ping:input_type -> mesh.biz.v1.PingRequest
+	2, // 3: mesh.biz.v1.BizA.Call:input_type -> mesh.biz.v1.CallRequest
+	0, // 4: mesh.biz.v1.BizB.Ping:input_type -> mesh.biz.v1.PingRequest
+	2, // 5: mesh.biz.v1.BizB.Call:input_type -> mesh.biz.v1.CallRequest
+	0, // 6: mesh.biz.v1.BizC.Ping:input_type -> mesh.biz.v1.PingRequest
+	2, // 7: mesh.biz.v1.BizC.Call:input_type -> mesh.biz.v1.CallRequest
+	1, // 8: mesh.biz.v1.BizA.Ping:output_type -> mesh.biz.v1.PingReply
+	3, // 9: mesh.biz.v1.BizA.Call:output_type -> mesh.biz.v1.CallReply
+	1, // 10: mesh.biz.v1.BizB.Ping:output_type -> mesh.biz.v1.PingReply
+	3, // 11: mesh.biz.v1.BizB.Call:output_type -> mesh.biz.v1.CallReply
+	1, // 12: mesh.biz.v1.BizC.Ping:output_type -> mesh.biz.v1.PingReply
+	3, // 13: mesh.biz.v1.BizC.Call:output_type -> mesh.biz.v1.CallReply
+	8, // [8:14] is the sub-list for method output_type
+	2, // [2:8] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name
 	2, // [2:2] is the sub-list for extension extendee
 	0, // [0:2] is the sub-list for field type_name
@@ -365,7 +379,7 @@ func file_biz_v1_biz_proto_init() {
 			NumEnums:      0,
 			NumMessages:   5,
 			NumExtensions: 0,
-			NumServices:   1,
+			NumServices:   3,
 		},
 		GoTypes:           file_biz_v1_biz_proto_goTypes,
 		DependencyIndexes: file_biz_v1_biz_proto_depIdxs,

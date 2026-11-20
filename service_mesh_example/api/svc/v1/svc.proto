@@ -4,8 +4,19 @@ package mesh.svc.v1;
 
 option go_package = "mall/service_mesh_example/api/svc/v1;svcv1";
 
-// Svc 只提供 gRPC，不对外暴露 HTTP 业务端口。
-service Svc {
+// gRPC 路径由包名和服务名决定。
+// SvcA 的方法路径是 /mesh.svc.v1.SvcA/Call，网关按这个前缀转发。
+service SvcA {
+  rpc Ping(PingRequest) returns (PingReply);
+  rpc Call(CallRequest) returns (CallReply);
+}
+
+service SvcB {
+  rpc Ping(PingRequest) returns (PingReply);
+  rpc Call(CallRequest) returns (CallReply);
+}
+
+service SvcC {
   rpc Ping(PingRequest) returns (PingReply);
   rpc Call(CallRequest) returns (CallReply);
 }

@@ -19,143 +19,425 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Svc_Ping_FullMethodName = "/mesh.svc.v1.Svc/Ping"
-	Svc_Call_FullMethodName = "/mesh.svc.v1.Svc/Call"
+	SvcA_Ping_FullMethodName = "/mesh.svc.v1.SvcA/Ping"
+	SvcA_Call_FullMethodName = "/mesh.svc.v1.SvcA/Call"
 )
 
-// SvcClient is the client API for Svc service.
+// SvcAClient is the client API for SvcA service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// Svc 只提供 gRPC，不对外暴露 HTTP 业务端口。
-type SvcClient interface {
+// gRPC 路径由包名和服务名决定。
+// SvcA 的方法路径是 /mesh.svc.v1.SvcA/Call，网关按这个前缀转发。
+type SvcAClient interface {
 	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingReply, error)
 	Call(ctx context.Context, in *CallRequest, opts ...grpc.CallOption) (*CallReply, error)
 }
 
-type svcClient struct {
+type svcAClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewSvcClient(cc grpc.ClientConnInterface) SvcClient {
-	return &svcClient{cc}
+func NewSvcAClient(cc grpc.ClientConnInterface) SvcAClient {
+	return &svcAClient{cc}
 }
 
-func (c *svcClient) Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingReply, error) {
+func (c *svcAClient) Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(PingReply)
-	err := c.cc.Invoke(ctx, Svc_Ping_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, SvcA_Ping_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *svcClient) Call(ctx context.Context, in *CallRequest, opts ...grpc.CallOption) (*CallReply, error) {
+func (c *svcAClient) Call(ctx context.Context, in *CallRequest, opts ...grpc.CallOption) (*CallReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CallReply)
-	err := c.cc.Invoke(ctx, Svc_Call_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, SvcA_Call_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// SvcServer is the server API for Svc service.
-// All implementations must embed UnimplementedSvcServer
+// SvcAServer is the server API for SvcA service.
+// All implementations must embed UnimplementedSvcAServer
 // for forward compatibility.
 //
-// Svc 只提供 gRPC，不对外暴露 HTTP 业务端口。
-type SvcServer interface {
+// gRPC 路径由包名和服务名决定。
+// SvcA 的方法路径是 /mesh.svc.v1.SvcA/Call，网关按这个前缀转发。
+type SvcAServer interface {
 	Ping(context.Context, *PingRequest) (*PingReply, error)
 	Call(context.Context, *CallRequest) (*CallReply, error)
-	mustEmbedUnimplementedSvcServer()
+	mustEmbedUnimplementedSvcAServer()
 }
 
-// UnimplementedSvcServer must be embedded to have
+// UnimplementedSvcAServer must be embedded to have
 // forward compatible implementations.
 //
 // NOTE: this should be embedded by value instead of pointer to avoid a nil
 // pointer dereference when methods are called.
-type UnimplementedSvcServer struct{}
+type UnimplementedSvcAServer struct{}
 
-func (UnimplementedSvcServer) Ping(context.Context, *PingRequest) (*PingReply, error) {
+func (UnimplementedSvcAServer) Ping(context.Context, *PingRequest) (*PingReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method Ping not implemented")
 }
-func (UnimplementedSvcServer) Call(context.Context, *CallRequest) (*CallReply, error) {
+func (UnimplementedSvcAServer) Call(context.Context, *CallRequest) (*CallReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method Call not implemented")
 }
-func (UnimplementedSvcServer) mustEmbedUnimplementedSvcServer() {}
-func (UnimplementedSvcServer) testEmbeddedByValue()             {}
+func (UnimplementedSvcAServer) mustEmbedUnimplementedSvcAServer() {}
+func (UnimplementedSvcAServer) testEmbeddedByValue()              {}
 
-// UnsafeSvcServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to SvcServer will
+// UnsafeSvcAServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to SvcAServer will
 // result in compilation errors.
-type UnsafeSvcServer interface {
-	mustEmbedUnimplementedSvcServer()
+type UnsafeSvcAServer interface {
+	mustEmbedUnimplementedSvcAServer()
 }
 
-func RegisterSvcServer(s grpc.ServiceRegistrar, srv SvcServer) {
-	// If the following call panics, it indicates UnimplementedSvcServer was
+func RegisterSvcAServer(s grpc.ServiceRegistrar, srv SvcAServer) {
+	// If the following call panics, it indicates UnimplementedSvcAServer was
 	// embedded by pointer and is nil.  This will cause panics if an
 	// unimplemented method is ever invoked, so we test this at initialization
 	// time to prevent it from happening at runtime later due to I/O.
 	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
 		t.testEmbeddedByValue()
 	}
-	s.RegisterService(&Svc_ServiceDesc, srv)
+	s.RegisterService(&SvcA_ServiceDesc, srv)
 }
 
-func _Svc_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _SvcA_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PingRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SvcServer).Ping(ctx, in)
+		return srv.(SvcAServer).Ping(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Svc_Ping_FullMethodName,
+		FullMethod: SvcA_Ping_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SvcServer).Ping(ctx, req.(*PingRequest))
+		return srv.(SvcAServer).Ping(ctx, req.(*PingRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Svc_Call_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _SvcA_Call_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CallRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SvcServer).Call(ctx, in)
+		return srv.(SvcAServer).Call(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Svc_Call_FullMethodName,
+		FullMethod: SvcA_Call_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SvcServer).Call(ctx, req.(*CallRequest))
+		return srv.(SvcAServer).Call(ctx, req.(*CallRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// Svc_ServiceDesc is the grpc.ServiceDesc for Svc service.
+// SvcA_ServiceDesc is the grpc.ServiceDesc for SvcA service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Svc_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "mesh.svc.v1.Svc",
-	HandlerType: (*SvcServer)(nil),
+var SvcA_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "mesh.svc.v1.SvcA",
+	HandlerType: (*SvcAServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "Ping",
-			Handler:    _Svc_Ping_Handler,
+			Handler:    _SvcA_Ping_Handler,
 		},
 		{
 			MethodName: "Call",
-			Handler:    _Svc_Call_Handler,
+			Handler:    _SvcA_Call_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "svc/v1/svc.proto",
+}
+
+const (
+	SvcB_Ping_FullMethodName = "/mesh.svc.v1.SvcB/Ping"
+	SvcB_Call_FullMethodName = "/mesh.svc.v1.SvcB/Call"
+)
+
+// SvcBClient is the client API for SvcB service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type SvcBClient interface {
+	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingReply, error)
+	Call(ctx context.Context, in *CallRequest, opts ...grpc.CallOption) (*CallReply, error)
+}
+
+type svcBClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewSvcBClient(cc grpc.ClientConnInterface) SvcBClient {
+	return &svcBClient{cc}
+}
+
+func (c *svcBClient) Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PingReply)
+	err := c.cc.Invoke(ctx, SvcB_Ping_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *svcBClient) Call(ctx context.Context, in *CallRequest, opts ...grpc.CallOption) (*CallReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CallReply)
+	err := c.cc.Invoke(ctx, SvcB_Call_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// SvcBServer is the server API for SvcB service.
+// All implementations must embed UnimplementedSvcBServer
+// for forward compatibility.
+type SvcBServer interface {
+	Ping(context.Context, *PingRequest) (*PingReply, error)
+	Call(context.Context, *CallRequest) (*CallReply, error)
+	mustEmbedUnimplementedSvcBServer()
+}
+
+// UnimplementedSvcBServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedSvcBServer struct{}
+
+func (UnimplementedSvcBServer) Ping(context.Context, *PingRequest) (*PingReply, error) {
+	return nil, status.Error(codes.Unimplemented, "method Ping not implemented")
+}
+func (UnimplementedSvcBServer) Call(context.Context, *CallRequest) (*CallReply, error) {
+	return nil, status.Error(codes.Unimplemented, "method Call not implemented")
+}
+func (UnimplementedSvcBServer) mustEmbedUnimplementedSvcBServer() {}
+func (UnimplementedSvcBServer) testEmbeddedByValue()              {}
+
+// UnsafeSvcBServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to SvcBServer will
+// result in compilation errors.
+type UnsafeSvcBServer interface {
+	mustEmbedUnimplementedSvcBServer()
+}
+
+func RegisterSvcBServer(s grpc.ServiceRegistrar, srv SvcBServer) {
+	// If the following call panics, it indicates UnimplementedSvcBServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&SvcB_ServiceDesc, srv)
+}
+
+func _SvcB_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SvcBServer).Ping(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SvcB_Ping_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SvcBServer).Ping(ctx, req.(*PingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SvcB_Call_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CallRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SvcBServer).Call(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SvcB_Call_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SvcBServer).Call(ctx, req.(*CallRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// SvcB_ServiceDesc is the grpc.ServiceDesc for SvcB service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var SvcB_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "mesh.svc.v1.SvcB",
+	HandlerType: (*SvcBServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Ping",
+			Handler:    _SvcB_Ping_Handler,
+		},
+		{
+			MethodName: "Call",
+			Handler:    _SvcB_Call_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "svc/v1/svc.proto",
+}
+
+const (
+	SvcC_Ping_FullMethodName = "/mesh.svc.v1.SvcC/Ping"
+	SvcC_Call_FullMethodName = "/mesh.svc.v1.SvcC/Call"
+)
+
+// SvcCClient is the client API for SvcC service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type SvcCClient interface {
+	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingReply, error)
+	Call(ctx context.Context, in *CallRequest, opts ...grpc.CallOption) (*CallReply, error)
+}
+
+type svcCClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewSvcCClient(cc grpc.ClientConnInterface) SvcCClient {
+	return &svcCClient{cc}
+}
+
+func (c *svcCClient) Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PingReply)
+	err := c.cc.Invoke(ctx, SvcC_Ping_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *svcCClient) Call(ctx context.Context, in *CallRequest, opts ...grpc.CallOption) (*CallReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CallReply)
+	err := c.cc.Invoke(ctx, SvcC_Call_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// SvcCServer is the server API for SvcC service.
+// All implementations must embed UnimplementedSvcCServer
+// for forward compatibility.
+type SvcCServer interface {
+	Ping(context.Context, *PingRequest) (*PingReply, error)
+	Call(context.Context, *CallRequest) (*CallReply, error)
+	mustEmbedUnimplementedSvcCServer()
+}
+
+// UnimplementedSvcCServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedSvcCServer struct{}
+
+func (UnimplementedSvcCServer) Ping(context.Context, *PingRequest) (*PingReply, error) {
+	return nil, status.Error(codes.Unimplemented, "method Ping not implemented")
+}
+func (UnimplementedSvcCServer) Call(context.Context, *CallRequest) (*CallReply, error) {
+	return nil, status.Error(codes.Unimplemented, "method Call not implemented")
+}
+func (UnimplementedSvcCServer) mustEmbedUnimplementedSvcCServer() {}
+func (UnimplementedSvcCServer) testEmbeddedByValue()              {}
+
+// UnsafeSvcCServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to SvcCServer will
+// result in compilation errors.
+type UnsafeSvcCServer interface {
+	mustEmbedUnimplementedSvcCServer()
+}
+
+func RegisterSvcCServer(s grpc.ServiceRegistrar, srv SvcCServer) {
+	// If the following call panics, it indicates UnimplementedSvcCServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&SvcC_ServiceDesc, srv)
+}
+
+func _SvcC_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SvcCServer).Ping(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SvcC_Ping_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SvcCServer).Ping(ctx, req.(*PingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SvcC_Call_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CallRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SvcCServer).Call(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SvcC_Call_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SvcCServer).Call(ctx, req.(*CallRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// SvcC_ServiceDesc is the grpc.ServiceDesc for SvcC service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var SvcC_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "mesh.svc.v1.SvcC",
+	HandlerType: (*SvcCServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Ping",
+			Handler:    _SvcC_Ping_Handler,
+		},
+		{
+			MethodName: "Call",
+			Handler:    _SvcC_Call_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

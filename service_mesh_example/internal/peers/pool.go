@@ -1,5 +1,5 @@
-// Package peers 持有到内部 svc 的 gRPC 连接。地址使用 Kubernetes DNS，
-// 流量由 Consul 透明代理劫持并做 mTLS。
+// Package peers 持有到 API Gateway 的一条 gRPC 连接。
+// svc-a、svc-b、svc-c 走同一条连接，靠 proto 方法路径区分。
 package peers
 
 import (
@@ -17,25 +17,26 @@ import (
 	"mall/service_mesh_example/internal/callpath"
 )
 
-// Pool 按服务名复用连接。第一次调用时才拨号，避免启动顺序互相卡死。
-type Pool struct {
-	addrs map[string]string
-	log   *log.Helper
-
-	mu    sync.Mutex
-	conns map[string]*grpc.ClientConn
+// svcClient 是三个生成客户端共有的 Call 方法。
+type svcClient interface {
+	Call(ctx context.Context, in *svcv1.CallRequest, opts ...grpc.CallOption) (*svcv1.CallReply, error)
 }
 
-// New 用服务名到地址的映射构造连接池。
-func New(addrs map[string]string, logger log.Logger) *Pool {
-	copied := make(map[string]string, len(addrs))
-	for name, addr := range addrs {
-		copied[name] = addr
-	}
+// Pool 复用一条到网关的连接。第一次调用时才拨号，避免启动顺序互相卡死。
+type Pool struct {
+	addr string
+	log  *log.Helper
+
+	mu      sync.Mutex
+	conn    *grpc.ClientConn
+	clients map[string]svcClient
+}
+
+// New 用网关地址构造连接池。三个 svc 都从这条连接出去。
+func New(addr string, logger log.Logger) *Pool {
 	return &Pool{
-		addrs: copied,
-		log:   log.NewHelper(logger),
-		conns: map[string]*grpc.ClientConn{},
+		addr: addr,
+		log:  log.NewHelper(logger),
 	}
 }
 
@@ -60,35 +61,52 @@ func (p *Pool) Call(ctx context.Context, name, trace string, targets []string, d
 	return reply, nil
 }
 
-func (p *Pool) client(name string) (svcv1.SvcClient, error) {
+func (p *Pool) client(name string) (svcClient, error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	if conn, ok := p.conns[name]; ok {
-		return svcv1.NewSvcClient(conn), nil
+	if client, ok := p.clients[name]; ok {
+		return client, nil
 	}
-	addr, ok := p.addrs[name]
+	if _, ok := svcFactories[name]; !ok && p.conn != nil {
+		return nil, fmt.Errorf("unknown svc %q", name)
+	}
+	if p.conn == nil {
+		if err := p.dial(); err != nil {
+			return nil, err
+		}
+	}
+	client, ok := p.clients[name]
 	if !ok {
 		return nil, fmt.Errorf("unknown svc %q", name)
 	}
-	endpoint := addr
-	if !strings.Contains(addr, "://") {
-		// Kratos 的 direct 解析器把 host:port 交给 gRPC 拨号，DNS 由透明代理之前的内核完成。
-		endpoint = "direct:///" + addr
+	return client, nil
+}
+
+func (p *Pool) dial() error {
+	endpoint := p.addr
+	if !strings.Contains(endpoint, "://") {
+		endpoint = "direct:///" + endpoint
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+	// 网关本身不是某个 svc 的健康检查端点，不能按单个服务做 grpc health。
 	conn, err := kgrpc.DialInsecure(
 		ctx,
 		kgrpc.WithEndpoint(endpoint),
 		kgrpc.WithTimeout(3*time.Second),
-		kgrpc.WithHealthCheck(true),
+		kgrpc.WithHealthCheck(false),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("dial %s %s: %w", name, addr, err)
+		return fmt.Errorf("dial gateway %s: %w", p.addr, err)
 	}
-	p.conns[name] = conn
-	p.log.Infof("dialed peer=%s addr=%s", name, addr)
-	return svcv1.NewSvcClient(conn), nil
+	clients := make(map[string]svcClient, len(svcFactories))
+	for name, newClient := range svcFactories {
+		clients[name] = newClient(conn)
+	}
+	p.conn = conn
+	p.clients = clients
+	p.log.Infof("dialed gateway=%s", p.addr)
+	return nil
 }
 
 // TargetsOrDefault 在请求没写目标时使用全部 svc。

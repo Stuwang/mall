@@ -9,7 +9,6 @@ import (
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
 	khttp "github.com/go-kratos/kratos/v2/transport/http"
 
-	bizv1 "mall/service_mesh_example/api/biz/v1"
 	"mall/service_mesh_example/internal/biz"
 	"mall/service_mesh_example/internal/config"
 	"mall/service_mesh_example/internal/health"
@@ -29,7 +28,7 @@ func main() {
 	}
 	helper = log.NewHelper(log.With(logger, "service", cfg.Name))
 
-	pool := peers.New(cfg.Peers, logger)
+	pool := peers.New(cfg.GatewayAddr, logger)
 	httpSrv := khttp.NewServer(
 		khttp.Address(cfg.HTTPAddr),
 		khttp.Middleware(
@@ -37,7 +36,10 @@ func main() {
 			logging.Server(logger),
 		),
 	)
-	bizv1.RegisterBizHTTPServer(httpSrv, biz.New(cfg.Name, pool, logger))
+	if err := biz.RegisterHTTP(cfg.Name, httpSrv, biz.New(cfg.Name, pool, logger)); err != nil {
+		helper.Errorf("register http: %v", err)
+		os.Exit(1)
+	}
 
 	app := kratos.New(
 		kratos.ID(cfg.Name),

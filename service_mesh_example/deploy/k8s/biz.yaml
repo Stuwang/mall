@@ -14,8 +14,7 @@ spec:
         app: biz-a
       annotations:
         consul.hashicorp.com/connect-inject: "true"
-        consul.hashicorp.com/transparent-proxy: "true"
-        consul.hashicorp.com/transparent-proxy-exclude-inbound-ports: "8081"
+        consul.hashicorp.com/transparent-proxy: "false"
         consul.hashicorp.com/connect-service: "biz-a"
         consul.hashicorp.com/connect-service-port: "8000"
         consul.hashicorp.com/connect-service-protocol: "http"
@@ -28,14 +27,14 @@ spec:
             - name: SERVICE_NAME
               value: biz-a
             - name: HTTP_ADDR
-              value: ":8000"
+              value: "127.0.0.1:8000"
             - name: HEALTH_ADDR
               value: ":8081"
-            - name: SVC_ADDRS
+            - name: GATEWAY_ADDR
               valueFrom:
                 configMapKeyRef:
                   name: mesh-peers
-                  key: SVC_ADDRS
+                  key: GATEWAY_ADDR
           ports:
             - name: http
               containerPort: 8000
@@ -74,13 +73,12 @@ metadata:
   name: biz-a
   namespace: mesh
 spec:
-  # Kiri 只把 LoadBalancer 的端口转到 Windows 的 localhost。
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: biz-a
   ports:
     - name: http
-      port: 18081
+      port: 8000
       targetPort: http
 ---
 apiVersion: apps/v1
@@ -99,8 +97,7 @@ spec:
         app: biz-b
       annotations:
         consul.hashicorp.com/connect-inject: "true"
-        consul.hashicorp.com/transparent-proxy: "true"
-        consul.hashicorp.com/transparent-proxy-exclude-inbound-ports: "8081"
+        consul.hashicorp.com/transparent-proxy: "false"
         consul.hashicorp.com/connect-service: "biz-b"
         consul.hashicorp.com/connect-service-port: "8000"
         consul.hashicorp.com/connect-service-protocol: "http"
@@ -113,14 +110,14 @@ spec:
             - name: SERVICE_NAME
               value: biz-b
             - name: HTTP_ADDR
-              value: ":8000"
+              value: "127.0.0.1:8000"
             - name: HEALTH_ADDR
               value: ":8081"
-            - name: SVC_ADDRS
+            - name: GATEWAY_ADDR
               valueFrom:
                 configMapKeyRef:
                   name: mesh-peers
-                  key: SVC_ADDRS
+                  key: GATEWAY_ADDR
           ports:
             - name: http
               containerPort: 8000
@@ -159,12 +156,12 @@ metadata:
   name: biz-b
   namespace: mesh
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: biz-b
   ports:
     - name: http
-      port: 18082
+      port: 8000
       targetPort: http
 ---
 apiVersion: apps/v1
@@ -183,8 +180,7 @@ spec:
         app: biz-c
       annotations:
         consul.hashicorp.com/connect-inject: "true"
-        consul.hashicorp.com/transparent-proxy: "true"
-        consul.hashicorp.com/transparent-proxy-exclude-inbound-ports: "8081"
+        consul.hashicorp.com/transparent-proxy: "false"
         consul.hashicorp.com/connect-service: "biz-c"
         consul.hashicorp.com/connect-service-port: "8000"
         consul.hashicorp.com/connect-service-protocol: "http"
@@ -197,14 +193,14 @@ spec:
             - name: SERVICE_NAME
               value: biz-c
             - name: HTTP_ADDR
-              value: ":8000"
+              value: "127.0.0.1:8000"
             - name: HEALTH_ADDR
               value: ":8081"
-            - name: SVC_ADDRS
+            - name: GATEWAY_ADDR
               valueFrom:
                 configMapKeyRef:
                   name: mesh-peers
-                  key: SVC_ADDRS
+                  key: GATEWAY_ADDR
           ports:
             - name: http
               containerPort: 8000
@@ -243,10 +239,10 @@ metadata:
   name: biz-c
   namespace: mesh
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: biz-c
   ports:
     - name: http
-      port: 18083
+      port: 8000
       targetPort: http
